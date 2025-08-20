@@ -4,7 +4,7 @@
 
 # 大規模言語モデル評価フレームワーク swallow-evaluation-instruct 内部版
 
-[内部向けマニュアル](./REDME_t4_a3_lcl.md)
+**[内部向けマニュアル](./README_t4_a3_lcl.md)**
 
 このリポジトリでは，推論型モデルのような事後学習済みモデルの評価を想定して[Swallowプロジェクト](https://swallow-llm.github.io/)にて開発した包括的評価フレームワーク swallow-evaluation-instruct（以下，"本フレームワーク"）を配布しています．  
 
