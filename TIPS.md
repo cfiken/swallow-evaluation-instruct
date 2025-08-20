@@ -5,9 +5,7 @@
 ### 評価結果の詳細を確認する
 
 ベンチマークのスコアだけでなく各設問のプロンプトや出力などの評価結果の詳細を確認したい場合は，lightevalの引数 `--save-details` を指定して実行してください．評価結果の詳細は `{--output-dir引数}/details/{モデル名}/` 以下にParquet形式で保存されます．
-評価結果の詳細は設問ごとに1行となる表形式で保存されており，Pandasなどで開くことができます（参考：[Saving and reading results](https://huggingface.co/docs/lighteval/v0.8.0/en/saving-and-reading-results)．  
-列の構造はベンチマークにより異なりますが，基本的には "instruction" 列に設問，"gold" 列に正解，"predictions" 列にモデルの応答文，"specifics" 列（Dict形式）に応答文から抽出したモデルの回答が格納されます．
-
+評価結果の詳細は設問ごとに1行となる表形式で保存されており，Pandasなどで開くことができます（参考：[Saving and reading results](https://huggingface.co/docs/lighteval/v0.8.0/en/saving-and-reading-results)）．  
 評価結果の詳細をPandasで開く例を以下に示します．
 
 ```python
@@ -16,6 +14,8 @@ import pandas as pd
 path = "{output_dir}/details/{モデル名}/{タイムスタンプ}/details_{Task ID}_{タイムスタンプ}.parquet"
 df = pd.read_parquet(path)
 ```
+
+表に含まれる列はベンチマークにより異なりますが，基本的には "instruction" 列に設問，"gold" 列に正解，"predictions" 列にモデルの応答文，"specifics" 列（Dict形式）に応答文から抽出したモデルの回答が格納されます．
 
 ### vLLMが対応していない推論型モデルを評価する
 
@@ -30,7 +30,7 @@ DeepSeek-R1形式でマークアップするモデルの場合は `deepseek_r1_m
 
 プロバイダが提供する推論APIでありがちなエラーとして，リクエスト数の制限または，1回の呼び出しの応答数の制限に抵触するケースが挙げられます．
 リクエスト数制限については環境変数 `LITELLM_CONCURRENT_CALLS` を小さくしてみてください．
-応答数制限が問題になるのはそもそも LiveCodeBench のように設問ごとに複数の応答を要求するベンチマークのみですが，応答数制限に抵触してエラーになる場合は MODEL_ARGS:generation の `max_n` を1に設定してみてください．たとえばOpenAIは応答数が8までに制限されているモデルが多いので `max_n:1` の設定を推奨します（2025年8月時点）．
+応答数制限が問題になるのはそもそも LiveCodeBench のように設問ごとに複数の応答を要求するベンチマークのみですが，応答数制限に抵触してエラーになる場合は MODEL_ARGS:generation の `max_n` を1に設定してみてください．たとえばOpenAIは一度の応答数が8までに制限されているモデルが多いので `max_n:1` の設定を推奨します（2025年8月時点）．
 
 上記のケースで解決しない場合は，LiteLLMパッケージからプロバイダの推論APIを直接呼び出してみて問題を切り分けることをおすすめします（参考：[Chat Completions](https://docs.litellm.ai/docs/completion)）．
 
