@@ -255,11 +255,11 @@ class JapaneseTranslationPreparator:
 
 
 def wmt20_enja_translation_span_extractor(text: str):
-    prefixes = ["日本語:", "`日本語:", "```日本語:"]
+    prefixes = ["日本語:", "`日本語:", "```日本語:", "**日本語:", "翻訳文:", "訳文：", "和訳："]
     return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
 
 def wmt20_jaen_translation_span_extractor(text: str):
-    prefixes = ["English:", "`English:", "```English:"]
+    prefixes = ["English:", "`English:", "```English:", "**English:"]
     return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
 
 
