@@ -2764,7 +2764,7 @@ vllm = [
 requires-dist = [
     { name = "datasets", marker = "extra == 'lighteval'", specifier = "<4.0.0" },
     { name = "lighteval", extras = ["math", "extended-tasks", "litellm", "vllm"], marker = "extra == 'lighteval'", editable = "lighteval" },
-    { name = "litellm", marker = "extra == 'lighteval'", specifier = ">1.75.8" },
+    { name = "litellm", marker = "extra == 'lighteval'", specifier = ">=1.75.8" },
     { name = "openai", marker = "extra == 'lighteval'", specifier = ">=1.40.0" },
     { name = "pandas", marker = "extra == 'aggregate-results'", specifier = ">=2.2.3" },
     { name = "protobuf", marker = "extra == 'auto-detector'" },
