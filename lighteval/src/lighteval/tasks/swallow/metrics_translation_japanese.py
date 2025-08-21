@@ -64,6 +64,23 @@ def _prefixed_line_extraction_function(text: str, prefix: str,
         extraction_mode=extraction_mode,
     )
 
+def multi_prefix_extraction_function(text: str, prefixes: List[str], extraction_mode: Literal["first_match", "last_match", "any_match"]) -> List[str]:
+    """
+    Iterate over prefixes and extract using _prefixed_line_extraction_function.
+    """
+    results = []
+    for prefix in prefixes:
+        extracted = _prefixed_line_extraction_function(text=text, prefix=prefix, extraction_mode=extraction_mode)
+        if extraction_mode == "any_match":
+            results.extend(extracted)
+        else:
+            if len(extracted) > 0:
+                if extraction_mode == "first_match":
+                    return extracted
+                else:
+                    results = extracted
+    return results
+
 def _pass_through(text: str) -> List[str]:
     return [text]
 
@@ -238,10 +255,12 @@ class JapaneseTranslationPreparator:
 
 
 def wmt20_enja_translation_span_extractor(text: str):
-    return _prefixed_line_extraction_function(text=text, prefix="日本語:", extraction_mode="last_match")
+    prefixes = ["日本語:", "`日本語:", "```日本語:"]
+    return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
 
 def wmt20_jaen_translation_span_extractor(text: str):
-    return _prefixed_line_extraction_function(text=text, prefix="English:", extraction_mode="last_match")
+    prefixes = ["English:", "`English:", "```English:"]
+    return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
 
 
 wmt20_enja_translation_preparator = JapaneseTranslationPreparator(
