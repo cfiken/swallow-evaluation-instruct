@@ -67,6 +67,9 @@ def _prefixed_line_extraction_function(text: str, prefix: str,
 def multi_prefix_extraction_function(text: str, prefixes: List[str], extraction_mode: Literal["first_match", "last_match", "any_match"]) -> List[str]:
     """
     Iterate over prefixes and extract using _prefixed_line_extraction_function.
+    **prefixesには妥当性の高いものから順に並べていくこと．** e.g., ['日本語:', '日本語：', '`日本語:', '```日本語:', ...]
+    prefixesを先頭から順番に試していき，文を抽出できたら以後のprefixは試さずにそこで打ち切りにする．
+    extraction_modeは個別のprefixに対する正規表現に適用される．たとえば "last_match" を指定した場合はprefixに対して最後にマッチした行が抽出される．
     """
     results = []
     for prefix in prefixes:
