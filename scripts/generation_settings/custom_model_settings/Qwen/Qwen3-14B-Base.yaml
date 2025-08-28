@@ -1,0 +1,3 @@
+reasoning:
+  reasoning_parser: "qwen3"
+  version: "1"
