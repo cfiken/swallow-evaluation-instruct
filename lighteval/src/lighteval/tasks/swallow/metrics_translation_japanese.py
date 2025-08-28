@@ -4,7 +4,6 @@ import unicodedata
 import re
 from janome.tokenizer import Tokenizer as JanomeTokenizer
 import nagisa
-from markdown_it import MarkdownIt
 
 from lighteval.metrics.utils.metric_utils import (
     CorpusLevelMetric,
@@ -16,6 +15,30 @@ from lighteval.metrics.sample_preparator import GenerativeCorpusMetricInput
 from lighteval.tasks.requests import Doc
 
 from .utils import _regex_extractor
+
+
+def _fenced_codeblock_extraction_function(text: str,
+    extraction_mode: Literal["first_match", "last_match", "any_match"],
+    ) -> List[str]:
+    """
+    Markdownのコードブロックからテキストを抽出する．
+    行数や言語指定などのバリエーションを許容する．
+    """
+    str_codeblock_regex = (
+        r'```'                        # opening fence
+        r'(?:[^\n\r]*\r?\n(?!```))?'  # optional info-string + newline
+        r'(?P<content>.*?)'           # DOTALL, greedy
+        r'(?:\r?\n)?'                 # optional newline before closing fence
+        r'```'                        # closing fence
+    )
+    codeblock_regex = re.compile(str_codeblock_regex, re.DOTALL | re.UNICODE)
+
+    return _regex_extractor(
+        obj_regex=codeblock_regex,
+        match_group_name="content",
+        text=text,
+        extraction_mode=extraction_mode,
+    )
 
 def _prefixed_line_extraction_function(text: str, prefix: str,
     extraction_mode: Literal["first_match", "last_match", "any_match"],
@@ -54,19 +77,6 @@ def multi_prefix_extraction_function(text: str, prefixes: List[str], extraction_
         if len(extracted) > 0:
             return extracted
     return results
-
-def extract_last_code_block(model_output: str) -> List[str]:
-    """
-    モデルの出力における最後のコードブロックを抽出する．
-    ただし，文中に現れるコードブロック以外の ``` や，文法的に成立していないコードブロックは無視する．
-    抽出に失敗したときは空配列を返す．
-    """
-    md = MarkdownIt()
-    tokens = md.parse(model_output)
-    codes = [t.content for t in tokens if t.type == "fence"]
-    
-    return [codes[-1]] if len(codes) > 0 else []
-
 
 def _pass_through(text: str) -> List[str]:
     return [text]
@@ -241,15 +251,13 @@ class JapaneseTranslationPreparator:
         )
 
 
-def wmt20_enja_translation_span_extractor(text: str) -> List[str]:
-    # prefixes = ["日本語:", "日本語：", "`日本語:", "```日本語:", "**日本語:", "翻訳文:", "訳文：", "和訳："]
-    # return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
-    return extract_last_code_block(text)
+def wmt20_enja_translation_span_extractor(text: str):
+    prefixes = ["日本語:", "日本語：", "`日本語:", "```日本語:", "**日本語:", "翻訳文:", "訳文：", "和訳："]
+    return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
 
-def wmt20_jaen_translation_span_extractor(text: str) -> List[str]:
-    # prefixes = ["English:", "English：", "`English:", "```English:", "**English:"]
-    # return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
-    return extract_last_code_block(text)
+def wmt20_jaen_translation_span_extractor(text: str):
+    prefixes = ["English:", "English：", "`English:", "```English:", "**English:"]
+    return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
 
 
 wmt20_enja_translation_preparator = JapaneseTranslationPreparator(
