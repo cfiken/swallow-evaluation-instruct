@@ -252,13 +252,18 @@ class JapaneseTranslationPreparator:
 
 
 def wmt20_enja_translation_span_extractor(text: str):
+    MAX_CHARACTER_LENGTH = 400
     prefixes = ["日本語:", "日本語：", "`日本語:", "```日本語:", "**日本語:", "翻訳文:", "訳文：", "和訳："]
-    return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
+    lst_ret = multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
+    lst_ret = [sentence[:MAX_CHARACTER_LENGTH] for sentence in lst_ret]
+    return lst_ret
 
 def wmt20_jaen_translation_span_extractor(text: str):
+    MAX_CHARACTER_LENGTH = 800
     prefixes = ["English:", "English：", "`English:", "```English:", "**English:"]
-    return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
-
+    lst_ret = multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
+    lst_ret = [sentence[:MAX_CHARACTER_LENGTH] for sentence in lst_ret]
+    return lst_ret
 
 wmt20_enja_translation_preparator = JapaneseTranslationPreparator(
     text_extraction_function=wmt20_enja_translation_span_extractor, 
