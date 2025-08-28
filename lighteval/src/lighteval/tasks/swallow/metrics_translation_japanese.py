@@ -71,14 +71,8 @@ def multi_prefix_extraction_function(text: str, prefixes: List[str], extraction_
     results = []
     for prefix in prefixes:
         extracted = _prefixed_line_extraction_function(text=text, prefix=prefix, extraction_mode=extraction_mode)
-        if extraction_mode == "any_match":
-            results.extend(extracted)
-        else:
-            if len(extracted) > 0:
-                if extraction_mode == "first_match":
-                    return extracted
-                else:
-                    results = extracted
+        if len(extracted) > 0:
+            return extracted
     return results
 
 def _pass_through(text: str) -> List[str]:
