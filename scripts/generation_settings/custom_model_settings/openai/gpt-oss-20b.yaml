@@ -1,0 +1,11 @@
+reasoning_effort_low:
+  reasoning_effort: "low"
+  version: "1"
+
+reasoning_effort_medium:
+  reasoning_effort: "medium"
+  version: "1"
+
+reasoning_effort_high:
+  reasoning_effort: "high"
+  version: "1"
