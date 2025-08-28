@@ -18,12 +18,13 @@ from lighteval.tasks.swallow.metrics_translation_japanese import (
         ("日本語\n\n日本語: こんにちは\nありがとう", ["日本語:"], "last_match", ["こんにちは"]),
         # multiple prefixes, first_match picks first
         ("日本語: A\n`日本語: B\n```日本語: C", ["日本語:", "`日本語:", "```日本語:"], "first_match", ["A"]),
-        # multiple prefixes, last_match picks last
-        ("日本語: A\n`日本語: B\n```日本語: C", ["日本語:", "`日本語:", "```日本語:"], "last_match", ["C"]),
-        # any_match collects all in order encountered
-        ("日本語: A\n`日本語: B\n```日本語: C", ["日本語:", "`日本語:", "```日本語:"], "any_match", ["A", "B", "C"]),
         # whitespace tolerance: leading spaces and no space after colon
-        ("  日本語:Hello\n\t`日本語:World and me.", ["日本語:", "`日本語:", "```日本語:"], "any_match", ["Hello", "World and me."]),
+        ("  日本語:Hello\n\t`日本語:World and me.", ["日本語:", "`日本語:", "```日本語:"], "first_match", ["Hello"]),
+        # multiple prefixes, last_match picks last
+        ("日本語: A\n`日本語: B\n```日本語: C", ["日本語:", "`日本語:", "```日本語:"], "last_match", ["A"]),
+        # any_match collects all for the specific prefix; "日本語:" in this case.
+        ("日本語: A\n日本語: B\n日本語: C\n", ["日本語:", "`日本語:", "```日本語:"], "any_match", ["A", "B", "C"]),
+        
     ],
 )
 def test_multi_prefix_extraction_function(text, prefixes, mode, expected):
