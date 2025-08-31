@@ -194,7 +194,7 @@ uv run --isolated --locked --extra lighteval \
         --save-details
 ```
 
-`vllm serve` の引数 `--reasoning-parser` を指定することで，推論過程（reasoning_content）および最終出力（content）が分離されたモデルの出力を受け取ることができます．本フレームワークはモデルの最終出力から回答を抽出して正誤判定する仕様となっていますので **推論型モデルの場合は必ず `--reasoning-parser` を指定してください．**
+`vllm serve` の引数 `--reasoning-parser` を指定することで，推論過程（reasoning_content）および最終出力（content）が分離されたモデルの出力を受け取ることができます．本フレームワークはモデルの最終出力から回答を抽出して正誤判定する仕様（参考：[評価の方針](./EVALUATION_POLICY.md)）となっていますので **推論型モデルの場合は必ず `--reasoning-parser` を指定してください．**
 
 MODEL_ARGS の generation_parameters にはtemperatureのような文生成条件を指定できます．詳細は後述します．**本フレームワークではデフォルトの文生成条件を定義していませんので，モデルやベンチマークごとに適切な条件を指定してください**（参考：[Swallowチームが実装したベンチマーク一覧](./BENCHMARKS.md)）．
 
@@ -379,6 +379,7 @@ lightevalの実行時引数 `lighteval endpoint litellm {MODEL_ARGS} {TASK_ID} [
 
 * [Swallowチームが実装したベンチマーク一覧](./BENCHMARKS.md)
 * [評価における課題と解決策](./TIPS.md)
+* [評価の方針](./EVALUATION_POLICY.md)
 
 ## 引用について
 
