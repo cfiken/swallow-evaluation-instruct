@@ -47,7 +47,7 @@ gpqa_ja_instruct_metric = multilingual_extractive_match_metric(
 )
 
 lst_jgpqa_tasks = []
-for subset in ("diamond", "main"):
+for subset in ("diamond", "main", "extended"):
     name = f"jgpqa:{subset}"
 
     _task = LightevalTaskConfig(
