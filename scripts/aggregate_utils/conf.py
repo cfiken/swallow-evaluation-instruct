@@ -1157,4 +1157,15 @@ AGGREGATE_CONF = [
             'task_key': 'swallow|humanevalplus|0'
         },
     },
+    # JGPQA (=LLM-jpによるGPQA邦訳版)
+    {
+        "display_name": "jgpqa_diamond",
+        "func": pick,
+        "func_args": {
+            'metric_key': 'extractive_match'
+        }, 
+        'target': {
+            'task_key': 'swallow|jgpqa:diamond|0'
+        }
+    },
 ]
