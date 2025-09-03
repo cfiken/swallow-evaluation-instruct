@@ -23,7 +23,6 @@ lighteval = [
     "transformers>=4.51.0", # Set the floor to allow evaluation of the latest models
     "openai>=1.40.0", # Set the floor to avoid using deprecated names.
     "datasets<4.0.0", # Set the ceiling to avoid errors due to breaking changes
-    "pyarrow==20.0.0",
     "litellm>=1.75.8", # Set the ceiling to support gpt-oss
 ]
 
