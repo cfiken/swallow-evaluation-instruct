@@ -51,7 +51,7 @@ Swallowチームが実装したベンチマークの一覧は `lighteval tasks l
 博士課程レベルの科学問題を集めたベンチマーク GPQA の，LLM-jpにより開発された邦訳版です．
 
 * タスク分類：科学知識に基づく質問応答
-* 出典：[Huang et al. (2025)](https://arxiv.org/abs/2502.07346)
+* 出典：[Tamakoshi et al. (2025)](https://huggingface.co/datasets/llm-jp/jgpqa)
 * lightevalタスクID：`swallow|jgpqa:diamond`
 * データセット：[llm-jp/jgpqa](https://huggingface.co/datasets/llm-jp/jgpqa/)
 * ライセンス：CC BY 4.0
