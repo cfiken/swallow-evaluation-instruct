@@ -84,8 +84,10 @@ class SettingManager:
         model_id_key = model_id.replace("/", "_")
 
         if self.__is_development_model(model_id_key):
-            # Wild search for development model
-            model_id_key = re.sub(r"-iter\d+$", "", model_id_key)
+            if self.custom_model_settings.get(model_id_key, None) is None:
+                # Wild search for development model
+                model_id_key = re.sub(r"-iter\d+$", "", model_id_key)
+        
         model_setting_dict = self.custom_model_settings.get(model_id_key, {})
 
         if isinstance(model_setting_dict, dict) and len(model_setting_dict.keys())>0:
