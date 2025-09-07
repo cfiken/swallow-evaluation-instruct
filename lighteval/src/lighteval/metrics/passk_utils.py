@@ -43,6 +43,23 @@ def estimate_pass_at_k(num_samples: int, num_correct: int, k: int) -> float:
         return 1.0
     return 1.0 - np.prod(1.0 - k / np.arange(num_samples - num_correct + 1, num_samples + 1))
 
+def powers_of_two_up_to_n(N):
+    """Generates all powers of two up to a given number N.
+
+    Args:
+        N (int): The upper limit (inclusive) for generating powers of two.
+
+    Returns:
+        List[int]: A list of all powers of two up to N.
+    """
+    result = []
+    value = 1
+    while value <= N:
+        result.append(value)
+        value *= 2
+    if result[-1] != N:
+        result.append(N)
+    return result
 
 def create_passk_metric_fn(base_metric: SampleLevelMetric, k: int) -> callable:
     """
@@ -95,7 +112,7 @@ def create_passk_metric_fn(base_metric: SampleLevelMetric, k: int) -> callable:
     return passk_metric_fn
 
 
-def create_passk_metrics(base_metric: SampleLevelMetric, k_values: List[int], num_samples: int = 10) -> List[SampleLevelMetric]:
+def create_passk_metrics(base_metric: SampleLevelMetric, k_values: List[int], num_samples: int) -> List[SampleLevelMetric]:
     """
     SampleLevelMetricから複数のK値に対してPass@Kメトリクスを作成します。
     
