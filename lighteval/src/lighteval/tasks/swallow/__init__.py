@@ -21,7 +21,7 @@ from .mmlu_pro_english import mmlu_pro_english_tasks
 from .mmlu_english import mmlu_english_tasks
 from .english_mt_bench.main import mt_bench_english_swallow_gpt4o
 from .mifeval_ja.main import mifeval_ja
-from .gpqa import gpqa_diamond_instruct_swallow
+from .gpqa import gpqa_diamond_instruct_swallow, lst_gpqa_diamond_instruct_swallow_passk
 from .aime import aime_24_swallow, aime_25_swallow
 from .math_500 import math_500_swallow
 from .lcb_swallow import lcb_swallow_tasks
@@ -55,3 +55,6 @@ TASKS_TABLE.extend(mmlu_pro_english_tasks)
 TASKS_TABLE.extend(mmlu_english_tasks)
 TASKS_TABLE.extend(lcb_swallow_tasks)
 TASKS_TABLE.extend(lst_jgpqa_tasks)
+
+# Pass@K variants
+TASKS_TABLE.extend(lst_gpqa_diamond_instruct_swallow_passk)
