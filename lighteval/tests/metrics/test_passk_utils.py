@@ -217,7 +217,8 @@ class TestCreatePassKMetrics:
         self.base_metric.metric_name = "test_metric"
         self.base_metric.use_case = MetricUseCase.ACCURACY
         self.base_metric.sample_level_fn = Mock(return_value=1.0)
-    
+        self.base_metric.corpus_level_fn = lambda scores: sum(scores) / len(scores) if scores else 0.0
+
     def test_create_multiple_k_values(self):
         """Test creating metrics for multiple k values."""
         k_values = [1, 3, 5]
