@@ -30,6 +30,7 @@ from typing import List
 import numpy as np
 
 from lighteval.metrics.utils.metric_utils import (
+    MetricUseCase,
     MetricCategory,
     SampleLevelMetric,
 )
@@ -106,8 +107,9 @@ def create_passk_metrics(base_metric: SampleLevelMetric, k_values: List[int], nu
     Returns:
         Pass@Kメトリクスのリスト
     """
+    assert base_metric.use_case == MetricUseCase.ACCURACY, "Base metric must be an accuracy-type metric."
+
     metrics = []
-    
     for k in k_values:
         # Pass@K用のメトリクス関数を作成
         passk_fn = create_passk_metric_fn(base_metric, k)
@@ -123,7 +125,7 @@ def create_passk_metrics(base_metric: SampleLevelMetric, k_values: List[int], nu
             use_case=base_metric.use_case,
             higher_is_better=True,
             sample_level_fn=passk_fn,
-            corpus_level_fn=np.mean,
+            corpus_level_fn=base_metric.corpus_level_fn,
         )
         
         metrics.append(metric)
