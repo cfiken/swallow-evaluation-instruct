@@ -65,7 +65,8 @@ class TestEstimatePassAtK:
 
     def test_pass_at_k_monotonicity(self):
         """Test that Pass@K increases monotonically with K."""
-        num_samples, num_correct = 10, 3
+        num_samples = 10
+        num_correct = 3
         
         results = []
         for k in range(1, 8):  # k from 1 to 7 (less than num_samples - num_correct)
@@ -104,23 +105,23 @@ class TestEstimatePassAtK:
         
         # k equals num_correct
         result = estimate_pass_at_k(num_samples=10, num_correct=3, k=3)
-        expected = 1.0 - np.prod(1.0 - 3 / np.arange(8, 11))  # 1 - (7/8 * 8/9 * 9/10)
+        expected = 1.0 - np.prod(1.0 - 3 / np.arange(8, 11))  # 1 - (5/8 * 6/9 * 7/10)
         assert result == pytest.approx(expected, abs=1e-10)
     
     def test_known_mathematical_values(self):
         """Test against known mathematical values."""
         # 10 samples, 2 correct, k=2
         # P(at least 1 correct in 2 draws) = 1 - P(both incorrect)
-        # P(both incorrect) = (8/10) * (7/9) = 56/90 = 28/45
-        # P(at least 1 correct) = 1 - 28/45 = 17/45 ≈ 0.3778
+        # P(both incorrect) = (8/10) * (7/9)
+        # P(at least 2 correct) = 1 - (8/10) * (7/9)
         result = estimate_pass_at_k(num_samples=10, num_correct=2, k=2)
         expected = 1.0 - (8/10) * (7/9)
         assert result == pytest.approx(expected, abs=1e-10)
         
         # 5 samples, 1 correct, k=3
         # P(correct in 3 draws) = 1 - P(all 3 incorrect)
-        # P(all 3 incorrect) = (4/5) * (3/4) * (2/3) = 24/60 = 2/5
-        # P(at least 1 correct) = 1 - 2/5 = 3/5 = 0.6
+        # P(all 3 incorrect) = (4/5) * (3/4) * (2/3)
+        # P(at least 1 correct) = 1 - (4/5) * (3/4) * (2/3)
         result = estimate_pass_at_k(num_samples=5, num_correct=1, k=3)
         expected = 1.0 - (4/5) * (3/4) * (2/3)
         assert result == pytest.approx(expected, abs=1e-10)
