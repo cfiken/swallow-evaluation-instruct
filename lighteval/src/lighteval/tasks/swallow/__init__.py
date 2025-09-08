@@ -23,7 +23,7 @@ from .english_mt_bench.main import mt_bench_english_swallow_gpt4o
 from .mifeval_ja.main import mifeval_ja
 from .gpqa import gpqa_diamond_instruct_swallow, lst_gpqa_diamond_instruct_swallow_passk
 from .aime import aime_24_swallow, aime_25_swallow
-from .math_500 import math_500_swallow
+from .math_500 import math_500_swallow, lst_math_500_swallow_passk
 from .lcb_swallow import lcb_swallow_tasks
 from .humaneval_series import humaneval, humanevalplus
 from .jgpqa import lst_jgpqa_tasks
@@ -58,3 +58,4 @@ TASKS_TABLE.extend(lst_jgpqa_tasks)
 
 # Pass@K variants
 TASKS_TABLE.extend(lst_gpqa_diamond_instruct_swallow_passk)
+TASKS_TABLE.extend(lst_math_500_swallow_passk)
