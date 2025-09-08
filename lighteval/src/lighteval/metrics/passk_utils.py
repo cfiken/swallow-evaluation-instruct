@@ -72,7 +72,7 @@ def create_passk_metric_fn(base_metric: SampleLevelMetric, k: int) -> callable:
     Returns:
         Pass@K対応のメトリクス関数
     """
-    def passk_metric_fn(predictions: List[str], formatted_doc: Doc, **kwargs) -> float:
+    def passk_metric_fn(golds: List[str], predictions: List[str], formatted_doc: Doc, **kwargs) -> float:
         """
         Pass@K指標を計算するメトリクス関数
         
@@ -89,7 +89,6 @@ def create_passk_metric_fn(base_metric: SampleLevelMetric, k: int) -> callable:
         
         # 各予測に対して基となるメトリクスを計算
         scores = []
-        golds = formatted_doc.get_golds()
         
         for pred in predictions:
             # 基となるメトリクス関数を呼び出し
