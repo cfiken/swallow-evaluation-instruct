@@ -16,19 +16,6 @@ from lighteval.tasks.requests import Doc
 
 from .utils import _regex_extractor
 
-def truncate_preds_by_gold_len_multiple(
-    preds: List[str], golds: List[str], multiple: Optional[int]
-) -> List[str]:
-    """
-    preds の各要素を、goldsの最大文字数 * multiple の長さで先頭から切り詰める。
-    multiple=None の場合は何もしない。
-    """
-    if multiple is not None and len(golds) > 0:
-        max_gold_len = max(len(g) for g in golds)
-        max_len = max_gold_len * multiple
-        return [s[:max_len] for s in preds]
-    else:
-        return preds
 
 def _fenced_codeblock_extraction_function(text: str,
     extraction_mode: Literal["first_match", "last_match", "any_match"],
@@ -76,20 +63,6 @@ def _prefixed_line_extraction_function(text: str, prefix: str,
         text=text,
         extraction_mode=extraction_mode,
     )
-
-def multi_prefix_extraction_function(text: str, prefixes: List[str], extraction_mode: Literal["first_match", "last_match", "any_match"]) -> List[str]:
-    """
-    Iterate over prefixes and extract using _prefixed_line_extraction_function.
-    **prefixesには妥当性の高いものから順に並べていくこと．** e.g., ['日本語:', '日本語：', '`日本語:', '```日本語:', ...]
-    prefixesを先頭から順番に試していき，文を抽出できたら以後のprefixは試さずにそこで打ち切りにする．
-    extraction_modeは個別のprefixに対する正規表現に適用される．たとえば "last_match" を指定した場合はprefixに対して最後にマッチした行が抽出される．
-    """
-    results = []
-    for prefix in prefixes:
-        extracted = _prefixed_line_extraction_function(text=text, prefix=prefix, extraction_mode=extraction_mode)
-        if len(extracted) > 0:
-            return extracted
-    return results
 
 def _pass_through(text: str) -> List[str]:
     return [text]
@@ -157,25 +130,20 @@ class JapaneseTextSegmenter:
 
 
 class TranslationPreparator:
-    """
-    BLEUやchrFなどを計算する際に使う前処理クラス．
-    翻訳スパンの抽出，文字列の正規化に対応している．
-    CorpusLevelMetric(sample_level_fn) に，インスタンスの .prepare() method を渡すことで前処理が行われるようになる．  
+    
+    def __init__(self, text_extraction_function: Callable[[str], List[str]], 
+                 extraction_fallback_function: Optional[Callable[[str], List[str]]] = _return_empty_text):
+        """_summary_
+        BLEUやchrFなどを計算する際に使う前処理クラス．
+        翻訳スパンの抽出，文字列の正規化に対応している．
+        CorpusLevelMetric(sample_level_fn) に，インスタンスの .prepare() method を渡すことで前処理が行われるようになる．  
 
-    Args:
-        text_extraction_function (Callable[[str], List[str]]): 翻訳スパン抽出関数．翻訳指示プロンプトに整合させること．
-        extraction_fallback_function (Callable[[str], List[str]]): 翻訳スパン抽出に失敗した場合のスパン抽出関数．デフォルトは応答文全体をそのまま翻訳とみなす．
-        truncate_pred_by_gold_len_multiple (Optional[int]): 翻訳文を参照訳の文字数x指定値で切り詰める．Noneでoff，整数指定でon．onにする場合は3程度を推奨．
-    """       
-    def __init__(
-        self, 
-        text_extraction_function: Callable[[str], List[str]], 
-        extraction_fallback_function: Optional[Callable[[str], List[str]]] = _return_empty_text,
-        truncate_pred_by_gold_len_multiple: Optional[int] = None,
-    ):
+        Args:
+            text_extraction_function (Callable[[str], List[str]]): 翻訳スパン抽出関数．翻訳指示プロンプトに整合させること．
+            extraction_fallback_function (Callable[[str], List[str]]): 翻訳スパン抽出に失敗した場合のスパン抽出関数．デフォルトは応答文全体をそのまま翻訳とみなす．
+        """       
         self.text_extraction_function = text_extraction_function
         self.extraction_fallback_function = extraction_fallback_function
-        self.truncate_pred_by_gold_len_multiple = truncate_pred_by_gold_len_multiple
         
     def prepare(self, golds: list[str], predictions: list[str], formatted_doc: Doc, **kwargs):
         """
@@ -197,11 +165,6 @@ class TranslationPreparator:
         if len(lst_translated) == 0:
             _fallback = self.extraction_fallback_function(pred)
             lst_translated.extend(_fallback)
-
-        # predsをgoldsの最大文字数×倍率で切り詰める
-        lst_translated = truncate_preds_by_gold_len_multiple(
-            preds=lst_translated, golds=golds, multiple=self.truncate_pred_by_gold_len_multiple
-        )
             
         if formatted_doc.specific is None:
             formatted_doc.specific = {}
@@ -212,20 +175,6 @@ class TranslationPreparator:
 
     
 class JapaneseTranslationPreparator:
-    """
-    邦訳文に対してBLEUやchrFなどを計算する際に使う前処理クラス．
-    JanomeまたはNagisaによる分かち書き，トークン正規化に対応．
-
-    Args:
-        text_extraction_function: 翻訳スパン抽出関数
-        extraction_fallback_function: 抽出失敗時の関数
-        segmenter_type: "janome" または "nagisa"
-        remove_whitespace_tokens: 空白トークンの削除
-        lowercase: 小文字化
-        normalize_nfkc: NFKC正規化
-        kwargs_segmenter: 分かち書き器の初期化引数
-        truncate_pred_by_gold_len_multiple (Optional[int]): 翻訳文を参照訳の文字数x指定値で切り詰める．Noneでoff，整数指定でon．onにする場合は3程度を推奨．        
-    """
     def __init__(
         self,
         text_extraction_function: Callable[[str], List[str]],
@@ -234,12 +183,23 @@ class JapaneseTranslationPreparator:
         remove_whitespace_tokens: bool = False,
         lowercase: bool = False,
         normalize_nfkc: bool = False,
-        truncate_pred_by_gold_len_multiple: Optional[int] = None,
         **kwargs_segmenter,
     ):
+        """
+        邦訳文に対してBLEUやchrFなどを計算する際に使う前処理クラス．
+        JanomeまたはNagisaによる分かち書き，トークン正規化に対応．
+
+        Args:
+            text_extraction_function: 翻訳スパン抽出関数
+            extraction_fallback_function: 抽出失敗時の関数
+            segmenter_type: "janome" または "nagisa"
+            remove_whitespace_tokens: 空白トークンの削除
+            lowercase: 小文字化
+            normalize_nfkc: NFKC正規化
+            kwargs_segmenter: 分かち書き器の初期化引数
+        """
         self.text_extraction_function = text_extraction_function
         self.extraction_fallback_function = extraction_fallback_function
-        self.truncate_pred_by_gold_len_multiple = truncate_pred_by_gold_len_multiple
 
         self.segmenter = JapaneseTextSegmenter(
             segmenter_type=segmenter_type,
@@ -253,7 +213,6 @@ class JapaneseTranslationPreparator:
         """
         1. モデルの出力から翻訳文を抽出する
         2. 抽出した翻訳文および参照訳を分かち書きする
-        3. もし有効なら preds を gold の最大文字数の指定倍率で切り詰める
         """
         lst_translated = []
         for pred in predictions:
@@ -264,11 +223,6 @@ class JapaneseTranslationPreparator:
         if len(lst_translated) == 0:
             _fallback = self.extraction_fallback_function(pred)
             lst_translated.extend(_fallback)
-
-        # predsをgoldsの最大文字数×倍率で切り詰める
-        lst_translated = truncate_preds_by_gold_len_multiple(
-            preds=lst_translated, golds=golds, multiple=self.truncate_pred_by_gold_len_multiple
-        )
 
         if formatted_doc.specific is None:
             formatted_doc.specific = {}
@@ -284,25 +238,21 @@ class JapaneseTranslationPreparator:
 
 
 def wmt20_enja_translation_span_extractor(text: str):
-    prefixes = ["日本語:", "日本語：", "`日本語:", "```日本語:", "**日本語:", "翻訳文:", "訳文：", "和訳："]
-    return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
+    return _prefixed_line_extraction_function(text=text, prefix="日本語:", extraction_mode="last_match")
 
 def wmt20_jaen_translation_span_extractor(text: str):
-    prefixes = ["English:", "English：", "`English:", "```English:", "**English:"]
-    return multi_prefix_extraction_function(text=text, prefixes=prefixes, extraction_mode="last_match")
+    return _prefixed_line_extraction_function(text=text, prefix="English:", extraction_mode="last_match")
+
 
 wmt20_enja_translation_preparator = JapaneseTranslationPreparator(
     text_extraction_function=wmt20_enja_translation_span_extractor, 
     extraction_fallback_function=_return_empty_text,
-    remove_whitespace_tokens=False, lowercase=False, normalize_nfkc=False,
-    truncate_pred_by_gold_len_multiple=3,
-)
+    remove_whitespace_tokens=False, lowercase=False, normalize_nfkc=False)
 
 wmt20_jaen_translation_preparator = TranslationPreparator(
     text_extraction_function=wmt20_jaen_translation_span_extractor, 
-    extraction_fallback_function=_return_empty_text,
-    truncate_pred_by_gold_len_multiple=3,
-)
+    extraction_fallback_function=_return_empty_text
+    )
 
 # 邦訳文向けBLEU
 bleu_ja = CorpusLevelMetric(
@@ -370,8 +320,7 @@ wmt20_enja_translation_preparator_nagisa = JapaneseTranslationPreparator(
     text_extraction_function=wmt20_enja_translation_span_extractor,
     extraction_fallback_function=_return_empty_text,
     segmenter_type="nagisa",
-    remove_whitespace_tokens=False, lowercase=False, normalize_nfkc=False,
-    truncate_pred_by_gold_len_multiple=3,
+    remove_whitespace_tokens=False, lowercase=False, normalize_nfkc=False
 )
 
 bleu_ja_nagisa = CorpusLevelMetric(
