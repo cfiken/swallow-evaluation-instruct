@@ -3,6 +3,9 @@ from collections import defaultdict, Counter
 from scipy.special import comb as sp_comb
 import random
 
+from math import comb
+from itertools import combinations
+
 def maj_at_k_exact_dp_scipy(counts_dict: Dict[Any, int], correct_dict: Dict[Any, bool], K: int):
     """
     Exact Maj@K (plurality, uniform tie-break) via Dynamic Programming (DP).
@@ -24,7 +27,7 @@ def maj_at_k_exact_dp_scipy(counts_dict: Dict[Any, int], correct_dict: Dict[Any,
              for k, v in counts_dict.items() if v > 0]
     items.sort(key=lambda x: x[0])       # 再現性確保のためにソート
     lst_num_freqs = [v for _, v, _ in items]        # N_m
-    lst_is_correct = [c for _, _, c in items]       # True_{m∈C}
+    lst_is_correct = [c for _, _, c in items]       # True if {m∈C}
     N = sum(lst_num_freqs)                          # 試行回数 N
     M = len(lst_num_freqs)                          # クラス数 M
     assert 1 <= K <= N
@@ -105,3 +108,23 @@ def maj_at_k_monte_carlo(counts_dict: Dict[Any, int], correct_dict: Dict[Any, bo
         if cw > 0:
             win += cw / len(majority_classes)
     return win / trials
+
+# Brute-force baseline (sampling without replacement)
+# This can be used for small N and K to verify the DP implementation.
+def maj_at_k_bruteforce(counts_dict: Dict[Any, int], correct_dict: Dict[Any, bool], K: int):
+    population = []
+    for k, f in counts_dict.items():
+        population.extend([k]*int(f))
+    N = len(population)
+    assert 1 <= K <= N
+    win = 0.0
+    for idxs in combinations(range(N), K):
+        sample = [population[i] for i in idxs]
+        cnt = Counter(sample)
+        top = max(cnt.values())
+        winners = [a for a, c in cnt.items() if c == top]
+        t = len(winners)
+        cw = sum(1 for a in winners if correct_dict.get(a, False))
+        if cw > 0:
+            win += cw / t
+    return win / comb(N, K)
