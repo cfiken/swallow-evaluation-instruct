@@ -1,0 +1,272 @@
+"""
+Tests for Maj@K metric utilities.
+"""
+
+import pytest
+import numpy as np
+from unittest.mock import Mock
+
+from lighteval.metrics.passk_utils import (
+    hash_multiple_extractions,
+    get_extracted_results,
+    is_extraction_compatible,
+    create_majk_metric_fn,
+    create_majk_metrics,
+    create_sampling_metrics,
+)
+from lighteval.metrics.utils.metric_utils import (
+    MetricCategory,
+    MetricUseCase,
+    SampleLevelMetric,
+)
+from lighteval.tasks.requests import Doc
+
+
+class TestHashMultipleExtractions:
+    """Test the hash_multiple_extractions function."""
+    
+    def test_empty_list(self):
+        """Test with empty list."""
+        result = hash_multiple_extractions([])
+        assert result == "EMPTY"
+    
+    def test_single_extraction(self):
+        """Test with single extraction."""
+        result = hash_multiple_extractions(["5"])
+        assert result == "5"
+    
+    def test_multiple_extractions(self):
+        """Test with multiple extractions."""
+        result = hash_multiple_extractions(["5", "3", "7"])
+        assert result.startswith("MULTI_")
+        assert len(result) == 14  # "MULTI_" + 8 character hash
+    
+    def test_same_extractions_same_hash(self):
+        """Test that same extractions produce same hash."""
+        result1 = hash_multiple_extractions(["5", "3"])
+        result2 = hash_multiple_extractions(["3", "5"])  # Different order
+        assert result1 == result2  # Should be same due to sorting
+
+
+class TestGetExtractedResults:
+    """Test the get_extracted_results function."""
+    
+    def test_no_specific(self):
+        """Test when doc has no specific attribute."""
+        doc = Mock()
+        del doc.specific  # Remove specific attribute
+        result = get_extracted_results(doc)
+        assert result == []
+    
+    def test_empty_specific(self):
+        """Test when doc.specific is empty."""
+        doc = Mock()
+        doc.specific = {}
+        result = get_extracted_results(doc)
+        assert result == []
+    
+    def test_extracted_predictions_list(self):
+        """Test with extracted_predictions as list."""
+        doc = Mock()
+        doc.specific = {"extracted_predictions": ["5", "3"]}
+        result = get_extracted_results(doc)
+        assert result == ["5", "3"]
+    
+    def test_extracted_predictions_single(self):
+        """Test with extracted_predictions as single value."""
+        doc = Mock()
+        doc.specific = {"extracted_predictions": "5"}
+        result = get_extracted_results(doc)
+        assert result == ["5"]
+    
+    def test_extracted_prediction_variant(self):
+        """Test with extracted_prediction (singular) variant."""
+        doc = Mock()
+        doc.specific = {"extracted_prediction": ["7"]}
+        result = get_extracted_results(doc)
+        assert result == ["7"]
+
+
+class TestIsExtractionCompatible:
+    """Test the is_extraction_compatible function."""
+    
+    def test_extractive_metric_name(self):
+        """Test metric with 'extractive' in name."""
+        metric = Mock(spec=SampleLevelMetric)
+        metric.metric_name = "extractive_match"
+        metric.sample_level_fn = Mock()
+        # Mock __code__ attribute to avoid source code inspection
+        metric.sample_level_fn.__code__ = None
+        result = is_extraction_compatible(metric)
+        assert result is True
+    
+    def test_non_extractive_metric_name(self):
+        """Test metric without extractive indicators."""
+        metric = Mock(spec=SampleLevelMetric)
+        metric.metric_name = "exact_match"
+        metric.sample_level_fn = Mock()
+        metric.sample_level_fn.__name__ = "exact_match_fn"
+        result = is_extraction_compatible(metric)
+        assert result is False
+
+
+class TestCreateMajKMetricFn:
+    """Test the create_majk_metric_fn function."""
+    
+    def setup_method(self):
+        """Set up test fixtures."""
+        # Create a mock extractive metric
+        self.base_metric = Mock(spec=SampleLevelMetric)
+        self.base_metric.sample_level_fn = Mock()
+        self.base_metric.use_case = MetricUseCase.ACCURACY
+        
+        # Create a mock formatted_doc
+        self.formatted_doc = Mock(spec=Doc)
+    
+    def test_insufficient_predictions_raises_error(self):
+        """Test that insufficient predictions raises ValueError."""
+        majk_fn = create_majk_metric_fn(self.base_metric, k=5)
+        predictions = ["A", "B", "C"]  # Only 3 predictions, but k=5
+        
+        with pytest.raises(ValueError, match="Number of predictions \\(3\\) is less than k \\(5\\)"):
+            majk_fn(golds=["A"], predictions=predictions, formatted_doc=self.formatted_doc)
+    
+    def test_majk_calculation_with_extractions(self):
+        """Test Maj@K calculation with extracted results."""
+        # Mock the base metric to return different scores and extractions
+        def mock_sample_level_fn(golds, predictions, formatted_doc, **kwargs):
+            pred = predictions[0]
+            # Set up mock extraction results - use a real dict instead of Mock
+            if not hasattr(formatted_doc, 'specific') or formatted_doc.specific is None:
+                formatted_doc.specific = {}
+            
+            if pred == "answer is 5":
+                formatted_doc.specific["extracted_predictions"] = ["5"]
+                return 1.0  # Correct
+            elif pred == "answer is 3":
+                formatted_doc.specific["extracted_predictions"] = ["3"]
+                return 0.0  # Incorrect
+            elif pred == "the result is 5":
+                formatted_doc.specific["extracted_predictions"] = ["5"]
+                return 1.0  # Correct
+            else:
+                formatted_doc.specific["extracted_predictions"] = [pred]
+                return 0.0
+        
+        self.base_metric.sample_level_fn.side_effect = mock_sample_level_fn
+        
+        # Initialize formatted_doc.specific as a real dict
+        self.formatted_doc.specific = {}
+        
+        majk_fn = create_majk_metric_fn(self.base_metric, k=3)
+        predictions = ["answer is 5", "answer is 3", "the result is 5"]
+        
+        result = majk_fn(golds=["5"], predictions=predictions, formatted_doc=self.formatted_doc)
+        
+        # Should be > 0 since "5" appears twice and is correct
+        assert result > 0.0
+        assert result <= 1.0
+
+
+class TestCreateMajKMetrics:
+    """Test the create_majk_metrics function."""
+    
+    def setup_method(self):
+        """Set up test fixtures."""
+        # Create a mock extractive metric
+        self.base_metric = Mock(spec=SampleLevelMetric)
+        self.base_metric.metric_name = "extractive_test"
+        self.base_metric.use_case = MetricUseCase.ACCURACY
+        self.base_metric.sample_level_fn = Mock()
+        self.base_metric.corpus_level_fn = np.mean
+    
+    def test_create_multiple_k_values(self):
+        """Test creating metrics for multiple k values."""
+        # Mock is_extraction_compatible to return True
+        import lighteval.metrics.passk_utils as passk_utils
+        original_is_compatible = passk_utils.is_extraction_compatible
+        passk_utils.is_extraction_compatible = Mock(return_value=True)
+        
+        try:
+            k_values = [1, 3, 5]
+            num_samples = 10
+            
+            metrics = create_majk_metrics(self.base_metric, k_values, num_samples)
+            
+            assert len(metrics) == 3
+            
+            # Check metric names
+            expected_names = [
+                "extractive_test_maj@1:10",
+                "extractive_test_maj@3:10",
+                "extractive_test_maj@5:10"
+            ]
+            
+            for i, metric in enumerate(metrics):
+                assert isinstance(metric, SampleLevelMetric)
+                assert metric.metric_name == expected_names[i]
+                assert metric.category == MetricCategory.GENERATIVE_SAMPLING
+                assert metric.use_case == MetricUseCase.ACCURACY
+                assert metric.higher_is_better is True
+        finally:
+            # Restore original function
+            passk_utils.is_extraction_compatible = original_is_compatible
+    
+    def test_incompatible_metric_raises_error(self):
+        """Test that incompatible metric raises error."""
+        # Mock is_extraction_compatible to return False
+        import lighteval.metrics.passk_utils as passk_utils
+        original_is_compatible = passk_utils.is_extraction_compatible
+        passk_utils.is_extraction_compatible = Mock(return_value=False)
+        
+        try:
+            k_values = [1, 3]
+            num_samples = 10
+            
+            with pytest.raises(ValueError, match="is not compatible with Maj@K"):
+                create_majk_metrics(self.base_metric, k_values, num_samples)
+        finally:
+            # Restore original function
+            passk_utils.is_extraction_compatible = original_is_compatible
+
+
+class TestCreateSamplingMetrics:
+    """Test the create_sampling_metrics function."""
+    
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.base_metric = Mock(spec=SampleLevelMetric)
+        self.base_metric.metric_name = "test_metric"
+        self.base_metric.use_case = MetricUseCase.ACCURACY
+        self.base_metric.corpus_level_fn = np.mean
+    
+    def test_pass_metrics_creation(self):
+        """Test creating Pass@K metrics."""
+        k_values = [1, 3]
+        num_samples = 10
+        
+        metrics = create_sampling_metrics(self.base_metric, k_values, num_samples, metric_type="pass")
+        
+        assert len(metrics) == 2
+        assert metrics[0].metric_name == "test_metric_pass@1:10"
+        assert metrics[1].metric_name == "test_metric_pass@3:10"
+    
+    def test_maj_metrics_creation(self):
+        """Test creating Maj@K metrics."""
+        # Mock is_extraction_compatible to return True
+        import lighteval.metrics.passk_utils as passk_utils
+        original_is_compatible = passk_utils.is_extraction_compatible
+        passk_utils.is_extraction_compatible = Mock(return_value=True)
+        
+        try:
+            k_values = [1, 3]
+            num_samples = 10
+            
+            metrics = create_sampling_metrics(self.base_metric, k_values, num_samples, metric_type="maj")
+            
+            assert len(metrics) == 2
+            assert metrics[0].metric_name == "test_metric_maj@1:10"
+            assert metrics[1].metric_name == "test_metric_maj@3:10"
+        finally:
+            # Restore original function
+            passk_utils.is_extraction_compatible = original_is_compatible
