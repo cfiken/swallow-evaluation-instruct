@@ -21,12 +21,15 @@
 # SOFTWARE.
 
 """
-Pass@K metric utilities for creating Pass@K versions of existing SampleLevelMetric.
-This module provides utilities to convert any SampleLevelMetric into a Pass@K metric 
+Pass@K and Maj@K metric utilities for creating sampling-based versions of existing SampleLevelMetric.
+This module provides utilities to convert any SampleLevelMetric into Pass@K or Maj@K metrics 
 that can be used across different benchmarks.
 """
 
-from typing import List
+from typing import List, Literal
+from collections import defaultdict
+import copy
+import hashlib
 import numpy as np
 
 from lighteval.metrics.utils.metric_utils import (
@@ -34,6 +37,7 @@ from lighteval.metrics.utils.metric_utils import (
     MetricCategory,
     SampleLevelMetric,
 )
+from lighteval.metrics.maj_at_k_solutions import maj_at_k_exact_dp_scipy
 from lighteval.tasks.requests import Doc
 
 
@@ -61,6 +65,159 @@ def powers_of_two_up_to_n(N):
         result.append(N)
     return result
 
+
+def hash_multiple_extractions(extracted_list):
+    """複数抽出結果をハッシュ化
+    
+    Args:
+        extracted_list: 抽出結果のリスト
+        
+    Returns:
+        str: ハッシュ化された結果
+    """
+    if not extracted_list:
+        return "EMPTY"
+    if len(extracted_list) == 1:
+        return str(extracted_list[0])
+    
+    # 複数ある場合はソートしてハッシュ化
+    sorted_extractions = sorted([str(x) for x in extracted_list])
+    combined = "|".join(sorted_extractions)
+    return f"MULTI_{hashlib.md5(combined.encode()).hexdigest()[:8]}"
+
+
+def get_extracted_results(temp_doc) -> list:
+    """formatted_doc.specificから抽出結果を取得（表記揺れ対応）
+    
+    Args:
+        temp_doc: 処理済みのDoc
+        
+    Returns:
+        list: 抽出結果のリスト
+    """
+    if not (hasattr(temp_doc, 'specific') and temp_doc.specific):
+        return []
+    
+    # 可能な表記のリスト（優先順位順）
+    possible_keys = [
+        "extracted_predictions",
+        "extracted_prediction",
+        "extracted_preds", 
+        "extracted_pred"
+    ]
+    
+    for key in possible_keys:
+        if key in temp_doc.specific and temp_doc.specific[key]:
+            results = temp_doc.specific[key]
+            # リストでない場合はリストに変換
+            if not isinstance(results, list):
+                results = [results]
+            return results
+    
+    return []
+
+
+def is_extraction_compatible(base_metric: SampleLevelMetric) -> bool:
+    """base_metricがMaj@Kと互換性があるかチェック（関数解析ベース）
+    
+    Args:
+        base_metric: チェック対象のメトリクス
+        
+    Returns:
+        bool: 互換性があるかどうか
+    """
+    import inspect
+    
+    # メトリクス名からの推測（最初にチェック）
+    if "extractive" in base_metric.metric_name.lower():
+        return True
+    
+    # sample_level_fn が関数オブジェクトの場合、__name__ をチェック
+    if hasattr(base_metric.sample_level_fn, '__name__'):
+        func_name = base_metric.sample_level_fn.__name__
+        if "extractive" in func_name.lower() or "extract" in func_name.lower():
+            return True
+    
+    try:
+        # sample_level_fnのソースコードを取得
+        if hasattr(base_metric.sample_level_fn, '__code__') and base_metric.sample_level_fn.__code__ is not None:
+            source = inspect.getsource(base_metric.sample_level_fn)
+            
+            # 抽出系の特徴を検索
+            extraction_indicators = [
+                "extracted_predictions",
+                "extracted_prediction", 
+                "extract_target_from_pred",
+                "formatted_doc.specific"
+            ]
+            
+            for indicator in extraction_indicators:
+                if indicator in source:
+                    return True
+                
+    except Exception:
+        # ソース取得に失敗した場合は継続
+        pass
+    
+    return False
+
+def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_type: str) -> callable:
+    """Pass@KとMaj@K共通のメトリクス関数作成
+    
+    Args:
+        base_metric: 基となるSampleLevelMetric
+        k: K値
+        metric_type: "pass" または "maj"
+        
+    Returns:
+        サンプリングベースのメトリクス関数
+    """
+    def sampling_metric_fn(golds: List[str], predictions: List[str], formatted_doc: Doc, **kwargs) -> float:
+        if len(predictions) < k:
+            raise ValueError(f"Number of predictions ({len(predictions)}) is less than k ({k}) for {metric_type}@{k}")
+        
+        if metric_type == "pass":
+            # Pass@K計算
+            scores = []
+            for pred in predictions:
+                temp_doc = copy.deepcopy(formatted_doc)
+                score = base_metric.sample_level_fn(golds=golds, predictions=[pred], formatted_doc=temp_doc, **kwargs)
+                scores.append(int(score))
+            
+            num_samples = len(predictions)
+            num_correct = sum(scores)
+            result = estimate_pass_at_k(num_samples=num_samples, num_correct=num_correct, k=k)
+            
+        elif metric_type == "maj":
+            # Maj@K計算
+            
+            # counts_dictとcorrect_dictを作成
+            counts_dict = defaultdict(int)
+            correct_dict = {}            
+            for pred in predictions:
+                temp_doc = copy.deepcopy(formatted_doc)
+                score = base_metric.sample_level_fn(golds=golds, predictions=[pred], formatted_doc=temp_doc, **kwargs)
+                is_correct = bool(score)
+                
+                # 抽出結果の取得
+                extracted_list = get_extracted_results(temp_doc)
+                hashed_result = hash_multiple_extractions(extracted_list)                
+                counts_dict[hashed_result] += 1
+                correct_dict[hashed_result] = is_correct
+            
+            # Maj@K計算
+            result = maj_at_k_exact_dp_scipy(counts_dict, correct_dict, k)
+        else:
+            raise ValueError(f"Unknown metric_type: {metric_type}")
+        
+        # 最後に全predictionsでbase_metricを実行してformatted_doc.specificを正しく設定
+        _ = base_metric.sample_level_fn(golds=golds, predictions=predictions, formatted_doc=formatted_doc, **kwargs)
+        
+        return result
+    
+    return sampling_metric_fn
+
+
 def create_passk_metric_fn(base_metric: SampleLevelMetric, k: int) -> callable:
     """
     SampleLevelMetricをPass@K対応に変換する関数を作成します。
@@ -72,43 +229,72 @@ def create_passk_metric_fn(base_metric: SampleLevelMetric, k: int) -> callable:
     Returns:
         Pass@K対応のメトリクス関数
     """
-    def passk_metric_fn(golds: List[str], predictions: List[str], formatted_doc: Doc, **kwargs) -> float:
-        """
-        Pass@K指標を計算するメトリクス関数
+    return create_sampling_metric_fn(base_metric, k, "pass")
+
+
+def create_majk_metric_fn(base_metric: SampleLevelMetric, k: int) -> callable:
+    """
+    SampleLevelMetricをMaj@K対応に変換する関数を作成します。
+    
+    Args:
+        base_metric: 基となるSampleLevelMetric
+        k: Maj@Kのk値
+    
+    Returns:
+        Maj@K対応のメトリクス関数
+    """
+    return create_sampling_metric_fn(base_metric, k, "maj")
+
+
+def create_sampling_metrics(base_metric: SampleLevelMetric, k_values: List[int], num_samples: int, metric_type: Literal["pass", "maj"]) -> List[SampleLevelMetric]:
+    """
+    SampleLevelMetricから複数のK値に対してサンプリングベースのメトリクス（Pass@KまたはMaj@K）を作成します。
+    
+    Args:
+        base_metric: 基となるSampleLevelMetric
+        k_values: K値のリスト
+        num_samples: サンプリング数
+        metric_type: メトリクスタイプ（"pass" または "maj"）
+    
+    Returns:
+        サンプリングベースのメトリクスのリスト
+    """
+    assert base_metric.use_case == MetricUseCase.ACCURACY, "Base metric must be an accuracy-type metric."
+
+    # Maj@Kの場合は事前に互換性をチェック
+    if metric_type == "maj" and not is_extraction_compatible(base_metric):
+        raise ValueError(f"Base metric '{base_metric.metric_name}' is not compatible with Maj@K. "
+                        f"Maj@K requires metrics that set extracted_predictions in formatted_doc.specific.")
+
+    metrics = []
+    for k in k_values:
+        # メトリクスタイプに応じて適切な関数を選択
+        if metric_type == "pass":
+            sampling_fn = create_passk_metric_fn(base_metric, k)
+            metric_suffix = "pass"
+        elif metric_type == "maj":
+            sampling_fn = create_majk_metric_fn(base_metric, k)
+            metric_suffix = "maj"
+        else:
+            raise ValueError(f"Unknown metric_type: {metric_type}")
         
-        Args:
-            predictions: 予測結果のリスト（K個以上）
-            formatted_doc: フォーマット済みドキュメント
-            **kwargs: メトリクス関数に渡す追加引数
+        # メトリクス名を生成
+        base_name = base_metric.metric_name
+        metric_name = f"{base_name}_{metric_suffix}@{k}:{num_samples}"
         
-        Returns:
-            Pass@K値
-        """
-        if len(predictions) < k:
-            raise ValueError(f"Number of predictions ({len(predictions)}) is less than k ({k}) for Pass@{k}")
-        
-        # 各予測に対して基となるメトリクスを計算
-        scores = []
-        
-        for pred in predictions:
-            # 基となるメトリクス関数を呼び出し
-            score = base_metric.sample_level_fn(golds=golds, predictions=[pred], formatted_doc=formatted_doc, **kwargs)
-            scores.append(int(score))
-        
-        # Pass@K計算: estimate_pass_at_kを使用
-        num_samples = len(predictions)
-        num_correct = sum(scores)
-        
-        # 単一サンプルに対するPass@K計算
-        pass_at_k_score = estimate_pass_at_k(
-            num_samples=num_samples, 
-            num_correct=num_correct, 
-            k=k
+        # SampleLevelMetricを作成
+        metric = SampleLevelMetric(
+            metric_name=metric_name,
+            category=MetricCategory.GENERATIVE_SAMPLING,
+            use_case=base_metric.use_case,
+            higher_is_better=True,
+            sample_level_fn=sampling_fn,
+            corpus_level_fn=base_metric.corpus_level_fn,
         )
         
-        return pass_at_k_score
+        metrics.append(metric)
     
-    return passk_metric_fn
+    return metrics
 
 
 def create_passk_metrics(base_metric: SampleLevelMetric, k_values: List[int], num_samples: int) -> List[SampleLevelMetric]:
@@ -123,27 +309,19 @@ def create_passk_metrics(base_metric: SampleLevelMetric, k_values: List[int], nu
     Returns:
         Pass@Kメトリクスのリスト
     """
-    assert base_metric.use_case == MetricUseCase.ACCURACY, "Base metric must be an accuracy-type metric."
+    return create_sampling_metrics(base_metric, k_values, num_samples, metric_type="pass")
 
-    metrics = []
-    for k in k_values:
-        # Pass@K用のメトリクス関数を作成
-        passk_fn = create_passk_metric_fn(base_metric, k)
-        
-        # メトリクス名を生成（基のメトリクス名にpass@kを追加）
-        base_name = base_metric.metric_name
-        metric_name = f"{base_name}_pass@{k}:{num_samples}"
-        
-        # SampleLevelMetricを作成
-        metric = SampleLevelMetric(
-            metric_name=metric_name,
-            category=MetricCategory.GENERATIVE_SAMPLING,
-            use_case=base_metric.use_case,
-            higher_is_better=True,
-            sample_level_fn=passk_fn,
-            corpus_level_fn=base_metric.corpus_level_fn,
-        )
-        
-        metrics.append(metric)
+
+def create_majk_metrics(base_metric: SampleLevelMetric, k_values: List[int], num_samples: int) -> List[SampleLevelMetric]:
+    """
+    SampleLevelMetricから複数のK値に対してMaj@Kメトリクスを作成します。
     
-    return metrics
+    Args:
+        base_metric: 基となるSampleLevelMetric
+        k_values: Maj@KのK値のリスト
+        num_samples: サンプリング数
+    
+    Returns:
+        Maj@Kメトリクスのリスト
+    """
+    return create_sampling_metrics(base_metric, k_values, num_samples, metric_type="maj")
