@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 from unittest.mock import Mock
 
-from lighteval.metrics.passk_utils import (
+from lighteval.metrics.sample_metric_utils import (
     estimate_pass_at_k,
     create_passk_metric_fn,
     create_passk_metrics,

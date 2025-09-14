@@ -6,7 +6,7 @@ import pytest
 import numpy as np
 from unittest.mock import Mock
 
-from lighteval.metrics.passk_utils import (
+from lighteval.metrics.sample_metric_utils import (
     hash_multiple_extractions,
     get_extracted_results,
     is_extraction_compatible,
@@ -183,9 +183,9 @@ class TestCreateMajKMetrics:
     def test_create_multiple_k_values(self):
         """Test creating metrics for multiple k values."""
         # Mock is_extraction_compatible to return True
-        import lighteval.metrics.passk_utils as passk_utils
-        original_is_compatible = passk_utils.is_extraction_compatible
-        passk_utils.is_extraction_compatible = Mock(return_value=True)
+        import lighteval.metrics.sample_metric_utils as sample_metric_utils
+        original_is_compatible = sample_metric_utils.is_extraction_compatible
+        sample_metric_utils.is_extraction_compatible = Mock(return_value=True)
         
         try:
             k_values = [1, 3, 5]
@@ -210,14 +210,14 @@ class TestCreateMajKMetrics:
                 assert metric.higher_is_better is True
         finally:
             # Restore original function
-            passk_utils.is_extraction_compatible = original_is_compatible
+            sample_metric_utils.is_extraction_compatible = original_is_compatible
     
     def test_incompatible_metric_raises_error(self):
         """Test that incompatible metric raises error."""
         # Mock is_extraction_compatible to return False
-        import lighteval.metrics.passk_utils as passk_utils
-        original_is_compatible = passk_utils.is_extraction_compatible
-        passk_utils.is_extraction_compatible = Mock(return_value=False)
+        import lighteval.metrics.sample_metric_utils as sample_metric_utils
+        original_is_compatible = sample_metric_utils.is_extraction_compatible
+        sample_metric_utils.is_extraction_compatible = Mock(return_value=False)
         
         try:
             k_values = [1, 3]
@@ -227,7 +227,7 @@ class TestCreateMajKMetrics:
                 create_majk_metrics(self.base_metric, k_values, num_samples)
         finally:
             # Restore original function
-            passk_utils.is_extraction_compatible = original_is_compatible
+            sample_metric_utils.is_extraction_compatible = original_is_compatible
 
 
 class TestCreateSamplingMetrics:
@@ -254,9 +254,9 @@ class TestCreateSamplingMetrics:
     def test_maj_metrics_creation(self):
         """Test creating Maj@K metrics."""
         # Mock is_extraction_compatible to return True
-        import lighteval.metrics.passk_utils as passk_utils
-        original_is_compatible = passk_utils.is_extraction_compatible
-        passk_utils.is_extraction_compatible = Mock(return_value=True)
+        import lighteval.metrics.sample_metric_utils as sample_metric_utils
+        original_is_compatible = sample_metric_utils.is_extraction_compatible
+        sample_metric_utils.is_extraction_compatible = Mock(return_value=True)
         
         try:
             k_values = [1, 3]
@@ -269,4 +269,4 @@ class TestCreateSamplingMetrics:
             assert metrics[1].metric_name == "test_metric_maj@3:10"
         finally:
             # Restore original function
-            passk_utils.is_extraction_compatible = original_is_compatible
+            sample_metric_utils.is_extraction_compatible = original_is_compatible
