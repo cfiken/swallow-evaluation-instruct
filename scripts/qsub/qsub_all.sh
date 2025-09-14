@@ -164,3 +164,5 @@ qsub_task en mmlu_pro
 # qsub_task en humaneval
 # qsub_task en humanevalplus
 # qsub_task ja jgpqa_diamond
+# qsub_task ja jamcqa
+# qsub_task ja jamcqa_cot

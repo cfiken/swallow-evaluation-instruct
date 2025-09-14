@@ -22,3 +22,5 @@ en_livecodebench_v5_v6,lcb:codegeneration_v5_v6,en/livecodebench_v5_v6,lighteval
 en_humaneval,humaneval,en/humaneval,lighteval,01:00:00,04:00:00,01:00:00,04:00:00
 en_humanevalplus,humanevalplus,en/humanevalplus,lighteval,03:00:00,06:00:00,03:00:00,06:00:00
 ja_jgpqa_diamond,jgpqa:diamond,ja/jgpqa_diamond,lighteval,00:30:00,02:00:00,00:30:00,02:00:00
+ja_jamcqa,jamcqa,ja/jamcqa,lighteval,02:00:00,02:00:00,02:00:00,02:00:00
+ja_jamcqa_cot,jamcqa_cot,ja/jamcqa_cot,lighteval,02:00:00,02:00:00,02:00:00,02:00:00
