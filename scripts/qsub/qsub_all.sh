@@ -139,6 +139,7 @@ echo "🚀 Submitting tasks..."
 ## Japanese
 qsub_task ja gpqa
 qsub_task ja jemhopqa_cot
+qsub_task ja jamcqa
 qsub_task ja math_100
 qsub_task ja mmlu_prox
 qsub_task ja mtbench
@@ -159,10 +160,9 @@ qsub_task en mmlu_pro
 ## Optional
 # qsub_task ja mmlu
 # qsub_task ja jemhopqa
+# qsub_task ja jamcqa_cot
 # qsub_task en mmlu
 # qsub_task en mmlu_prox
 # qsub_task en humaneval
 # qsub_task en humanevalplus
 # qsub_task ja jgpqa_diamond
-# qsub_task ja jamcqa
-# qsub_task ja jamcqa_cot
