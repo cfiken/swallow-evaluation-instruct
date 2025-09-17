@@ -117,50 +117,6 @@ def get_extracted_results(temp_doc) -> list:
     return []
 
 
-def is_extraction_compatible(base_metric: SampleLevelMetric) -> bool:
-    """base_metricがMaj@Kと互換性があるかチェック（関数解析ベース）
-    
-    Args:
-        base_metric: チェック対象のメトリクス
-        
-    Returns:
-        bool: 互換性があるかどうか
-    """
-    import inspect
-    
-    # メトリクス名からの推測（最初にチェック）
-    if "extractive" in base_metric.metric_name.lower():
-        return True
-    
-    # sample_level_fn が関数オブジェクトの場合、__name__ をチェック
-    if hasattr(base_metric.sample_level_fn, '__name__'):
-        func_name = base_metric.sample_level_fn.__name__
-        if "extractive" in func_name.lower() or "extract" in func_name.lower():
-            return True
-    
-    try:
-        # sample_level_fnのソースコードを取得
-        if hasattr(base_metric.sample_level_fn, '__code__') and base_metric.sample_level_fn.__code__ is not None:
-            source = inspect.getsource(base_metric.sample_level_fn)
-            
-            # 抽出系の特徴を検索
-            extraction_indicators = [
-                "extracted_predictions",
-                "extracted_prediction", 
-                "extract_target_from_pred",
-                "formatted_doc.specific"
-            ]
-            
-            for indicator in extraction_indicators:
-                if indicator in source:
-                    return True
-                
-    except Exception:
-        # ソース取得に失敗した場合は継続
-        pass
-    
-    return False
-
 def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_type: str) -> callable:
     """Pass@KとMaj@K共通のメトリクス関数作成
     
@@ -172,6 +128,11 @@ def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_typ
     Returns:
         サンプリングベースのメトリクス関数
     """
+    
+    supports_extracted = getattr(base_metric, "supports_return_extracted_predictions", False)
+    if not supports_extracted and metric_type == "maj":
+        raise ValueError("Metrics declaring supports_return_extracted_predictions=True must be used for Maj@K.")
+    
     def sampling_metric_fn(golds: List[str], predictions: List[str], formatted_doc: Doc, **kwargs) -> float:
         if len(predictions) < k:
             raise ValueError(f"Number of predictions ({len(predictions)}) is less than k ({k}) for {metric_type}@{k}")
@@ -190,21 +151,31 @@ def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_typ
             
         elif metric_type == "maj":
             # Maj@K計算
-            
+
             # counts_dictとcorrect_dictを作成
             counts_dict = defaultdict(int)
-            correct_dict = {}            
+            correct_dict = {}
             for pred in predictions:
                 temp_doc = copy.deepcopy(formatted_doc)
-                score = base_metric.sample_level_fn(golds=golds, predictions=[pred], formatted_doc=temp_doc, **kwargs)
+                score, extracted_list = base_metric.sample_level_fn(
+                    golds=golds,
+                    predictions=[pred],
+                    formatted_doc=temp_doc,
+                    return_extracted_predictions=True,
+                    **kwargs,
+                )
                 is_correct = bool(score)
                 
                 # 抽出結果の取得
-                extracted_list = get_extracted_results(temp_doc)
-                hashed_result = hash_multiple_extractions(extracted_list)                
+                if extracted_list is None:
+                    extracted_list = []
+                elif not isinstance(extracted_list, list):
+                    extracted_list = list(extracted_list)
+                
+                hashed_result = hash_multiple_extractions(extracted_list)
                 counts_dict[hashed_result] += 1
                 correct_dict[hashed_result] = is_correct
-            
+
             # Maj@K計算
             result = maj_at_k_exact_dp_scipy(counts_dict, correct_dict, k)
         else:
@@ -261,10 +232,13 @@ def create_sampling_metrics(base_metric: SampleLevelMetric, k_values: List[int],
     """
     assert base_metric.use_case == MetricUseCase.ACCURACY, "Base metric must be an accuracy-type metric."
 
-    # Maj@Kの場合は事前に互換性をチェック
-    if metric_type == "maj" and not is_extraction_compatible(base_metric):
-        raise ValueError(f"Base metric '{base_metric.metric_name}' is not compatible with Maj@K. "
-                        f"Maj@K requires metrics that set extracted_predictions in formatted_doc.specific.")
+    # Maj@Kの場合は抽出結果取得に対応しているかをチェック
+    if metric_type == "maj" and not getattr(base_metric, "supports_return_extracted_predictions", False):
+        raise ValueError(
+            f"Base metric '{base_metric.metric_name}' is not compatible with Maj@K. "
+            f"Set supports_return_extracted_predictions=True and implement the optional "
+            f"return_extracted_predictions interface to use Maj@K."
+        )
 
     metrics = []
     for k in k_values:

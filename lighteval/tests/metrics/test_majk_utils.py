@@ -9,7 +9,6 @@ from unittest.mock import Mock
 from lighteval.metrics.sample_metric_utils import (
     hash_multiple_extractions,
     get_extracted_results,
-    is_extraction_compatible,
     create_majk_metric_fn,
     create_majk_metrics,
     create_sampling_metrics,
@@ -87,29 +86,6 @@ class TestGetExtractedResults:
         assert result == ["7"]
 
 
-class TestIsExtractionCompatible:
-    """Test the is_extraction_compatible function."""
-    
-    def test_extractive_metric_name(self):
-        """Test metric with 'extractive' in name."""
-        metric = Mock(spec=SampleLevelMetric)
-        metric.metric_name = "extractive_match"
-        metric.sample_level_fn = Mock()
-        # Mock __code__ attribute to avoid source code inspection
-        metric.sample_level_fn.__code__ = None
-        result = is_extraction_compatible(metric)
-        assert result is True
-    
-    def test_non_extractive_metric_name(self):
-        """Test metric without extractive indicators."""
-        metric = Mock(spec=SampleLevelMetric)
-        metric.metric_name = "exact_match"
-        metric.sample_level_fn = Mock()
-        metric.sample_level_fn.__name__ = "exact_match_fn"
-        result = is_extraction_compatible(metric)
-        assert result is False
-
-
 class TestCreateMajKMetricFn:
     """Test the create_majk_metric_fn function."""
     
@@ -119,6 +95,7 @@ class TestCreateMajKMetricFn:
         self.base_metric = Mock(spec=SampleLevelMetric)
         self.base_metric.sample_level_fn = Mock()
         self.base_metric.use_case = MetricUseCase.ACCURACY
+        self.base_metric.supports_return_extracted_predictions = True
         
         # Create a mock formatted_doc
         self.formatted_doc = Mock(spec=Doc)
@@ -134,25 +111,39 @@ class TestCreateMajKMetricFn:
     def test_majk_calculation_with_extractions(self):
         """Test Maj@K calculation with extracted results."""
         # Mock the base metric to return different scores and extractions
-        def mock_sample_level_fn(golds, predictions, formatted_doc, **kwargs):
+        def mock_sample_level_fn(
+            golds,
+            predictions,
+            formatted_doc,
+            return_extracted_predictions=False,
+            **kwargs,
+        ):
             pred = predictions[0]
             # Set up mock extraction results - use a real dict instead of Mock
             if not hasattr(formatted_doc, 'specific') or formatted_doc.specific is None:
                 formatted_doc.specific = {}
             
             if pred == "answer is 5":
-                formatted_doc.specific["extracted_predictions"] = ["5"]
-                return 1.0  # Correct
+                extracted = ["5"]
+                formatted_doc.specific["extracted_predictions"] = extracted
+                score = 1.0  # Correct
             elif pred == "answer is 3":
-                formatted_doc.specific["extracted_predictions"] = ["3"]
-                return 0.0  # Incorrect
+                extracted = ["3"]
+                formatted_doc.specific["extracted_predictions"] = extracted
+                score = 0.0  # Incorrect
             elif pred == "the result is 5":
-                formatted_doc.specific["extracted_predictions"] = ["5"]
-                return 1.0  # Correct
+                extracted = ["5"]
+                formatted_doc.specific["extracted_predictions"] = extracted
+                score = 1.0  # Correct
             else:
-                formatted_doc.specific["extracted_predictions"] = [pred]
-                return 0.0
-        
+                extracted = [pred]
+                formatted_doc.specific["extracted_predictions"] = extracted
+                score = 0.0
+
+            if return_extracted_predictions:
+                return score, extracted
+            return score
+
         self.base_metric.sample_level_fn.side_effect = mock_sample_level_fn
         
         # Initialize formatted_doc.specific as a real dict
@@ -179,55 +170,42 @@ class TestCreateMajKMetrics:
         self.base_metric.use_case = MetricUseCase.ACCURACY
         self.base_metric.sample_level_fn = Mock()
         self.base_metric.corpus_level_fn = np.mean
+        self.base_metric.supports_return_extracted_predictions = False
     
     def test_create_multiple_k_values(self):
         """Test creating metrics for multiple k values."""
-        # Mock is_extraction_compatible to return True
-        import lighteval.metrics.sample_metric_utils as sample_metric_utils
-        original_is_compatible = sample_metric_utils.is_extraction_compatible
-        sample_metric_utils.is_extraction_compatible = Mock(return_value=True)
-        
-        try:
-            k_values = [1, 3, 5]
-            num_samples = 10
-            
-            metrics = create_majk_metrics(self.base_metric, k_values, num_samples)
-            
-            assert len(metrics) == 3
-            
-            # Check metric names
-            expected_names = [
-                "extractive_test_maj@1:10",
-                "extractive_test_maj@3:10",
-                "extractive_test_maj@5:10"
-            ]
-            
-            for i, metric in enumerate(metrics):
-                assert isinstance(metric, SampleLevelMetric)
-                assert metric.metric_name == expected_names[i]
-                assert metric.category == MetricCategory.GENERATIVE_SAMPLING
-                assert metric.use_case == MetricUseCase.ACCURACY
-                assert metric.higher_is_better is True
-        finally:
-            # Restore original function
-            sample_metric_utils.is_extraction_compatible = original_is_compatible
-    
+        self.base_metric.supports_return_extracted_predictions = True
+
+        k_values = [1, 3, 5]
+        num_samples = 10
+
+        metrics = create_majk_metrics(self.base_metric, k_values, num_samples)
+
+        assert len(metrics) == 3
+
+        # Check metric names
+        expected_names = [
+            "extractive_test_maj@1:10",
+            "extractive_test_maj@3:10",
+            "extractive_test_maj@5:10"
+        ]
+
+        for i, metric in enumerate(metrics):
+            assert isinstance(metric, SampleLevelMetric)
+            assert metric.metric_name == expected_names[i]
+            assert metric.category == MetricCategory.GENERATIVE_SAMPLING
+            assert metric.use_case == MetricUseCase.ACCURACY
+            assert metric.higher_is_better is True
+
     def test_incompatible_metric_raises_error(self):
         """Test that incompatible metric raises error."""
-        # Mock is_extraction_compatible to return False
-        import lighteval.metrics.sample_metric_utils as sample_metric_utils
-        original_is_compatible = sample_metric_utils.is_extraction_compatible
-        sample_metric_utils.is_extraction_compatible = Mock(return_value=False)
-        
-        try:
-            k_values = [1, 3]
-            num_samples = 10
-            
-            with pytest.raises(ValueError, match="is not compatible with Maj@K"):
-                create_majk_metrics(self.base_metric, k_values, num_samples)
-        finally:
-            # Restore original function
-            sample_metric_utils.is_extraction_compatible = original_is_compatible
+        self.base_metric.supports_return_extracted_predictions = False
+
+        k_values = [1, 3]
+        num_samples = 10
+
+        with pytest.raises(ValueError, match="is not compatible with Maj@K"):
+            create_majk_metrics(self.base_metric, k_values, num_samples)
 
 
 class TestCreateSamplingMetrics:
@@ -239,6 +217,7 @@ class TestCreateSamplingMetrics:
         self.base_metric.metric_name = "test_metric"
         self.base_metric.use_case = MetricUseCase.ACCURACY
         self.base_metric.corpus_level_fn = np.mean
+        self.base_metric.supports_return_extracted_predictions = False
     
     def test_pass_metrics_creation(self):
         """Test creating Pass@K metrics."""
@@ -253,20 +232,13 @@ class TestCreateSamplingMetrics:
     
     def test_maj_metrics_creation(self):
         """Test creating Maj@K metrics."""
-        # Mock is_extraction_compatible to return True
-        import lighteval.metrics.sample_metric_utils as sample_metric_utils
-        original_is_compatible = sample_metric_utils.is_extraction_compatible
-        sample_metric_utils.is_extraction_compatible = Mock(return_value=True)
-        
-        try:
-            k_values = [1, 3]
-            num_samples = 10
-            
-            metrics = create_sampling_metrics(self.base_metric, k_values, num_samples, metric_type="maj")
-            
-            assert len(metrics) == 2
-            assert metrics[0].metric_name == "test_metric_maj@1:10"
-            assert metrics[1].metric_name == "test_metric_maj@3:10"
-        finally:
-            # Restore original function
-            sample_metric_utils.is_extraction_compatible = original_is_compatible
+        self.base_metric.supports_return_extracted_predictions = True
+
+        k_values = [1, 3]
+        num_samples = 10
+
+        metrics = create_sampling_metrics(self.base_metric, k_values, num_samples, metric_type="maj")
+
+        assert len(metrics) == 2
+        assert metrics[0].metric_name == "test_metric_maj@1:10"
+        assert metrics[1].metric_name == "test_metric_maj@3:10"
