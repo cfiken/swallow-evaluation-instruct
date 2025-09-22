@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")"
+
 # このスクリプトは qsub_all.shを複数モデルに対して実行するためのものです。
-# 現在はabci,tsubameのみ対応しています。
+# 現在はabci,tsubameのみ対応しています。(localは非対応)
 
 # 使い方
-# 1. qsub_all.shで評価するタスクのみをコメントアウト (qsub_task ja gpqaなど)
+# 1. qsub_all.shの最下部で評価するタスクのみをコメントアウト (qsub_task ja gpqaなど)
 # 2. 下の MODEL_NAMES に評価したいモデル名を追加
 # 3. scripts/generation_settings/generation_settings.json に評価したいモデルを追加 ( 追加する場合は他のモデルの設定を参考に。node_kindは["rt_HG", "rt_HF", "rt_HC"]のいずれかを指定, custom_settingsは必要に応じて設定名を入れる。node_kindはtsubameで使う場合も[rt_HG, rt_HF, rt_HC]で指定し、qsub_multi内で自動で[node_q, node_f, cpu_16]に変換されます。)
 # 4. bash scripts/qsub/qsub_multi.sh
@@ -14,14 +15,14 @@ cd "$(dirname "$0")"
 
 # 評価したいモデル名を改行区切りで追加
 MODEL_NAMES=(
-  "Qwen/Qwen3-235B-A22B-Instruct-2507"
-  "Qwen/Qwen3-235B-A22B-Thinking-2507"
+  "tokyotech-llm/example-8B-Instruct"
+  "tokyotech-llm/example-12B-Instruct"
 ) 
 
 ######## Common Settings ########
-PROVIDER="vllm"                 # ["vllm"] (現状vllmのみ,openai,deepinfraは非対応)
-SERVICE="abci"                  # ["abci"]
-PREDOWNLOAD_MODEL="true"
+PROVIDER="vllm"                 # ["vllm"] 
+SERVICE="abci"                  # ["abci","tsubame"]
+PREDOWNLOAD_MODEL="true"        # ["true","false"] falseだと大量のモデルを同時にダウンロードすることになり、HFのレートリミットに引っかかる可能性がある
 MAX_SAMPLES=""
 PRIORITY="-5"
 CUDA_VISIBLE_DEVICES=""
@@ -51,12 +52,29 @@ fi
 job_idx=0
 for key in "${ALLOW_KEYS[@]}"; do
   # モデル名がJSONに存在しない場合はストップ
+  model="$key"
   if ! jq -e --arg k "$key" 'has($k)' "$JOBS_FILE" >/dev/null; then
-    echo "⚠️  ERROR: key \"$key\" not found in $JOBS_FILE"
-    exit 1
+    echo "⚠️  ERROR: key \"$key\" not found in $JOBS_FILE" >&2
+
+    # 「tokyotech-llm/xxxx-iterNNN」形式なら、-iter以降を落として再チェック
+    if [[ "$key" =~ ^tokyotech-llm/.+-iter[0-9]+$ ]]; then
+      alt_key="${key%-iter*}"
+
+      if jq -e --arg k "$alt_key" 'has($k)' "$JOBS_FILE" >/dev/null; then
+        echo "   ⚠️  Note: using alternative key \"$alt_key\" instead." >&2
+        key="$alt_key"   # 以降このキーで参照
+      else
+        echo "❌ Also not found with alternative key \"$alt_key\". Exiting." >&2
+        exit 1
+      fi
+
+    else
+      echo "❌ No matching fallback rule for \"$key\". Exiting." >&2
+      exit 1
+    fi
   fi
 
-  echo "======== 🧩 Job #$job_idx — $key ========"
+  echo "======== 🧩 Job #$job_idx — $model ========"
   NK="$(jq -er --arg k "$key" '.[$k].node_kind' "$JOBS_FILE")" || {
     echo "❌ Error: key \"$key\" has no 'node_kind' in $JOBS_FILE" >&2
     exit 1
@@ -77,7 +95,7 @@ for key in "${ALLOW_KEYS[@]}"; do
 
   # 環境変数として定義して、qsub_all.shではこの設定で上書きして実行する
   envs=(
-    "ENV_MODEL_NAME=$key"             
+    "ENV_MODEL_NAME=$model"     
     "ENV_NODE_KIND=$NK"
     "ENV_CUSTOM_SETTINGS=$CUSTOM_SETTINGS"
     "ENV_PROVIDER=$PROVIDER"

@@ -82,6 +82,14 @@
   "microsoft/phi-4":{
     "node_kind":"rt_HG"
   },
+  "nvidia/Llama-3.1-Nemotron-Nano-8B-v1":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "nvidia/Llama-3_3-Nemotron-Super-49B-v1":{
+    "node_kind":"rt_HF",
+    "custom_settings":"deepseek_r1_markup"
+  },
   "Qwen/Qwen2.5-7B-Instruct":{
     "node_kind":"rt_HG"
   },
@@ -142,5 +150,37 @@
   "tokyotech-llm/Llama-3.3-Swallow-70B-Instruct-v0.4":{
     "node_kind":"rt_HF",
     "custom_settings":"default"
+  },
+  "tokyotech-llm/Qwen3-8B-LR-ablation-LR1.0E-5":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "tokyotech-llm/Qwen3-8B-LR-ablation-LR1.5E-5":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "tokyotech-llm/Qwen3-8B-LR-ablation-LR2.5E-5":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "tokyotech-llm/Qwen3-8B-ablation-exp4-without-open-code-reasoning-LR1.5E-5":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "tokyotech-llm/Qwen3-8B-ablation-exp5-open-math-reasoning-think-trajectory":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "tokyotech-llm/Qwen3-8B-ablation-exp6-open-science-reasoning":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "tokyotech-llm/Qwen3-8B-ablation-exp8-without-cosmopedia":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "tokyotech-llm/Qwen3-Swallow-8B-v0.1-LR1.5E-5":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
   }
 }
