@@ -119,6 +119,34 @@
     "node_kind":"rt_HF",
     "custom_settings":"reasoning"
   },
+  "Qwen/Qwen3-0.6B-Base":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "Qwen/Qwen3-1.7B-Base":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "Qwen/Qwen3-4B-Base":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "Qwen/Qwen3-8B-Base":{
+    "node_kind":"rt_HG",
+    "custom_settings":"reasoning"
+  },
+  "Qwen/Qwen3-14B-Base":{
+    "node_kind":"rt_HF",
+    "custom_settings":"reasoning"
+  },
+  "Qwen/Qwen3-30B-A3B-Base":{
+    "node_kind":"rt_HF",
+    "custom_settings":"reasoning"
+  },
+  "Qwen/Qwen3-30B-A3B":{
+    "node_kind":"rt_HF",
+    "custom_settings":"reasoning"
+  },
   "Qwen/Qwen3-235B-A22B-Instruct-2507":{
     "node_kind":"rt_HF",
     "custom_settings":"default"
