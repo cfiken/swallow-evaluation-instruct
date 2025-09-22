@@ -8,8 +8,7 @@ from unittest.mock import Mock
 
 from lighteval.metrics.sample_metric_utils import (
     hash_multiple_extractions,
-    get_extracted_results,
-    create_majk_metric_fn,
+    create_sampling_metric_fn,
     create_majk_metrics,
     create_sampling_metrics,
 )
@@ -47,45 +46,6 @@ class TestHashMultipleExtractions:
         assert result1 == result2  # Should be same due to sorting
 
 
-class TestGetExtractedResults:
-    """Test the get_extracted_results function."""
-    
-    def test_no_specific(self):
-        """Test when doc has no specific attribute."""
-        doc = Mock()
-        del doc.specific  # Remove specific attribute
-        result = get_extracted_results(doc)
-        assert result == []
-    
-    def test_empty_specific(self):
-        """Test when doc.specific is empty."""
-        doc = Mock()
-        doc.specific = {}
-        result = get_extracted_results(doc)
-        assert result == []
-    
-    def test_extracted_predictions_list(self):
-        """Test with extracted_predictions as list."""
-        doc = Mock()
-        doc.specific = {"extracted_predictions": ["5", "3"]}
-        result = get_extracted_results(doc)
-        assert result == ["5", "3"]
-    
-    def test_extracted_predictions_single(self):
-        """Test with extracted_predictions as single value."""
-        doc = Mock()
-        doc.specific = {"extracted_predictions": "5"}
-        result = get_extracted_results(doc)
-        assert result == ["5"]
-    
-    def test_extracted_prediction_variant(self):
-        """Test with extracted_prediction (singular) variant."""
-        doc = Mock()
-        doc.specific = {"extracted_prediction": ["7"]}
-        result = get_extracted_results(doc)
-        assert result == ["7"]
-
-
 class TestCreateMajKMetricFn:
     """Test the create_majk_metric_fn function."""
     
@@ -102,7 +62,7 @@ class TestCreateMajKMetricFn:
     
     def test_insufficient_predictions_raises_error(self):
         """Test that insufficient predictions raises ValueError."""
-        majk_fn = create_majk_metric_fn(self.base_metric, k=5)
+        majk_fn = create_sampling_metric_fn(self.base_metric, k=5, metric_type="maj")
         predictions = ["A", "B", "C"]  # Only 3 predictions, but k=5
         
         with pytest.raises(ValueError, match="Number of predictions \\(3\\) is less than k \\(5\\)"):
@@ -148,8 +108,8 @@ class TestCreateMajKMetricFn:
         
         # Initialize formatted_doc.specific as a real dict
         self.formatted_doc.specific = {}
-        
-        majk_fn = create_majk_metric_fn(self.base_metric, k=3)
+
+        majk_fn = create_sampling_metric_fn(self.base_metric, k=3, metric_type="maj")
         predictions = ["answer is 5", "answer is 3", "the result is 5"]
         
         result = majk_fn(golds=["5"], predictions=predictions, formatted_doc=self.formatted_doc)

@@ -7,15 +7,15 @@ import numpy as np
 from unittest.mock import Mock
 
 from lighteval.metrics.sample_metric_utils import (
-    estimate_pass_at_k,
-    create_passk_metric_fn,
     create_passk_metrics,
+    create_sampling_metric_fn
 )
 from lighteval.metrics.utils.metric_utils import (
     MetricCategory,
     MetricUseCase,
     SampleLevelMetric,
 )
+from lighteval.metrics.pass_at_k_solutions import estimate_pass_at_k
 from lighteval.tasks.requests import Doc
 
 
@@ -123,8 +123,8 @@ class TestCreatePassKMetricFn:
         """Test when all predictions are correct."""
         # Mock the base metric to always return 1.0 (correct)
         self.base_metric.sample_level_fn.return_value = 1.0
-        
-        passk_fn = create_passk_metric_fn(self.base_metric, k=3)
+
+        passk_fn = create_sampling_metric_fn(self.base_metric, k=3, metric_type="pass")
         predictions = ["A", "A", "A", "A", "A"]  # 5 predictions, all correct
 
         result = passk_fn(golds=["A"], predictions=predictions, formatted_doc=self.formatted_doc)
@@ -137,8 +137,8 @@ class TestCreatePassKMetricFn:
         # Mock the base metric to return 1.0 for first 2 calls, 0.0 for the rest
         # Need extra call for final base_metric execution to save details
         self.base_metric.sample_level_fn.side_effect = [1.0, 1.0, 0.0, 0.0, 0.0, 1.0]
-        
-        passk_fn = create_passk_metric_fn(self.base_metric, k=3)
+
+        passk_fn = create_sampling_metric_fn(self.base_metric, k=3, metric_type="pass")
         predictions = ["A", "A", "B", "C", "D"]  # 5 predictions, 2 correct
         
         result = passk_fn(golds=["A"], predictions=predictions, formatted_doc=self.formatted_doc)
@@ -150,8 +150,8 @@ class TestCreatePassKMetricFn:
         """Test when no predictions are correct."""
         # Mock the base metric to always return 0.0 (incorrect)
         self.base_metric.sample_level_fn.return_value = 0.0
-        
-        passk_fn = create_passk_metric_fn(self.base_metric, k=3)
+
+        passk_fn = create_sampling_metric_fn(self.base_metric, k=3, metric_type="pass")
         predictions = ["B", "C", "D", "E", "F"]  # 5 predictions, none correct
         
         result = passk_fn(golds=["A"], predictions=predictions, formatted_doc=self.formatted_doc)
@@ -161,7 +161,7 @@ class TestCreatePassKMetricFn:
     
     def test_insufficient_predictions_raises_error(self):
         """Test that insufficient predictions raises ValueError."""
-        passk_fn = create_passk_metric_fn(self.base_metric, k=5)
+        passk_fn = create_sampling_metric_fn(self.base_metric, k=5, metric_type="pass")
         predictions = ["A", "B", "C"]  # Only 3 predictions, but k=5
         
         with pytest.raises(ValueError, match="Number of predictions \\(3\\) is less than k \\(5\\)"):
@@ -171,8 +171,8 @@ class TestCreatePassKMetricFn:
         """Test when number of predictions equals k."""
         # Need extra call for final base_metric execution to save details
         self.base_metric.sample_level_fn.side_effect = [1.0, 0.0, 0.0, 1.0]
-        
-        passk_fn = create_passk_metric_fn(self.base_metric, k=3)
+
+        passk_fn = create_sampling_metric_fn(self.base_metric, k=3, metric_type="pass")
         predictions = ["A", "B", "C"]  # Exactly 3 predictions for k=3
         
         result = passk_fn(golds=["A"], predictions=predictions, formatted_doc=self.formatted_doc)

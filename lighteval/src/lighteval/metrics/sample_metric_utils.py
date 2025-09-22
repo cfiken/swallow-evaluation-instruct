@@ -30,7 +30,7 @@ from typing import List, Literal
 from collections import defaultdict
 import copy
 import hashlib
-import numpy as np
+from lighteval.metrics.pass_at_k_solutions import estimate_pass_at_k
 
 from lighteval.metrics.utils.metric_utils import (
     MetricUseCase,
@@ -40,12 +40,6 @@ from lighteval.metrics.utils.metric_utils import (
 from lighteval.metrics.maj_at_k_solutions import maj_at_k_exact_dp_scipy
 from lighteval.tasks.requests import Doc
 
-
-def estimate_pass_at_k(num_samples: int, num_correct: int, k: int) -> float:
-    """Estimates pass@k for a single problem."""
-    if num_samples - num_correct < k:
-        return 1.0
-    return 1.0 - np.prod(1.0 - k / np.arange(num_samples - num_correct + 1, num_samples + 1))
 
 def powers_of_two_up_to_n(N):
     """Generates all powers of two up to a given number N.
@@ -84,38 +78,6 @@ def hash_multiple_extractions(extracted_list):
     sorted_extractions = sorted([str(x) for x in extracted_list])
     combined = "|".join(sorted_extractions)
     return f"MULTI_{hashlib.md5(combined.encode()).hexdigest()[:8]}"
-
-
-def get_extracted_results(temp_doc) -> list:
-    """formatted_doc.specificから抽出結果を取得（表記揺れ対応）
-    
-    Args:
-        temp_doc: 処理済みのDoc
-        
-    Returns:
-        list: 抽出結果のリスト
-    """
-    if not (hasattr(temp_doc, 'specific') and temp_doc.specific):
-        return []
-    
-    # 可能な表記のリスト（優先順位順）
-    possible_keys = [
-        "extracted_predictions",
-        "extracted_prediction",
-        "extracted_preds", 
-        "extracted_pred"
-    ]
-    
-    for key in possible_keys:
-        if key in temp_doc.specific and temp_doc.specific[key]:
-            results = temp_doc.specific[key]
-            # リストでない場合はリストに変換
-            if not isinstance(results, list):
-                results = [results]
-            return results
-    
-    return []
-
 
 def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_type: str) -> callable:
     """Pass@KとMaj@K共通のメトリクス関数作成
@@ -188,35 +150,6 @@ def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_typ
     
     return sampling_metric_fn
 
-
-def create_passk_metric_fn(base_metric: SampleLevelMetric, k: int) -> callable:
-    """
-    SampleLevelMetricをPass@K対応に変換する関数を作成します。
-    
-    Args:
-        base_metric: 基となるSampleLevelMetric
-        k: Pass@Kのk値
-    
-    Returns:
-        Pass@K対応のメトリクス関数
-    """
-    return create_sampling_metric_fn(base_metric, k, "pass")
-
-
-def create_majk_metric_fn(base_metric: SampleLevelMetric, k: int) -> callable:
-    """
-    SampleLevelMetricをMaj@K対応に変換する関数を作成します。
-    
-    Args:
-        base_metric: 基となるSampleLevelMetric
-        k: Maj@Kのk値
-    
-    Returns:
-        Maj@K対応のメトリクス関数
-    """
-    return create_sampling_metric_fn(base_metric, k, "maj")
-
-
 def create_sampling_metrics(base_metric: SampleLevelMetric, k_values: List[int], num_samples: int, metric_type: Literal["pass", "maj"]) -> List[SampleLevelMetric]:
     """
     SampleLevelMetricから複数のK値に対してサンプリングベースのメトリクス（Pass@KまたはMaj@K）を作成します。
@@ -244,17 +177,15 @@ def create_sampling_metrics(base_metric: SampleLevelMetric, k_values: List[int],
     for k in k_values:
         # メトリクスタイプに応じて適切な関数を選択
         if metric_type == "pass":
-            sampling_fn = create_passk_metric_fn(base_metric, k)
-            metric_suffix = "pass"
+            sampling_fn = create_sampling_metric_fn(base_metric, k, metric_type="pass")
         elif metric_type == "maj":
-            sampling_fn = create_majk_metric_fn(base_metric, k)
-            metric_suffix = "maj"
+            sampling_fn = create_sampling_metric_fn(base_metric, k, metric_type="maj")
         else:
             raise ValueError(f"Unknown metric_type: {metric_type}")
         
         # メトリクス名を生成
         base_name = base_metric.metric_name
-        metric_name = f"{base_name}_{metric_suffix}@{k}:{num_samples}"
+        metric_name = f"{base_name}_{metric_type}@{k}:{num_samples}"
         
         # SampleLevelMetricを作成
         metric = SampleLevelMetric(
