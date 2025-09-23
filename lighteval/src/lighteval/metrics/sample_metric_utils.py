@@ -29,7 +29,6 @@ that can be used across different benchmarks.
 from typing import List, Literal
 from collections import defaultdict
 import copy
-import hashlib
 from lighteval.metrics.pass_at_k_solutions import estimate_pass_at_k
 
 from lighteval.metrics.utils.metric_utils import (
@@ -60,8 +59,8 @@ def powers_of_two_up_to_n(N):
     return result
 
 
-def hash_multiple_extractions(extracted_list):
-    """複数抽出結果をハッシュ化
+def normalize_multiple_extractions(extracted_list) -> str:
+    """抽出結果をdeduplicateおよびstringに変換
     
     Args:
         extracted_list: 抽出結果のリスト
@@ -73,11 +72,16 @@ def hash_multiple_extractions(extracted_list):
         return "EMPTY"
     if len(extracted_list) == 1:
         return str(extracted_list[0])
-    
-    # 複数ある場合はソートしてハッシュ化
-    sorted_extractions = sorted([str(x) for x in extracted_list])
-    combined = "|".join(sorted_extractions)
-    return f"MULTI_{hashlib.md5(combined.encode()).hexdigest()[:8]}"
+
+    normalized = [str(x) for x in extracted_list]
+    unique_extractions = sorted(set(normalized))
+
+    if len(unique_extractions) == 1:
+        return unique_extractions[0]
+
+    # 複数ある場合は重複を除去したうえでソートして連結した文字列を返す
+    combined = "|".join(unique_extractions)
+    return combined
 
 def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_type: str) -> callable:
     """Pass@KとMaj@K共通のメトリクス関数作成
@@ -98,7 +102,9 @@ def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_typ
     def sampling_metric_fn(golds: List[str], predictions: List[str], formatted_doc: Doc, **kwargs) -> float:
         if len(predictions) < k:
             raise ValueError(f"Number of predictions ({len(predictions)}) is less than k ({k}) for {metric_type}@{k}")
-        
+
+        counts_freq_snapshot = None
+
         if metric_type == "pass":
             # Pass@K計算
             scores = []
@@ -134,18 +140,28 @@ def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_typ
                 elif not isinstance(extracted_list, list):
                     extracted_list = list(extracted_list)
                 
-                hashed_result = hash_multiple_extractions(extracted_list)
-                counts_dict[hashed_result] += 1
-                correct_dict[hashed_result] = is_correct
+                normalized_result = normalize_multiple_extractions(extracted_list)
+                counts_dict[normalized_result] += 1
+                correct_dict[normalized_result] = is_correct
 
             # Maj@K計算
             result = maj_at_k_exact_dp_scipy(counts_dict, correct_dict, k)
+            counts_freq_snapshot = [
+                {"answer": key, "count": int(value)}
+                for key, value in sorted(counts_dict.items())
+            ]
         else:
             raise ValueError(f"Unknown metric_type: {metric_type}")
-        
-        # 最後に全predictionsでbase_metricを実行してformatted_doc.specificを正しく設定
+
+        # 全てのpredictionsでbase_metricを実行してformatted_doc.specificを正しく設定        
         _ = base_metric.sample_level_fn(golds=golds, predictions=predictions, formatted_doc=formatted_doc, **kwargs)
-        
+
+        # Maj@Kの場合，回答の頻度情報をformatted_doc.specific.extracted_predictions_freqに保存
+        if counts_freq_snapshot is not None:
+            if not hasattr(formatted_doc, "specific") or formatted_doc.specific is None:
+                formatted_doc.specific = {}
+            formatted_doc.specific["extracted_predictions_freq"] = counts_freq_snapshot
+
         return result
     
     return sampling_metric_fn

@@ -7,7 +7,7 @@ import numpy as np
 from unittest.mock import Mock
 
 from lighteval.metrics.sample_metric_utils import (
-    hash_multiple_extractions,
+    normalize_multiple_extractions,
     create_sampling_metric_fn,
     create_majk_metrics,
     create_sampling_metrics,
@@ -25,24 +25,23 @@ class TestHashMultipleExtractions:
     
     def test_empty_list(self):
         """Test with empty list."""
-        result = hash_multiple_extractions([])
+        result = normalize_multiple_extractions([])
         assert result == "EMPTY"
     
     def test_single_extraction(self):
         """Test with single extraction."""
-        result = hash_multiple_extractions(["5"])
+        result = normalize_multiple_extractions(["5"])
         assert result == "5"
     
     def test_multiple_extractions(self):
         """Test with multiple extractions."""
-        result = hash_multiple_extractions(["5", "3", "7"])
-        assert result.startswith("MULTI_")
-        assert len(result) == 14  # "MULTI_" + 8 character hash
-    
+        result = normalize_multiple_extractions(["5", "3", "7"])
+        assert result == "3|5|7"
+
     def test_same_extractions_same_hash(self):
         """Test that same extractions produce same hash."""
-        result1 = hash_multiple_extractions(["5", "3"])
-        result2 = hash_multiple_extractions(["3", "5"])  # Different order
+        result1 = normalize_multiple_extractions(["5", "3"])
+        result2 = normalize_multiple_extractions(["3", "5"])  # Different order
         assert result1 == result2  # Should be same due to sorting
 
 
@@ -117,6 +116,10 @@ class TestCreateMajKMetricFn:
         # Should be > 0 since "5" appears twice and is correct
         assert result > 0.0
         assert result <= 1.0
+        assert self.formatted_doc.specific["extracted_predictions_freq"] == [
+            {"answer": "3", "count": 1},
+            {"answer": "5", "count": 2},
+        ]
 
 
 class TestCreateMajKMetrics:
