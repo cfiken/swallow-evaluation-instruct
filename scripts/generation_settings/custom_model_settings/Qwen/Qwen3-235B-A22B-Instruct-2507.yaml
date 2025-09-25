@@ -1,0 +1,3 @@
+default:
+  reasoning_parser: "ignore"
+  version: "1"

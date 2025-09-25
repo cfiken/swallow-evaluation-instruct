@@ -28,3 +28,5 @@ ja_math_100_n16,math_100_japanese_N16,ja/math_100_n16,lighteval,08:00:00,24:00:0
 en_gpqa_diamond_n16,gpqa_N16:diamond,en/gpqa_diamond_n16,lighteval,08:00:00,24:00:00,08:00:00,24:00:00
 en_math_500_n16,math_500_N16,en/math_500_n16,lighteval,08:00:00,24:00:00,08:00:00,24:00:00
 en_aime_2024_2025_n16,aime_N16,en/aime_2024_2025_n16,lighteval,08:00:00,24:00:00,08:00:00,24:00:00
+ja_jamcqa,jamcqa,ja/jamcqa,lighteval,02:00:00,02:00:00,02:00:00,02:00:00
+ja_jamcqa_cot,jamcqa_cot,ja/jamcqa_cot,lighteval,02:00:00,02:00:00,02:00:00,02:00:00

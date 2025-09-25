@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # How-to-use: bash scripts/tsubame/qsub_all.sh
 set -euo pipefail
-
 ########################################################
 
 # Set Args
@@ -21,6 +20,19 @@ PRIORITY="-5"               # Default: "-5". A priority of the job. Note that do
 CUDA_VISIBLE_DEVICES=""     # Default: "". A CUDA_VISIBLE_DEVICES to use. [e.g. "0,1"] (Only for and absolutely necessary for local)
 
 #######################################################
+ENABLE_ENV="${1:-}" # qsub_multi.shから複数モデルを実行する場合に、環境変数で上書きするためのフラグ
+# Override with environment variables if enabled
+if [[ "$ENABLE_ENV" == "enable_env" ]]; then
+  NODE_KIND="$ENV_NODE_KIND"
+  MODEL_NAME="$ENV_MODEL_NAME"
+  PROVIDER="$ENV_PROVIDER"
+  CUSTOM_SETTINGS="$ENV_CUSTOM_SETTINGS"
+  PREDOWNLOAD_MODEL="$ENV_PREDOWNLOAD_MODEL"
+  MAX_SAMPLES="$ENV_MAX_SAMPLES"
+  SERVICE="$ENV_SERVICE"
+  PRIORITY="$ENV_PRIORITY"
+  CUDA_VISIBLE_DEVICES="$ENV_CUDA_VISIBLE_DEVICES"
+fi
 
 # Load .env and define dirs
 source "$(dirname "$0")/../../.env"
@@ -139,8 +151,8 @@ echo "🚀 Submitting tasks..."
 ## Japanese
 qsub_task ja gpqa
 qsub_task ja jemhopqa_cot
+qsub_task ja jamcqa
 qsub_task ja math_100
-qsub_task ja mmlu
 qsub_task ja mmlu_prox
 qsub_task ja mtbench
 qsub_task ja wmt20_en_ja
@@ -155,12 +167,14 @@ qsub_task en gpqa_diamond
 qsub_task en math_500
 qsub_task en aime_2024_2025
 qsub_task en livecodebench_v5_v6
-qsub_task en mmlu
 qsub_task en mmlu_pro
-qsub_task en mmlu_prox
 
 ## Optional
+# qsub_task ja mmlu
 # qsub_task ja jemhopqa
+# qsub_task ja jamcqa_cot
+# qsub_task en mmlu
+# qsub_task en mmlu_prox
 # qsub_task en humaneval
 # qsub_task en humanevalplus
 # qsub_task ja jgpqa_diamond

@@ -1167,7 +1167,28 @@ AGGREGATE_CONF = [
         'target': {
             'task_key': 'swallow|jgpqa:diamond|0'
         }
-    }
+    },
+    # JamC-QA
+    {
+        "display_name": "jamcqa",
+        "func": pick,
+        "func_args": {
+            'metric_key': 'extractive_match'
+        }, 
+        'target': {
+            'task_key': 'swallow|jamcqa|0'
+        }
+    },
+    {
+        "display_name": "jamcqa_cot",
+        "func": pick,
+        "func_args": {
+            'metric_key': 'extractive_match'
+        }, 
+        'target': {
+            'task_key': 'swallow|jamcqa_cot|0'
+        }
+    },
     # ここから下に新しいベンチマークを追加しないでください
 ]
 
@@ -1204,7 +1225,7 @@ lst_dict_sampling_metric_tasks = [
         "task_id": "swallow|aime_N{num_sample}|0",
         "metric_prefix": "extractive_match",
         "display_name": "aime_2024_2025_{metric}@{num_k}:{num_sample}",
-    },
+    }    
 ]
 for config in lst_dict_sampling_metric_tasks:
     task_id = config["task_id"]

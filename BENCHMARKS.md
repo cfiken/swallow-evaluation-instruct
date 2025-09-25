@@ -37,6 +37,20 @@ Swallowチームが実装したベンチマークの一覧は `lighteval tasks l
 * 派生版
     * CoTプロンプトを付けない `swallow|jemhopqa` があります．  
 
+### JamC-QA
+日本固有の文化や風習に関する知識に特化した，高難度の4択式質問応答ベンチマークです．設問は文化・風習・風土・地理・行政・法律・医療の8カテゴリを対象としており，ニッチで多様な知識が問われます．
+
+* タスク分類：日本固有の知識を問う質問応答
+* 出典：[岡ら (2025)](https://www.anlp.jp/proceedings/annual_meeting/2025/pdf_dir/Q2-18.pdf)
+* lightevalタスクID：`swallow|jamcqa`
+* データセット：[sbintuitions/JamC-QA](https://huggingface.co/datasets/sbintuitions/JamC-QA)
+* ライセンス：CC BY-SA 4.0
+* 設問数：2,309問
+* CoTプロンプト：なし
+* 評価尺度：正解率
+* 派生版
+    * CoTプロンプトを付けた `swallow|jamcqa_cot` があります．  
+
 ### BenchMAX Science Reasoning
 博士課程レベルの科学問題を集めたベンチマーク GPQA（Mainサブセット）の邦訳版です．
 

@@ -1,0 +1,4 @@
+default:
+  system_message: "以下は、タスクを説明する指示です。要求を適切に満たす応答を書きなさい。"
+  max_model_length: 4096
+  version: "1"

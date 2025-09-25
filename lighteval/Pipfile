@@ -54,3 +54,4 @@ test_custom_parser = "python -m pytest -s tests/models/test_custom_reasoning_par
 test_pass_at_k = "python -m pytest -s tests/metrics/test_passk_utils.py -v"
 test_maj_at_k_solutions = "python -m pytest -s tests/metrics/test_maj_at_k_solutions.py -v"
 test_maj_at_k = "python -m pytest -s tests/metrics/test_majk_utils.py -v"
+test_span_extractor = "python -m pytest -s tests/metrics/test_translation_span_extractor.py"

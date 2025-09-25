@@ -1,0 +1,4 @@
+reasoning:
+  system_message: "detailed thinking on"
+  reasoning_parser: "deepseek_r1_markup"
+  version: "1"

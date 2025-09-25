@@ -1,0 +1,3 @@
+reasoning:
+  reasoning_parser: "deepseek_r1"
+  version: "1"
