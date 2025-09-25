@@ -1198,31 +1198,37 @@ _AGGREGATE_CONF = []
 lst_dict_sampling_metric_tasks = [
     {
         "task_id": "swallow|jgpqa_N{num_sample}:diamond|0",
+        "func": pick,
         "metric_prefix": "extractive_match",
         "display_name": "jgpqa_diamond_{metric}@{num_k}:{num_sample}",
     },
     {
         "task_id": "swallow|swallow_gpqa_ja_N{num_sample}|0",
+        "func": pick,
         "metric_prefix": "extractive_match",
         "display_name": "gpqa_main_ja_{metric}@{num_k}:{num_sample}",
     },
     {
         "task_id": "swallow|math_100_japanese_N{num_sample}|0",
+        "func": pick,
         "metric_prefix": "extractive_match",
         "display_name": "mclm_math_100_japanese_{metric}@{num_k}:{num_sample}",
     },
     {
         "task_id": "swallow|gpqa_N{num_sample}:diamond|0",
+        "func": pick,
         "metric_prefix": "extractive_match",
         "display_name": "gpqa_diamond_{metric}@{num_k}:{num_sample}",
     },
     {
         "task_id": "swallow|math_500_N{num_sample}|0",
+        "func": pick,
         "metric_prefix": "extractive_match",
         "display_name": "math_500_{metric}@{num_k}:{num_sample}",
     },
     {
         "task_id": "swallow|aime_N{num_sample}|0",
+        "func": micro_average,
         "metric_prefix": "extractive_match",
         "display_name": "aime_2024_2025_{metric}@{num_k}:{num_sample}",
     }    
@@ -1231,11 +1237,12 @@ for config in lst_dict_sampling_metric_tasks:
     task_id = config["task_id"]
     metric_prefix = config["metric_prefix"]
     display_name = config["display_name"]
+    function = config["func"]
     for metric in ["pass", "maj"]:
         for num_k in [1, 4, 16]:
             _cfg = {
                 "display_name": display_name.format(metric=metric, num_k=num_k, num_sample=NUM_SAMPLE),
-                "func": pick,
+                "func": function,
                 "func_args": {
                     "metric_key": f"{metric_prefix}_{metric}@{num_k}:{NUM_SAMPLE}"
                 },
