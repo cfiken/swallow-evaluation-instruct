@@ -24,6 +24,7 @@
 >   - [3.6 評価がいつまでたっても終わらない場合](#36-評価がいつまでたっても終わらない場合)
 >   - [3.7 vLLMのreasoning_parserが対応していない推論型モデル](#37-vLLMのreasoning_parserが対応していない推論型モデル)
 >   - [3.8 Baseモデルを無理やり評価する](#38-Baseモデルを無理やり評価する)
+>   - [3.9 qsub_multiを使って複数モデルを効率的に評価する](#39-qsub_multiを使って複数モデルを効率的に評価する)
 
 ## 概要
 この資料は，岡崎研の評価チームが TSUBAME4，ABCI3.0，岡崎研HPC 上で評価を行う際に参照することを想定した，内部向けのマニュアルである．
@@ -39,6 +40,7 @@
 | 2025/07/25 | ABCI，local での実行に関する追記・修正 | 齋藤 |
 | 2025/07/31 | 独自のreasoning parserを使うケースを追記 | 水木 |
 | 2025/08/04 | Baseモデルを無理やり評価するユースケースを追記 | 水木 |
+| 2025/09/27 | qsub_multiを使って複数モデルを効率的に評価する | 一瀬 |
 
 </details>
 
@@ -423,4 +425,27 @@ lighteval endpoint litellm \
 "model=$MODEL,api_key=$API_KEY,base_url=$BASE_URL,generation_parameters={reasoning_effort:\"high\"}" \
 "swallow|gpqa:diamond|0|0" \
 --output-dir "$OUTPUT_DIR"
+```
+
+### 3.9 qsub_multiを使って複数モデルを効率的に評価する
+#### 使い方
+例えば、Pass@K, Maj@K を複数モデルに対して評価する方法を例に説明します。
+#### Step1. ```qsub_all.sh```の最下部で評価するタスクのみをコメントアウト (qsub_task ja gpqaなど)
+<img width="322" height="718" alt="image" src="https://github.com/user-attachments/assets/ddb95d8b-f07d-44b4-b04d-cd3f65eb14d4" />
+
+#### Step2. ```qsub_multi.sh```　の ```MODEL_NAMES``` に評価したいモデル名を追加
+<img width="381" height="310" alt="image" src="https://github.com/user-attachments/assets/d57993a5-ea45-41cb-b28c-6af1c6b72931" />
+
+#### Step3. ```scripts/generation_settings/generation_settings.json``` に評価したいモデルの設定がなければ追加
+> 多くのモデルは登録済みなので、このStep3をスキップし、Step4を実行してみてエラーが出たら対応するくらいが良い。
+> 追加する場合は他のモデルの設定を参考にする。node_kindは["rt_HG", "rt_HF", "rt_HC"]のいずれかを指定。
+> custom_settingsは必要に応じて設定名を入れる。
+> node_kindはtsubameで使う場合も[rt_HG, rt_HF, rt_HC]で指定し、qsub_multi内で自動で[node_q, node_f, cpu_16]に変換される。
+
+<img width="445" height="289" alt="image" src="https://github.com/user-attachments/assets/3c05fb53-a428-49f7-a300-7a89e1ab212d" />
+
+#### Step4. ```bash scripts/qsub/qsub_multi.sh```
+ターミナルで以下を実行すればOK
+```bash
+bash scripts/qsub/qsub_multi.sh
 ```
