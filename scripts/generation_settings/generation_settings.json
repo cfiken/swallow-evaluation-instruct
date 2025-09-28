@@ -38,6 +38,12 @@
     "node_kind":"rt_HF",
     "custom_settings":"reasoning"
   },
+  "openai/gpt-oss-20b":{
+    "node_kind":"rt_HG"
+  },
+  "openai/gpt-oss-120b":{
+    "node_kind":"rt_HF"
+  },
   "google/gemma-2-2b-it":{
     "node_kind":"rt_HG"
   },
