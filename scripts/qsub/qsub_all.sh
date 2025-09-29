@@ -178,8 +178,8 @@ qsub_task en mmlu_pro
 # qsub_task en humaneval
 # qsub_task en humanevalplus
 # qsub_task ja jgpqa_diamond
-# qsub task ja jgpqa_diamond_n16
-# qsub task ja gpqa_n16
+# qsub_task ja jgpqa_diamond_n16
+# qsub_task ja gpqa_n16
 # qsub_task ja math_100_n16
 # qsub_task en gpqa_diamond_n16
 # qsub_task en math_500_n16
