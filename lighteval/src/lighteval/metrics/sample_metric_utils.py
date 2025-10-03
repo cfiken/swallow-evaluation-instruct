@@ -126,7 +126,7 @@ def create_sampling_metric_fn(base_metric: SampleLevelMetric, k: int, metric_typ
             # Maj@K計算
             result = maj_at_k_exact_dp_scipy(counts_dict, correct_dict, k)
             counts_freq_snapshot = [
-                {"answer": key, "count": int(value)}
+                {"answer": key, "count": int(value), "is_correct": bool(correct_dict.get(key, None))}
                 for key, value in sorted(counts_dict.items())
             ]
         else:
