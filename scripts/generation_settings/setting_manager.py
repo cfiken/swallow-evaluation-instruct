@@ -48,13 +48,25 @@ class SettingManager:
             if not publisher_dir.is_dir():
                 continue
             publisher_name = publisher_dir.name
-            for yaml_file in publisher_dir.glob("*.yaml"):
-                model_name = yaml_file.stem
-                with open(yaml_file, "r") as f:
-                    settings = yaml.load(f, Loader=yaml.FullLoader)
 
-                self.custom_model_settings[f"{publisher_name}_{model_name}"] = settings
-                self.custom_model_settings_paths[f"{publisher_name}_{model_name}"] = yaml_file
+            # for models in groups (e.g., /groups/gag51395/checkpoints/...), load all yaml files in subdirectories
+            if publisher_name == "groups":
+                for yaml_file in publisher_dir.rglob("*.yaml"):
+                    publisher_name_groups = f"{publisher_name}/{yaml_file.relative_to(publisher_dir).parent}".replace("/", "_")
+                    model_name = yaml_file.stem
+                    with open(yaml_file, "r") as f:
+                        settings = yaml.load(f, Loader=yaml.FullLoader)
+
+                    self.custom_model_settings[f"_{publisher_name_groups}_{model_name}"] = settings
+                    self.custom_model_settings_paths[f"{publisher_name_groups}_{model_name}"] = yaml_file
+            else: 
+                for yaml_file in publisher_dir.glob("*.yaml"):
+                    model_name = yaml_file.stem
+                    with open(yaml_file, "r") as f:
+                        settings = yaml.load(f, Loader=yaml.FullLoader)
+
+                    self.custom_model_settings[f"{publisher_name}_{model_name}"] = settings
+                    self.custom_model_settings_paths[f"{publisher_name}_{model_name}"] = yaml_file
 
         # load task config (csv file)
         self.task_config_path = task_config_path
@@ -73,6 +85,8 @@ class SettingManager:
     def __is_development_model(self, model_id_key: str) -> bool:
         return model_id_key.startswith("tokyotech-llm_") and (re.search(r"-iter\d+$", model_id_key) is not None)
 
+    def __is_development_model_abci_path(self, model_id_key: str) -> bool:
+        return model_id_key.startswith("_groups_gag51395_checkpoints_") and (re.search(r"_iteration_\d+$", model_id_key) is not None)
 
     def search_model_settings(self, model_id: str, custom_settings: str) -> dict:
         # If model found and settings found -> return the settings. Otherwise, raise an error.
@@ -87,6 +101,10 @@ class SettingManager:
             if self.custom_model_settings.get(model_id_key, None) is None:
                 # Wild search for development model
                 model_id_key = re.sub(r"-iter\d+$", "", model_id_key)
+        elif self.__is_development_model_abci_path(model_id_key):
+            if self.custom_model_settings.get(model_id_key, None) is None:
+                # Wild search for development model ( abci path style )
+                model_id_key = re.sub(r"_iteration_\d+$", "", model_id_key)
         
         model_setting_dict = self.custom_model_settings.get(model_id_key, {})
 
