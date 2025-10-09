@@ -111,12 +111,16 @@ class SettingManager:
         if isinstance(model_setting_dict, dict) and len(model_setting_dict.keys())>0:
             # Found candidate settings
             model_settings = model_setting_dict.get(custom_settings, {})
-        elif model_setting_dict == {}:
-            # No settings defined for the specified model
-            assert False, f"💀 Custom settings for \'{model_id}\' not found in \'{self.custom_model_settings_dir}\'."
         else:
-            # Nothing defined in the yaml file or defined in a wrong format
-            assert False, f"💀 Custom settings for \'{model_id}\' might be defined without any settings or in a wrong format."
+            model_settings = {}
+
+        if model_settings == {} or model_setting_dict == {}:
+            # Not found settings in the model-specific yaml file; try to find in the common_settings.yaml
+            common_yaml_file = Path(self.custom_model_settings_dir) / "common_settings.yaml"
+            with open(common_yaml_file, "r") as f:
+                model_setting_dict = yaml.load(f, Loader=yaml.FullLoader)
+            self.custom_model_settings_paths[model_id.replace("/", "_")] = common_yaml_file
+            model_settings = model_setting_dict.get(custom_settings, {})
 
         if model_settings == {}:
             # Custom settings not found in the defined settings
