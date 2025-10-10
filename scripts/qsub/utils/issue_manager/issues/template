@@ -1,0 +1,58 @@
+#!/bin/bash
+set -a
+
+# ========== qsub settings ==========
+## Common Settings
+NODE_KIND=""                # A node kind to use. tsubame: ["node_q", "node_f", "cpu_16"], local: ["cpu", "gpu_*" (*: GPU number)], abci: ["rt_HG", "rt_HF", "rt_HC"]
+MODEL_NAMES=(
+)
+
+## Special Settings
+PROVIDER="vllm"             # Default: "vllm". A provider to host the model. ["vllm", "openai", "deepinfra"]
+CUSTOM_SETTINGS=""          # Default: "". A custom setting name to use. (e.g. "reasoning", "coding", "flashattn_incompatible")
+PREDOWNLOAD_MODEL="true"    # Default: "true". A pre-download a model before qsub.
+MAX_SAMPLES=""              # Default: "". A maximum number of samples in benchmark to evaluate. Set it for debugging.
+
+## Environmental Settings
+SERVICE=""                  # A service to use. ["tsubame", "abci", "local"]
+PRIORITY="-5"               # Default: "-5". A priority of the job. Note that double priority is double cost. ["-5", "-4", "-3"] (Only for TSUBAME)
+CUDA_VISIBLE_DEVICES=""
+
+TASKS=(
+    ## Japanese
+    ja gpqa
+    ja jemhopqa_cot
+    ja jamcqa
+    ja math_100
+    ja mmlu_prox
+    ja mtbench
+    ja wmt20_en_ja
+    ja wmt20_ja_en
+    ja humaneval
+    ja mifeval
+
+    ## English
+    en hellaswag
+    en mtbench
+    en gpqa_diamond
+    en math_500
+    en aime_2024_2025
+    en livecodebench_v5_v6
+    en mmlu_pro
+
+    ## Optional
+    # ja mmlu
+    # ja jemhopqa
+    # ja jamcqa_cot
+    # en mmlu
+    # en mmlu_prox
+    # en humaneval
+    # en humanevalplus
+    # ja jgpqa_diamond
+    # ja jgpqa_diamond_n16
+    # ja gpqa_n16
+    # ja math_100_n16
+    # en gpqa_diamond_n16
+    # en math_500_n16
+    # en aime_2024_2025_n16
+)
