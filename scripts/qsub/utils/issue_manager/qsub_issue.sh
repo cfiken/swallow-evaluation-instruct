@@ -1,12 +1,15 @@
 #!/bin/bash
-# Usage: bash qsub_issue.sh {issue_number}
+# Usage: bash qsub_issue.sh {issue_id}
 
 set -euo pipefail
 
-source "$(dirname $0)/issues/$1"
+ISSUE_ID=$1
+
+source "$(dirname $0)/issues/${ISSUE_ID}"
 
 # Load .env and define dirs
 source "$(dirname "$0")/../../../../.env"
+mkdir -p "${REPO_PATH}/scripts/qsub/utils/issue_manager/issues_status"
 case $CUSTOM_SETTINGS in
     "") CUSTOM_SETTINGS_SUBDIR="" ;;
     *) CUSTOM_SETTINGS_SUBDIR="/${CUSTOM_SETTINGS}" ;;
@@ -33,6 +36,86 @@ fi
 
 # Check service
 check_service "${SERVICE}"
+
+
+# Register tasks
+MODEL_NAMES_JSON=$(jq -c -n '$ARGS.positional' --args "${MODEL_NAMES[@]}")
+TASKS_JSON=$(jq -c -n '$ARGS.positional' --args "${TASKS[@]}")
+if [[ -f "${REPO_PATH}/scripts/qsub/utils/issue_manager/issues_status/${ISSUE_ID}.json" ]]; then
+    NEW_ISSUE=0
+else
+    python "${REPO_PATH}/scripts/qsub/utils/issue_manager/manage_jobs.py" --action issue_create --issue_id ${ISSUE_ID}
+    NEW_ISSUE=1
+fi
+
+# Define qsub-function
+last_submit_time=""
+qsub_task() {
+    # Get args
+    local lang=$1 task=$2
+
+    # Get task-specific args
+    result_dir=$(task_result "${lang}_${task}")
+    task_name=$(task_script "${lang}_${task}")
+    task_framework=$(task_framework "${lang}_${task}")
+    [[ -z $task_name || -z $result_dir || -z $task_framework ]] && { echo "❌ Unknown task ${lang}_${task}"; exit 1; }
+
+    # Set an outdir 
+    OUTDIR="${RESULTS_DIR}/${result_dir}"
+    mkdir -p "${OUTDIR}"
+
+    # Safety check for local jobs
+    if [[ "${SERVICE}" == "local" && -n "${last_submit_time}" ]]; then
+        now=$(date +%s); elapsed=$(( now - last_submit_time ))
+        if (( $elapsed < 30 )); then
+        echo "💀 Error: Local jobs cannot be submitted continuously. Please reset CUDA_VISIBLE_DEVICES appropriately and submit one task at a time."
+        exit 1
+        fi
+    fi
+
+    # Submit a job
+    local job_name="${lang}_${task}"
+    case $SERVICE in
+        "tsubame")
+        h_rt=$(hrt "${NODE_KIND}" "${lang}_${task}") || { echo "❌ Cound not get h_rt for ${lang}_${task} on ${NODE_KIND}"; exit 1; }
+        QSUB_MESSAGE=$(qsub -g "${TSUBAME_GROUP}" -l "${NODE_KIND}"=1 -p "${PRIORITY}" -N "${job_name}" -l h_rt=00:10:00 -o "${OUTDIR}" -e "${OUTDIR}" "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
+        --task-name "${task_name}" "${common_qsub_args[@]}" "${OPTIONAL_ARGS[@]}")
+        
+        echo ${QSUB_MESSAGE}
+        QSUB_MESSAGE_ARRAY=($QSUB_MESSAGE)
+        JOB_ID=${QSUB_MESSAGE_ARRAY[1]}
+        if [ -z "$CUSTOM_SETTINGS" ]; then
+            python "${REPO_PATH}/scripts/qsub/utils/issue_manager/manage_jobs.py" --action job_submitted --issue_id ${ISSUE_ID} --model_id ${MODEL_NAME} --task_id "${lang} ${task}" --job_id ${JOB_ID}
+        else
+            python "${REPO_PATH}/scripts/qsub/utils/issue_manager/manage_jobs.py" --action job_submitted --issue_id ${ISSUE_ID} --model_id ${MODEL_NAME} --task_id "${lang} ${task}" --job_id ${JOB_ID} --custom_settings ${CUSTOM_SETTINGS}
+        fi
+        ;;
+
+        "abci")
+        wlt=$(walltime "${NODE_KIND}" "${lang}_${task}") || { echo "❌ Cound not get walltime for ${lang}_${task} on ${NODE_KIND}"; exit 1; }
+        QSUB_MESSAGE=$(qsub -P "${ABCI_GROUP}" -q "${NODE_KIND}" -l select=1 -N "${job_name}" -l walltime="${wlt}" -o "${OUTDIR}" -e "${OUTDIR}" -- "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
+            --task-name "${task_name}" "${common_qsub_args[@]}" --stdout-stderr-dir "${OUTDIR}" "${OPTIONAL_ARGS[@]}")
+        echo ${QSUB_MESSAGE}
+        JOB_ID=${QSUB_MESSAGE}
+        if [ -z "$CUSTOM_SETTINGS" ]; then
+            python "${REPO_PATH}/scripts/qsub/utils/issue_manager/manage_jobs.py" --action job_submitted --issue_id ${ISSUE_ID} --model_id ${MODEL_NAME} --task_id "${lang} ${task}" --job_id ${JOB_ID}
+        else
+            python "${REPO_PATH}/scripts/qsub/utils/issue_manager/manage_jobs.py" --action job_submitted --issue_id ${ISSUE_ID} --model_id ${MODEL_NAME} --task_id "${lang} ${task}" --job_id ${JOB_ID} --custom_settings ${CUSTOM_SETTINGS}
+        fi
+        ;;
+
+        "local")
+        set_random_job_id
+        local session_name="${job_name}_${JOB_ID}"
+        tmux new-session -d -s "${session_name}" \
+            env ${CUDA_VISIBLE_DEVICES:+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}} \
+            bash "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
+            --task-name "${task_name}" "${common_qsub_args[@]}" --stdout-stderr-dir "${OUTDIR}" --custom-job-id "${JOB_ID}" "${OPTIONAL_ARGS[@]}"
+        echo "✅ Local job ${job_name} was successfully submitted to tmux session ${session_name}."
+        ;;
+    esac
+    last_submit_time=$(date +%s)
+}
 
 for MODEL_NAME in "${MODEL_NAMES[@]}"; do
     RESULTS_DIR="${REPO_PATH}/results/${PROVIDER_SUBDIR}${MODEL_NAME}${CUSTOM_SETTINGS_SUBDIR}"
@@ -62,100 +145,25 @@ for MODEL_NAME in "${MODEL_NAMES[@]}"; do
     echo "⏭️ Skipping pre-downloading model."
     fi
 
-    # Define qsub-function
-    last_submit_time=""
-    qsub_task() {
-    # Get args
-    local lang=$1 task=$2
-
-    # Get task-specific args
-    result_dir=$(task_result "${lang}_${task}")
-    task_name=$(task_script "${lang}_${task}")
-    task_framework=$(task_framework "${lang}_${task}")
-    [[ -z $task_name || -z $result_dir || -z $task_framework ]] && { echo "❌ Unknown task ${lang}_${task}"; exit 1; }
-
-    # Set an outdir 
-    OUTDIR="${RESULTS_DIR}/${result_dir}"
-    mkdir -p "${OUTDIR}"
-
-    # Safety check for local jobs
-    if [[ "${SERVICE}" == "local" && -n "${last_submit_time}" ]]; then
-        now=$(date +%s); elapsed=$(( now - last_submit_time ))
-        if (( $elapsed < 30 )); then
-        echo "💀 Error: Local jobs cannot be submitted continuously. Please reset CUDA_VISIBLE_DEVICES appropriately and submit one task at a time."
-        exit 1
-        fi
-    fi
-
-    # Submit a job
-    local job_name="${lang}_${task}"
-    case $SERVICE in
-        "tsubame")
-        h_rt=$(hrt "${NODE_KIND}" "${lang}_${task}") || { echo "❌ Cound not get h_rt for ${lang}_${task} on ${NODE_KIND}"; exit 1; }
-        qsub -g "${TSUBAME_GROUP}" -l "${NODE_KIND}"=1 -p "${PRIORITY}" -N "${job_name}" -l h_rt="${h_rt}" -o "${OUTDIR}" -e "${OUTDIR}" "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
-            --task-name "${task_name}" "${common_qsub_args[@]}" "${OPTIONAL_ARGS[@]}"
-        ;;
-
-        "abci")
-        wlt=$(walltime "${NODE_KIND}" "${lang}_${task}") || { echo "❌ Cound not get walltime for ${lang}_${task} on ${NODE_KIND}"; exit 1; }
-        qsub -P "${ABCI_GROUP}" -q "${NODE_KIND}" -l select=1 -N "${job_name}" -l walltime="${wlt}" -o "${OUTDIR}" -e "${OUTDIR}" -- "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
-            --task-name "${task_name}" "${common_qsub_args[@]}" --stdout-stderr-dir "${OUTDIR}" "${OPTIONAL_ARGS[@]}"
-        ;;
-
-        "local")
-        set_random_job_id
-        local session_name="${job_name}_${JOB_ID}"
-        tmux new-session -d -s "${session_name}" \
-            env ${CUDA_VISIBLE_DEVICES:+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES}} \
-            bash "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
-            --task-name "${task_name}" "${common_qsub_args[@]}" --stdout-stderr-dir "${OUTDIR}" --custom-job-id "${JOB_ID}" "${OPTIONAL_ARGS[@]}"
-        echo "✅ Local job ${job_name} was successfully submitted to tmux session ${session_name}."
-        ;;
-    esac
-    last_submit_time=$(date +%s)
-    }
-
     ########################################################
 
     # Submit tasks
     echo "🚀 Submitting tasks..."
 
-    ## Japanese
-    # qsub_task ja gpqa
-    # qsub_task ja jemhopqa_cot
-    # qsub_task ja jamcqa
-    # qsub_task ja math_100
-    # qsub_task ja mmlu_prox
-    # qsub_task ja mtbench
-    # qsub_task ja wmt20_en_ja
-    # qsub_task ja wmt20_ja_en
-    # qsub_task ja humaneval
-    # qsub_task ja mifeval
+    for TASK in "${TASKS[@]}"; do
+        if [[ "${NEW_ISSUE}" == "1" ]]; then
+            # First submit
+            qsub_task ${TASK}
+        else
+            CSV_FILE="${REPO_PATH}/scripts/qsub/utils/issue_manager/resub/${ISSUE_ID}.csv"
+            if [[ -n $(grep "^$MODEL_NAME, $TASK" "$CSV_FILE") ]]; then
+                # Re submit
+                echo ${TASK}
+                qsub_task ${TASK}
+            fi
+        fi
+    done
 
-    # ## English
-    # qsub_task en hellaswag
-    # qsub_task en mtbench
-    # qsub_task en gpqa_diamond
-    # qsub_task en math_500
-    # qsub_task en aime_2024_2025
-    # qsub_task en livecodebench_v5_v6
-    # qsub_task en mmlu_pro
-
-    ## Optional
-    # qsub_task ja mmlu
-    # qsub_task ja jemhopqa
-    # qsub_task ja jamcqa_cot
-    # qsub_task en mmlu
-    # qsub_task en mmlu_prox
-    # qsub_task en humaneval
-    # qsub_task en humanevalplus
-    # qsub_task ja jgpqa_diamond
-    # qsub_task ja jgpqa_diamond_n16
-    # qsub_task ja gpqa_n16
-    # qsub_task ja math_100_n16
-    # qsub_task en gpqa_diamond_n16
-    # qsub_task en math_500_n16
-    # qsub_task en aime_2024_2025_n16
 done
 
 # readarray -t JOB_IDS < <(python3 /home/ach17941yz/swallow-evaluation-instruct-private/scripts/qsub/utils/issue_manager/check_status.py)
