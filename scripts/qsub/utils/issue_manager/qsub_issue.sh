@@ -164,9 +164,7 @@ for MODEL_NAME in "${MODEL_NAMES[@]}"; do
                     qsub_task ${TASK}
                 fi
             else
-                echo "💀 Error: ${CSV_FILE} does not exist."
-                echo "Create csv file or delete issues_status/${ISSUE_ID}.json"
-                exit 1
+                bash "${REPO_PATH}/scripts/qsub/utils/issue_manager/check_status.sh" ${ISSUE_ID}
             fi
         fi
     done

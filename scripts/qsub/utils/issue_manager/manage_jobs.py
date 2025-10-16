@@ -107,6 +107,7 @@ def create_resub(issue_id):
             for task_name, jobs in model_tasks.items():
                 if len(jobs) == 0:
                     f.write(f"{model_name}, {task_name}\n")
+                    continue
                 status_list = [job["status"] for job_id, job in jobs.items()]
                 if not "done" in status_list:
                     version_list = [job["version"] for job_id, job in jobs.items()]

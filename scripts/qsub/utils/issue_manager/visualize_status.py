@@ -32,7 +32,8 @@ if __name__ == "__main__":
             f.write(f"Model: {model_name}\n")
             for task_name, jobs in model_tasks.items():
                 if len(jobs) == 0:
-                    f.write(f"\t⬜️ not submitted\ttask: [{task_name}]")
+                    f.write(f"\t⬜️ not submitted\ttask: [{task_name}]\n")
+                    continue
                 status_list = [job["status"] for job_id, job in jobs.items()]
                 if "done" in status_list:
                     job_id = tuple(jobs.keys())[status_list.index("done")]
