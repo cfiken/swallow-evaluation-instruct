@@ -20,39 +20,39 @@ CUDA_VISIBLE_DEVICES=""
 
 TASKS=(
     ## Japanese
-    ja gpqa
-    ja jemhopqa_cot
-    ja jamcqa
-    ja math_100
-    ja mmlu_prox
-    ja mtbench
-    ja wmt20_en_ja
-    ja wmt20_ja_en
-    ja humaneval
-    ja mifeval
+    "ja gpqa"
+    "ja jemhopqa_cot"
+    "ja jamcqa"
+    "ja math_100"
+    "ja mmlu_prox"
+    "ja mtbench"
+    "ja wmt20_en_ja"
+    "ja wmt20_ja_en"
+    "ja humaneval"
+    "ja mifeval"
 
     ## English
-    en hellaswag
-    en mtbench
-    en gpqa_diamond
-    en math_500
-    en aime_2024_2025
-    en livecodebench_v5_v6
-    en mmlu_pro
+    "en hellaswag"
+    "en mtbench"
+    "en gpqa_diamond"
+    "en math_500"
+    "en aime_2024_2025"
+    "en livecodebench_v5_v6"
+    "en mmlu_pro"
 
     ## Optional
-    # ja mmlu
-    # ja jemhopqa
-    # ja jamcqa_cot
-    # en mmlu
-    # en mmlu_prox
-    # en humaneval
-    # en humanevalplus
-    # ja jgpqa_diamond
-    # ja jgpqa_diamond_n16
-    # ja gpqa_n16
-    # ja math_100_n16
-    # en gpqa_diamond_n16
-    # en math_500_n16
-    # en aime_2024_2025_n16
+    # "ja mmlu"
+    # "ja jemhopqa"
+    # "ja jamcqa_cot"
+    # "en mmlu"
+    # "en mmlu_prox"
+    # "en humaneval"
+    # "en humanevalplus"
+    # "ja jgpqa_diamond"
+    # "ja jgpqa_diamond_n16"
+    # "ja gpqa_n16"
+    # "ja math_100_n16"
+    # "en gpqa_diamond_n16"
+    # "en math_500_n16"
+    # "en aime_2024_2025_n16"
 )
