@@ -159,12 +159,12 @@ for MODEL_NAME in "${MODEL_NAMES[@]}"; do
             CSV_FILE="${REPO_PATH}/scripts/qsub/utils/issue_manager/resub/${ISSUE_ID}.csv"
             if [[ -f "$CSV_FILE" ]]; then
                 echo "♻️ Resubmitting tasks listed in ${CSV_FILE} ..."
-                if [[ -n $(grep "^$MODEL_NAME, $TASK" "$CSV_FILE") ]]; then
-                    # Re submit
-                    qsub_task ${TASK}
-                fi
             else
                 bash "${REPO_PATH}/scripts/qsub/utils/issue_manager/check_status.sh" ${ISSUE_ID}
+            fi
+            if [[ -n $(grep "^$MODEL_NAME, $TASK" "$CSV_FILE") ]]; then
+                # Re submit
+                qsub_task ${TASK}
             fi
         fi
     done

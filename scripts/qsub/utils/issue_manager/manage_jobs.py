@@ -121,28 +121,6 @@ def create_resub(issue_id):
                         f.write(f"{model_name}, {task_name}\n")
     print(f"👀 Created resub tasks:\n\t{out_file}")
                 
-                    
-
-def get_job_ids(issue_id):
-    status_file = out_dir / f"{issue_id}.json"
-    with open(status_file, "r", encoding='utf-8') as f:
-        data = json.load(f)
-    models =  data['models']
-    for model_name, model_tasks in models.items():
-        for task_name, jobs in model_tasks.items():
-            for job_id, job in jobs.items():
-                print(job_id)
-
-def get_tasks(issue_id):
-    status_file = out_dir / f"{issue_id}.json"
-    with open(status_file, "r", encoding='utf-8') as f:
-        data = json.load(f)
-    models =  data['models']
-    for model_name, model_tasks in models.items():
-        for task_name, jobs in model_tasks.items():
-            for job_id, job in jobs.items():
-                print(task_name)
-
 
 if __name__ == "__main__":
     parser = ArgumentParser()
