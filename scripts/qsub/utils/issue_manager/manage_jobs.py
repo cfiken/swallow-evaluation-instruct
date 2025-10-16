@@ -53,7 +53,6 @@ def register_status(issue_id, qstat_log):
                     model_name_relative = model_name[1:] if model_name.startswith('/') else model_name
                     # For TSUBAME
                     result_o_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{lang}_{task}.o{job_id}"
-
                     if not result_o_file.is_file():
                         # For ABCI
                         result_o_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{job_id}.OU"
@@ -63,17 +62,28 @@ def register_status(issue_id, qstat_log):
                         continue
 
                     # Open .o file
-                    with open(result_o_file, "r") as f:
-                        content = f.read()
+                    with open(result_o_file, "r", errors="ignore") as f:
+                        o_content = f.read()
 
-                    is_finished = re.search(r"✅ Result aggregation was successfully done.", content)
-                    error_occurred = re.search(r"Traceback \(most recent call last\):", content)
+                    is_finished = re.search(r"✅ Result aggregation was successfully done.", o_content)
+                    error_occurred = re.search(r"Traceback \(most recent call last\):", o_content)
                     if error_occurred:
                         job["status"] = "error"
-                    elif is_finished:
-                        job["status"] = "done"
-                    else: 
-                        job["status"] = "timeout"
+                    else:
+                        # For TSUBAME
+                        result_e_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{lang}_{task}.e{job_id}"
+                        if not result_e_file.is_file():
+                            # For ABCI
+                            result_e_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{job_id}.ER"
+                        with open(result_e_file, "r", errors="ignore") as f:
+                            e_content = f.read()
+                        error_occurred = re.search(r"Traceback \(most recent call last\)", e_content)
+                        if error_occurred:
+                            job["status"] = "error"
+                        elif is_finished:
+                            job["status"] = "done"
+                        else: 
+                            job["status"] = "timeout"
 
     # register status to json file
     with open(out_file, 'w', encoding='utf-8') as f:
