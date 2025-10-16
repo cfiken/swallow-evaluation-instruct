@@ -41,7 +41,7 @@ check_service "${SERVICE}"
 # Register tasks
 MODEL_NAMES_JSON=$(jq -c -n '$ARGS.positional' --args "${MODEL_NAMES[@]}")
 TASKS_JSON=$(jq -c -n '$ARGS.positional' --args "${TASKS[@]}")
-echo ${TASKS_JSON[0]}
+
 if [[ -f "${REPO_PATH}/scripts/qsub/utils/issue_manager/issues_status/${ISSUE_ID}.json" ]]; then
     NEW_ISSUE=0
 else
@@ -157,16 +157,19 @@ for MODEL_NAME in "${MODEL_NAMES[@]}"; do
             qsub_task ${TASK}
         else
             CSV_FILE="${REPO_PATH}/scripts/qsub/utils/issue_manager/resub/${ISSUE_ID}.csv"
-            if [[ -n $(grep "^$MODEL_NAME, $TASK" "$CSV_FILE") ]]; then
-                # Re submit
-                qsub_task ${TASK}
+            if [[ -f "$CSV_FILE" ]]; then
+                echo "♻️ Resubmitting tasks listed in ${CSV_FILE} ..."
+                if [[ -n $(grep "^$MODEL_NAME, $TASK" "$CSV_FILE") ]]; then
+                    # Re submit
+                    qsub_task ${TASK}
+                fi
+            else
+                echo "💀 Error: ${CSV_FILE} does not exist."
+                echo "Create csv file or delete issues_status/${ISSUE_ID}.json"
+                exit 1
             fi
         fi
     done
 
 done
-
-# readarray -t JOB_IDS < <(python3 /home/ach17941yz/swallow-evaluation-instruct-private/scripts/qsub/utils/issue_manager/check_status.py)
-# for job_id in "${JOB_IDS[@]}"; do
-#     echo "$job_id"
-# done
+echo "🎉 All tasks were successfully submitted."
