@@ -23,7 +23,6 @@ def job_submitted(issue_id, model_id, task_id, job_id, custom_settings=""):
     with open(out_file, "r", encoding='utf-8') as f:
         data = json.load(f)
     task_jobs = data.get("models", {}).get(model_id, {}).get(task_id, None)
-    # assert task_jobs != None, f"💀 The job MODEL: {model_id}, TASK: {task_id} is already submitted."
     if task_jobs == None:
         task_jobs[job_id] = {"version": 1}
     else:

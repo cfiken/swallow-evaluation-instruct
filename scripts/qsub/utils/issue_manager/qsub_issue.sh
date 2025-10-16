@@ -41,6 +41,7 @@ check_service "${SERVICE}"
 # Register tasks
 MODEL_NAMES_JSON=$(jq -c -n '$ARGS.positional' --args "${MODEL_NAMES[@]}")
 TASKS_JSON=$(jq -c -n '$ARGS.positional' --args "${TASKS[@]}")
+echo ${TASKS_JSON[0]}
 if [[ -f "${REPO_PATH}/scripts/qsub/utils/issue_manager/issues_status/${ISSUE_ID}.json" ]]; then
     NEW_ISSUE=0
 else
@@ -78,12 +79,12 @@ qsub_task() {
     case $SERVICE in
         "tsubame")
         h_rt=$(hrt "${NODE_KIND}" "${lang}_${task}") || { echo "❌ Cound not get h_rt for ${lang}_${task} on ${NODE_KIND}"; exit 1; }
-        QSUB_MESSAGE=$(qsub -g "${TSUBAME_GROUP}" -l "${NODE_KIND}"=1 -p "${PRIORITY}" -N "${job_name}" -l h_rt=00:10:00 -o "${OUTDIR}" -e "${OUTDIR}" "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
+        QSUB_MESSAGE=$(qsub -g "${TSUBAME_GROUP}" -l "${NODE_KIND}"=1 -p "${PRIORITY}" -N "${job_name}" -l h_rt="${h_rt}" -o "${OUTDIR}" -e "${OUTDIR}" "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
         --task-name "${task_name}" "${common_qsub_args[@]}" "${OPTIONAL_ARGS[@]}")
         
         echo ${QSUB_MESSAGE}
         QSUB_MESSAGE_ARRAY=($QSUB_MESSAGE)
-        JOB_ID=${QSUB_MESSAGE_ARRAY[1]}
+        JOB_ID=${QSUB_MESSAGE_ARRAY[2]}
         if [ -z "$CUSTOM_SETTINGS" ]; then
             python "${REPO_PATH}/scripts/qsub/utils/issue_manager/manage_jobs.py" --action job_submitted --issue_id ${ISSUE_ID} --model_id ${MODEL_NAME} --task_id "${lang} ${task}" --job_id ${JOB_ID}
         else
@@ -158,7 +159,6 @@ for MODEL_NAME in "${MODEL_NAMES[@]}"; do
             CSV_FILE="${REPO_PATH}/scripts/qsub/utils/issue_manager/resub/${ISSUE_ID}.csv"
             if [[ -n $(grep "^$MODEL_NAME, $TASK" "$CSV_FILE") ]]; then
                 # Re submit
-                echo ${TASK}
                 qsub_task ${TASK}
             fi
         fi

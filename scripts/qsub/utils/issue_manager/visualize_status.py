@@ -63,8 +63,8 @@ if __name__ == "__main__":
                             f.write(f"\t🟨 timeout")
                         elif job["status"] == "error":
                             f.write(f"\t🟥 error  ")
-                        # f.write(f"\tjob_id: [{job_id}]\ttask: [{task_name}]\tfile://{result_o_file}\n")
-                        f.write(f"\tjob_id: [{job_id}]\ttask: [{task_name}]\n")
+                        f.write(f"\tjob_id: [{job_id}]\ttask: [{task_name}]\tfile://{result_o_file}\n")
+                        # f.write(f"\tjob_id: [{job_id}]\ttask: [{task_name}]\n")
 
         f.write(f"================================================================================\n")
     print(f"💡Visualized issue status:\n\t{out_file}")
