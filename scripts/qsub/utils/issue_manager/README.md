@@ -28,6 +28,7 @@ bash scripts/qsub/utils/issue_manager/check_status.sh {ISSUE_ID}
 
 ```
 🟤 queue
+🟣 transfer
 🔵 running
 🟢 done   
 🟨 timeout
