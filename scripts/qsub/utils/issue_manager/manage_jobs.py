@@ -117,7 +117,7 @@ def create_resub(issue_id):
                     job_id = tuple(jobs.keys())[ver_max_index]
                     lang, task = task_name.split()
                     
-                    if not job["status"] in ["r", "qw", "R", "Q"]:
+                    if not job["status"] in ["hqw", "t", "r", "qw", "R", "Q"]:
                         f.write(f"{model_name}, {task_name}\n")
     print(f"👀 Created resub tasks:\n\t{out_file}")
                 

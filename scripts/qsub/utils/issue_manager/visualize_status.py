@@ -47,9 +47,11 @@ if __name__ == "__main__":
                     lang, task = task_name.split()
                     
                     if job["status"] == "deleted":
-                        f.write(f"\t🔳 deleted\tjob_id: [{job_id}]\ttask: [{task_name}]\n")
+                        f.write(f"\t🔳 deleted \tjob_id: [{job_id}]\ttask: [{task_name}]\n")
                     elif job["status"] in ["qw", "Q"]:
-                        f.write(f"\t🟤 queue  \tjob_id: [{job_id}]\ttask: [{task_name}]\n")
+                        f.write(f"\t🟤 queue   \tjob_id: [{job_id}]\ttask: [{task_name}]\n")
+                    elif job["status"] == "t":
+                        f.write(f"\t🟣 transfer\tjob_id: [{job_id}]\ttask: [{task_name}]\n")
                     else:
                         task_dir = "mt_bench" if task == "mtbench" else task
                         model_name_relative = model_name[1:] if model_name.startswith('/') else model_name
@@ -59,11 +61,14 @@ if __name__ == "__main__":
                             # For ABCI
                             result_o_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{job_id}.OU"
                         if job["status"] in ["r", "R"]:
-                            f.write(f"\t🔵 running")
+                            f.write(f"\t🔵 running ")
                         elif job["status"] == "timeout":
-                            f.write(f"\t🟨 timeout")
+                            f.write(f"\t🟨 timeout ")
                         elif job["status"] == "error":
-                            f.write(f"\t🟥 error  ")
+                            f.write(f"\t🟥 error   ")
+                        else:
+                            status = job["status"]
+                            f.write(f"\t❓ {status}")
                         # f.write(f"\tjob_id: [{job_id}]\ttask: [{task_name}]\tfile://{result_o_file}\n")
                         f.write(f"\tjob_id: [{job_id}]\ttask: [{task_name}]\n")
 
