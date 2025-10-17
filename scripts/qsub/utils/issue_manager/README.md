@@ -1,6 +1,6 @@
 # Issue Manager
 
-issue単位でjobを管理し、ログファイルを確認することなくjobの進捗を把握できるようにするutilsである。
+issue単位でjobを管理し、ログファイルを確認することなくjobの進捗を把握できるようにするutilsである。現在はhosted_vllmのみに対応している。
 
 ## How to Use
 ### New Issue
