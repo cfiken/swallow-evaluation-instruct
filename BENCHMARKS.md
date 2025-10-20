@@ -14,7 +14,9 @@ Swallowチームが実装したベンチマークの一覧は `lighteval tasks l
   なお[Swallow LLM Leaderboard v2](https://swallow-llm.github.io/swallow-leaderboard-v2.ja.html)には，コンテキスト長さは最長32,768トークン，推奨設定を書いているベンチマークはそのとおり，推奨設定を書いていないベンチマークは貪欲法（temperature=0）を採用して，全モデルを同一の条件で評価した結果を掲載しています．  
 * 深い推論を妨げる可能性があるため，タスクIDの後ろに0をつけてゼロショットで評価することを推奨します．  
   例： `swallow|swallow_jmmlu|0|0`
-* Pass@KはK回試行して少なくとも1回成功する確率を表します．計算は [Chen et al. (2021)](https://arxiv.org/abs/2107.03374) の不偏推定式を用います．  
+* GPQAなどの数学・科学のベンチマークは，複数回試行してPass@KおよびMaj@Kを計測することができます．  
+  試行回数をNとして，K={1,2,4,...,N} におけるPass@KおよびMaj@Kを一括で計測します．  
+  Pass@KはK回試行して少なくとも1回成功する確率を表します．計算は [Chen et al. (2021)](https://arxiv.org/abs/2107.03374) の不偏推定式を用います．  
   Maj@KはK回試行したときの最頻回答の正解率を表します．試行回数NがKより大きい場合は，非復元抽出による厳密解を用います．詳細は [Maj@K の計算式](./lighteval/docs/source/majoirity-at-k-metric.mdx) を参照ください．  
 
 ## 日本語のベンチマーク
