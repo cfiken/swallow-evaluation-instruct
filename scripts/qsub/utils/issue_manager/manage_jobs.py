@@ -51,6 +51,7 @@ def register_status(issue_id, qstat_log):
                     lang, task = task_name.split()
                     task_dir = "mt_bench" if task == "mtbench" else task
                     model_name_relative = model_name[1:] if model_name.startswith('/') else model_name
+                    
                     # For TSUBAME
                     result_o_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{lang}_{task}.o{job_id}"
                     if not result_o_file.is_file():
@@ -60,27 +61,28 @@ def register_status(issue_id, qstat_log):
                         # deleted
                         job["status"] = "deleted"
                         continue
-
                     # Open .o file
                     with open(result_o_file, "r", errors="ignore") as f:
                         o_content = f.read()
 
+                    # For TSUBAME
+                    result_e_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{lang}_{task}.e{job_id}"
+                    if not result_e_file.is_file():
+                        # For ABCI
+                        result_e_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{job_id}.ER"
+                    with open(result_e_file, "r", errors="ignore") as f:
+                        e_content = f.read()
+
+                    o_error_occurred = re.search(r"Traceback \(most recent call last\):", o_content)
+                    e_error_occurred = re.search(r"Traceback \(most recent call last\)", e_content)
                     is_finished = re.search(r"✅ Result aggregation was successfully done.", o_content)
-                    error_occurred = re.search(r"Traceback \(most recent call last\):", o_content)
-                    if error_occurred:
-                        job["status"] = "error"
-                    else:
-                        # For TSUBAME
-                        result_e_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{lang}_{task}.e{job_id}"
-                        if not result_e_file.is_file():
-                            # For ABCI
-                            result_e_file = result_dir / "hosted_vllm" / model_name_relative / custom_settings / lang / task_dir / f"{job_id}.ER"
-                        with open(result_e_file, "r", errors="ignore") as f:
-                            e_content = f.read()
-                        error_occurred = re.search(r"Traceback \(most recent call last\)", e_content)
-                        if error_occurred:
+                    if o_error_occurred or e_error_occurred:
+                        if is_finished:
+                            job["status"] = "done_with_errors"
+                        else:
                             job["status"] = "error"
-                        elif is_finished:
+                    else:
+                        if is_finished:
                             job["status"] = "done"
                         else: 
                             job["status"] = "timeout"
@@ -109,7 +111,7 @@ def create_resub(issue_id):
                     f.write(f"{model_name}, {task_name}\n")
                     continue
                 status_list = [job["status"] for job_id, job in jobs.items()]
-                if not "done" in status_list:
+                if not ("done" in status_list or "done_with_errors" in status_list):
                     version_list = [job["version"] for job_id, job in jobs.items()]
                     ver_max = max(version_list)
                     ver_max_index = version_list.index(ver_max)

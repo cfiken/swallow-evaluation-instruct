@@ -38,6 +38,9 @@ if __name__ == "__main__":
                 if "done" in status_list:
                     job_id = tuple(jobs.keys())[status_list.index("done")]
                     f.write(f"\t🟢 done   \tjob_id: [{job_id}]\ttask: [{task_name}]\n")
+                elif "done_with_errors" in status_list:
+                    job_id = tuple(jobs.keys())[status_list.index("done_with_errors")]
+                    f.write(f"\t🟩 done_with_errors\tjob_id: [{job_id}]\ttask: [{task_name}]\n")
                 else:
                     version_list = [job["version"] for job_id, job in jobs.items()]
                     ver_max = max(version_list)
