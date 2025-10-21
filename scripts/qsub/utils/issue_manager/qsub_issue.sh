@@ -160,7 +160,7 @@ for MODEL_NAME in "${MODEL_NAMES[@]}"; do
             if [[ ! -f "$CSV_FILE" ]]; then
                 bash "${REPO_PATH}/scripts/qsub/utils/issue_manager/check_status.sh" ${ISSUE_ID}
             fi
-            if [[ -n $(grep "^$MODEL_NAME, $TASK" "$CSV_FILE") ]]; then
+            if [[ -n $(grep "^$MODEL_NAME, $TASK$" "$CSV_FILE") ]]; then
                 # Re submit
                 qsub_task ${TASK}
             fi
