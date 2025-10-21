@@ -139,7 +139,7 @@ for MODEL_NAME in "${MODEL_NAMES[@]}"; do
     fi
     source "${REPO_PATH}/.common_envs/bin/activate"
     echo "🤖 Downloading ${MODEL_NAME} ..."
-    huggingface-cli download $MODEL_NAME --cache-dir $HUGGINGFACE_CACHE --token $HF_TOKEN
+    hf download $MODEL_NAME --cache-dir $HUGGINGFACE_CACHE --token $HF_TOKEN
     deactivate
     echo "✅ \`${MODEL_NAME}\` was successfully downloaded at \`${HUGGINGFACE_CACHE}\`."
     else
@@ -157,9 +157,7 @@ for MODEL_NAME in "${MODEL_NAMES[@]}"; do
             qsub_task ${TASK}
         else
             CSV_FILE="${REPO_PATH}/scripts/qsub/utils/issue_manager/resub/${ISSUE_ID}.csv"
-            if [[ -f "$CSV_FILE" ]]; then
-                echo "♻️ Resubmitting tasks listed in ${CSV_FILE} ..."
-            else
+            if [[ ! -f "$CSV_FILE" ]]; then
                 bash "${REPO_PATH}/scripts/qsub/utils/issue_manager/check_status.sh" ${ISSUE_ID}
             fi
             if [[ -n $(grep "^$MODEL_NAME, $TASK" "$CSV_FILE") ]]; then
