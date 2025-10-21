@@ -31,11 +31,14 @@ bash scripts/qsub/utils/issue_manager/check_status.sh {ISSUE_ID}
 🟣 transfer
 🔵 running
 🟢 done   
+🟩 done_with_errors
 🟨 timeout
 🟥 error  
 ⬜️ not submitted
 ```
 下の3つは再度jobを投げる必要があるもので、場合に応じてログファイルを確認していただきたい。
+
+🟩 done_with_errors はmt_benchに発生しがちなステータスで、タスク内で何かしらエラーが発生しているが、評価結果の集計までできている状態を表す。実際にログファイルを参照してエラーの内容を確認することを推奨する。
 
 ### Resubmit Jobs
 再度jobを投げる必要があれば、`qsub_issue.sh`をもう一度実行すれば良い。これによりステータスがtimeout, error, not submittedのタスクが全てqsubされる。
