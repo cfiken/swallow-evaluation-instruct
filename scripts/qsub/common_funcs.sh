@@ -231,7 +231,7 @@ get_generation_params(){
     REPO_PATH=$3
     MODEL_NAME=$4
     MAX_SAMPLES=$5
-
+    UPLOAD_DETAILS_TO_HUGGINGFACE=$6
 
     # Load custom settings from model_conf.yaml
     local GENERATION_SETTINGS_DIR="${REPO_PATH}/scripts/generation_settings"
@@ -336,6 +336,11 @@ get_generation_params(){
     if [[ -n "${MAX_SAMPLES:-}" ]]; then
         OPTIONAL_ARGS_FOR_LIGHTEVAL+=(--max-samples $MAX_SAMPLES)
     fi
+    if [[ "${UPLOAD_DETAILS_TO_HUGGINGFACE}" == "true" ]]; then
+        OPTIONAL_ARGS_FOR_LIGHTEVAL+=(--push-to-hub)
+        OPTIONAL_ARGS_FOR_LIGHTEVAL+=(--results-org tokyotech-llm)
+    fi
+
 }
 
 

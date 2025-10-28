@@ -8,7 +8,7 @@ set -euo pipefail
 
 # Load Args
 ## Default Values
-TASK_NAME=""; NODE_KIND=""; MODEL_NAME=""; REPO_PATH=""; SERVICE=""; CUSTOM_SETTINGS=""; PROVIDER=""; CUSTOM_JOB_ID=""; MAX_SAMPLES=""
+TASK_NAME=""; NODE_KIND=""; MODEL_NAME=""; REPO_PATH=""; SERVICE=""; CUSTOM_SETTINGS=""; PROVIDER=""; CUSTOM_JOB_ID=""; MAX_SAMPLES=""; UPLOAD_DETAILS_TO_HUGGINGFACE=""
 STDOUT_STDERR_DIR=""; : "${CUDA_VISIBLE_DEVICES:=}"
 
 ## Parse Args
@@ -25,6 +25,7 @@ while [[ $# -gt 0 ]]; do
     --custom-job-id) CUSTOM_JOB_ID="$2";;           # Optional
     --max-samples) MAX_SAMPLES=$2;;               # Optional
     --stdout-stderr-dir) STDOUT_STDERR_DIR="$2";;   # Optional
+    --upload-details-to-huggingface) UPLOAD_DETAILS_TO_HUGGINGFACE="$2";; #optional
     *) echo "💀 Error: Unknown option: $1" >&2;;
   esac
   shift 2
@@ -57,7 +58,7 @@ fi
 source "${REPO_PATH}/scripts/qsub/common_funcs.sh"
 init_service "${SERVICE}" "${NODE_KIND}" "${CUDA_VISIBLE_DEVICES}" "${CUSTOM_JOB_ID}"
 init_common "${REPO_PATH}"
-get_generation_params "${CUSTOM_SETTINGS}" "${TASK_NAME}" "${REPO_PATH}" "${MODEL_NAME}" "${MAX_SAMPLES}"
+get_generation_params "${CUSTOM_SETTINGS}" "${TASK_NAME}" "${REPO_PATH}" "${MODEL_NAME}" "${MAX_SAMPLES}" "${UPLOAD_DETAILS_TO_HUGGINGFACE}"
 echo "⚙️ Generation Parameters: ${GEN_PARAMS}"
 RAW_OUTPUT_DIR="${REPO_PATH}/lighteval/outputs"
 
