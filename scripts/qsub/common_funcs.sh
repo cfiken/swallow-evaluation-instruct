@@ -337,7 +337,6 @@ get_generation_params(){
         OPTIONAL_ARGS_FOR_LIGHTEVAL+=(--max-samples $MAX_SAMPLES)
     fi
     if [[ "${UPLOAD_DETAILS_TO_HUGGINGFACE}" == "true" ]]; then
-        OPTIONAL_ARGS_FOR_LIGHTEVAL+=(--save-details)
         OPTIONAL_ARGS_FOR_LIGHTEVAL+=(--push-to-hub)
         OPTIONAL_ARGS_FOR_LIGHTEVAL+=(--results-org tokyotech-llm)
     fi
