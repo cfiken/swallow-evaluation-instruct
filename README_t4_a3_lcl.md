@@ -144,9 +144,9 @@ bash scripts/qsub/utils/save_and_check_qstat.sh
 `.pqt`ファイルは pandas を用いて dataframe として開くことができる． \
 （`scripts/utils/details_viewer.ipynb`参照）
 
-これらのjsonファイルおよびpqtファイルを共有したい場合は，lightevalに搭載されているHuggingFace Datasets自動アップロード機能を使うとよい．Ref. [Saving and reading results](https://huggingface.co/docs/lighteval/v0.8.0/en/saving-and-reading-results) \
-コマンドは以下の通り．事前にHuggingFace CLIによる認証を済ませておくこと．  
-なおDatasetsはデフォルトでprivate設定なので，意図しない限りインターネットに公開されることはない．  
+これらのjsonファイルおよびpqtファイルは，HuggingFace Datasetsに自動アップロードして共有したりブラウザで閲覧（要有料プラン）することができる．
+事前にHuggingFace CLIで認証したうえで，lightevalを以下の引数で実行すれば，jsonとpqtが自動的にアップロードされる [Saving and reading results](https://huggingface.co/docs/lighteval/v0.8.0/en/saving-and-reading-results)．  
+なおアップロードしたDatasetはデフォルトでprivate設定なので，意図しない限りインターネットに公開されることはない．  
 
 ```
 lighteval endpoint litellm \
@@ -156,6 +156,20 @@ lighteval endpoint litellm \
     --results-org "{あなたが属しているHuggingFace Organization ID}" # たとえば　tokyotech-llm
 ```
 
+HuggingFaceに自動アップロードすると，モデルIDがデータセット名，タスクIDがデータセットのSubset，タイムスタンプがSplitになる．  
+スコアなどが記録されるjsonファイルは，全タスクまとめて `results` という Subset に保存される．  
+有料プランを契約している場合はDataset Viewerによってブラウザで中身を閲覧できる．無料プランの場合は一般公開にした場合のみDataset Viewerが有効になる．  
+
+Qwen3-8B の評価詳細（MATH-500, GPQA, GPQA-Ja 各5問のみ）を自動アップロードしたので，閲覧してイメージをつかんでほしい．  
+https://huggingface.co/datasets/s-mizuki-nlp/details_hosted_vllm__Qwen__Qwen3-8B_private
+
+評価詳細を分析したいときは datasets パッケージでダウンロードするとよい．  
+
+```
+import datasets
+
+details = datasets.load_dataset("データセットID", subset="タスクID", split="タイムスタンプ（任意）")
+```
 
 ## 3. その他
 ### 3.1 タスクを追加するときに
