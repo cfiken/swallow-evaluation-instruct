@@ -13,7 +13,7 @@ PROVIDER="vllm"             # Default: "vllm". A provider to host the model. ["v
 CUSTOM_SETTINGS=""          # Default: "". A custom setting name to use. (e.g. "reasoning", "coding", "flashattn_incompatible")
 PREDOWNLOAD_MODEL="true"    # Default: "true". A pre-download a model before qsub.
 MAX_SAMPLES=""              # Default: "". A maximum number of samples in benchmark to evaluate. Set it for debugging.
-
+UPLOAD_DETAILS_TO_HUGGINGFACE="false"   # Default: "false". Set "true" If you want to upload the outputs to huggingface.
 ## Environmental Settings
 SERVICE=""                  # A service to use. ["tsubame", "abci", "local"]
 PRIORITY="-5"               # Default: "-5". A priority of the job. Note that double priority is double cost. ["-5", "-4", "-3"] (Only for TSUBAME)
@@ -62,6 +62,10 @@ fi
 if [[ -n "${MAX_SAMPLES}" ]]; then
   OPTIONAL_ARGS+=(--max-samples ${MAX_SAMPLES})
 fi
+if [[ "${UPLOAD_DETAILS_TO_HUGGINGFACE}" == "true" ]]; then
+  OPTIONAL_ARGS+=(--upload-details-to-huggingface ${UPLOAD_DETAILS_TO_HUGGINGFACE})
+fi
+
 
 # Set common qsub args
 common_qsub_args=(
