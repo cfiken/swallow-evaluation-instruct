@@ -1255,5 +1255,26 @@ for config in lst_dict_sampling_metric_tasks:
 AGGREGATE_CONF.extend(_AGGREGATE_CONF)
 
 AGGREGATE_CONF += [
+    # IFBench
+    {
+        "display_name": "ifbench_inst_level_strict_acc",
+        "func": pick,
+        "func_args": {
+            'metric_key': 'inst_level_strict_acc'
+        }, 
+        'target': {
+            'task_key': 'swallow|ifbench_singleturn|0'
+        }
+    },
+    {
+        "display_name": "ifbench_average",
+        "func": average_in_one_task,        
+        "func_args": {
+            "metric_key_list": IFBENCH
+        },
+        'target': {
+            'task_key': 'swallow|ifbench_singleturn|0'
+        }
+    },
     # 新しいベンチマークはここに追加していってください
 ]

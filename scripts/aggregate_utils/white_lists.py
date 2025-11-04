@@ -469,3 +469,10 @@ M_IFEVAL = [
     "prompt_level_loose_acc",
     "inst_level_loose_acc",
 ]
+
+IFBENCH = [
+    "prompt_level_strict_acc",
+    "inst_level_strict_acc",
+    "prompt_level_loose_acc",
+    "inst_level_loose_acc",
+]
