@@ -1,3 +1,11 @@
 reasoning_common_qwen3:
   reasoning_parser: "qwen3"
   version: "1"
+
+ignore_reasoning_tag_common:
+  reasoning_parser: "ignore"
+  version: "1"
+
+deepseek_r1_common:
+  reasoning_parser: "deepseek_r1"
+  version: "1"
