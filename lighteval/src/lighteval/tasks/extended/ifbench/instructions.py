@@ -28,7 +28,7 @@ import nltk
 import spacy
 import syllapy
 
-from ..ifeval import instructions_utils as instructions_util
+from lighteval.tasks.extended.ifbench import instructions_utils as instructions_util
 
 
 logger = logging.getLogger(__name__)
@@ -766,7 +766,7 @@ class PrimeLengthsChecker(Instruction):
         """Checks if the response only includes words with prime length."""
         value = value.translate(str.maketrans("", "", string.punctuation))
         words = value.split()
-        primes = set(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97)
+        primes = set([2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97])
         for word in words:
             if len(word) not in primes:
                 return False
