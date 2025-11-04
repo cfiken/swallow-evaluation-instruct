@@ -30,3 +30,4 @@ en_math_500_n16,math_500_N16,en/math_500_n16,lighteval,20:00:00,24:00:00,20:00:0
 en_aime_2024_2025_n16,aime_N16,en/aime_2024_2025_n16,lighteval,04:30:00,04:30:00,04:30:00,04:30:00
 ja_jamcqa,jamcqa,ja/jamcqa,lighteval,02:00:00,02:00:00,02:00:00,02:00:00
 ja_jamcqa_cot,jamcqa_cot,ja/jamcqa_cot,lighteval,02:00:00,02:00:00,02:00:00,02:00:00
+en_ifbench,ifbench_singleturn,en/ifbench,lighteval,01:30:00,00:10:00,00:10:00,00:10:00
