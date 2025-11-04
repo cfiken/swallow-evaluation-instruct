@@ -28,7 +28,7 @@ import nltk
 import spacy
 import syllapy
 
-import lighteval.tasks.extended.ifeval.instructions_utils as instructions_util
+from ..ifeval import instructions_utils as instructions_util
 
 
 logger = logging.getLogger(__name__)
@@ -1097,7 +1097,7 @@ class PronounCountChecker(Instruction):
 
     def check_following(self, value):
         """Checks if the response includes at least {N} pronouns."""
-        pronouns = set(
+        pronouns = set([
             "i",
             "me",
             "my",
@@ -1129,7 +1129,7 @@ class PronounCountChecker(Instruction):
             "their",
             "theirs",
             "themselves",
-        )
+        ])
         value = value.replace(
             "/", " "
         )  # to correctly count pronoun sets like she/her/hers, a common use case of pronouns

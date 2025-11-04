@@ -25,14 +25,15 @@ import numpy as np
 from aenum import extend_enum
 
 from lighteval.metrics.metrics import Metrics
-from lighteval.metrics.metrics_sample import SampleLevelComputation
 from lighteval.metrics.utils.metric_utils import (
+    MetricCategory,
+    MetricUseCase,
     SampleLevelMetricGrouping,
 )
 from lighteval.models.model_output import ModelResponse
 from lighteval.tasks.extended.ifbench import evaluation_lib
 from lighteval.tasks.lighteval_task import LightevalTaskConfig
-from lighteval.tasks.requests import Doc, SamplingMethod
+from lighteval.tasks.requests import Doc
 
 
 def ifbench_prompt(line, task_name: str = ""):
@@ -54,20 +55,20 @@ submetric_names = [
 ]
 
 
-class IFBench(SampleLevelComputation):
-    def compute(self, doc: Doc, model_response: ModelResponse, **kwargs) -> dict:
-        response = model_response.final_text[0]
+class IFBench():
+    def compute(self, formatted_doc: Doc, predictions: list[str], **kwargs) -> dict:
+        response = predictions[0]
 
         # Create InputExample from the doc data
         inp = evaluation_lib.InputExample(
             key=0,  # Not used in evaluation
-            instruction_id_list=doc.specific["instruction_id_list"],
-            prompt=doc.query,
-            kwargs=doc.specific["kwargs"],
+            instruction_id_list=formatted_doc.specific["instruction_id_list"],
+            prompt=formatted_doc.query,
+            kwargs=formatted_doc.specific["kwargs"],
         )
 
         # Create prompt_to_response mapping for evaluation_lib functions
-        prompt_to_response = {doc.query: response}
+        prompt_to_response = {formatted_doc.query: response}
 
         # Use existing evaluation_lib functions
         strict_result = evaluation_lib.test_instruction_following_strict(inp, prompt_to_response)
@@ -80,6 +81,17 @@ class IFBench(SampleLevelComputation):
             "inst_level_loose_acc": loose_result.follow_instruction_list,
         }
 
+    def __str__(self):
+        attrs = vars(self)
+        attr_strs = []
+        for k, v in attrs.items():
+            if callable(v):
+                val_str = v.__name__
+            else:
+                val_str = str(v)
+            attr_strs.append(f"{k}={val_str}")
+        return f"{self.__class__.__name__}({', '.join(attr_strs)})"
+
 
 def agg_inst_level_acc(items):
     flat_items = [item for sublist in items for item in sublist]
@@ -90,8 +102,9 @@ def agg_inst_level_acc(items):
 ifbench_metrics = SampleLevelMetricGrouping(
     metric_name=submetric_names,
     higher_is_better=dict.fromkeys(submetric_names, True),
-    category=SamplingMethod.GENERATIVE,
-    sample_level_fn=IFBench(),
+    category=MetricCategory.GENERATIVE,
+    use_case=MetricUseCase.ACCURACY,
+    sample_level_fn=IFBench().compute,
     corpus_level_fn={
         "prompt_level_strict_acc": np.mean,
         "inst_level_strict_acc": agg_inst_level_acc,
@@ -101,39 +114,22 @@ ifbench_metrics = SampleLevelMetricGrouping(
 )
 
 # Main IFBench test dataset task config
-ifbench_test = LightevalTaskConfig(
-    name="ifbench_test",
+ifbench = LightevalTaskConfig(
+    name="ifbench_singleturn",
     prompt_function=ifbench_prompt,
     suite=["extended"],
     hf_repo="allenai/IFBench_test",
     hf_subset="default",
-    metrics=[ifbench_metrics],
+    metric=[ifbench_metrics],
     hf_avail_splits=["train"],
     evaluation_splits=["train"],
-    few_shots_split="train",
-    few_shots_select="random_sampling",
-    generation_size=1280,
+    few_shots_split=None,
+    few_shots_select=None,
+    generation_size=None,
     stop_sequence=[],  # no stop sequence, will use eot token
     version="0.1",
 )
 
-# Multi-turn IFBench task config
-ifbench_multiturn = LightevalTaskConfig(
-    name="ifbench_multiturn",
-    prompt_function=ifbench_prompt,
-    suite=["extended"],
-    hf_repo="allenai/IFBench_multi-turn",
-    hf_subset="default",
-    metrics=[ifbench_metrics],
-    hf_avail_splits=["test"],
-    evaluation_splits=["test"],
-    few_shots_split="test",
-    few_shots_select="random_sampling",
-    generation_size=1280,
-    stop_sequence=[],  # no stop sequence, will use eot token
-    version="0.1",
-)
-
-TASKS_TABLE = [ifbench_test, ifbench_multiturn]
+TASKS_TABLE = [ifbench]
 
 extend_enum(Metrics, "ifbench_metric", ifbench_metrics)
