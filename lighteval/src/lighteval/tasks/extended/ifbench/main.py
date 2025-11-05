@@ -125,7 +125,7 @@ ifbench = LightevalTaskConfig(
     evaluation_splits=["train"],
     few_shots_split=None,
     few_shots_select=None,
-    generation_size=None,
+    generation_size=1280,
     stop_sequence=[],  # no stop sequence, will use eot token
     version="0.1",
 )
