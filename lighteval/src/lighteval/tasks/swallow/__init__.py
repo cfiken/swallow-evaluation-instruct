@@ -28,7 +28,7 @@ from .lcb_swallow import lcb_swallow_tasks
 from .humaneval_series import humaneval, humanevalplus
 from .jgpqa import lst_jgpqa_tasks, lst_jgpqa_passk_majk
 from .jamcqa import jamcqa_task, jamcqa_cot_task
-from .ifbench.main import ifbench
+from .ifbench import ifbench
 
 TASKS_TABLE = [
     math_100_japanese,
