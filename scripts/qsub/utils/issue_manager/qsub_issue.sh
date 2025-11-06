@@ -33,6 +33,9 @@ fi
 if [[ -n "${MAX_SAMPLES}" ]]; then
   OPTIONAL_ARGS+=(--max-samples ${MAX_SAMPLES})
 fi
+if [[ "${UPLOAD_DETAILS}" == "true" ]]; then
+  OPTIONAL_ARGS+=(--upload-details-to-huggingface ${UPLOAD_DETAILS})
+fi
 
 # Check service
 check_service "${SERVICE}"
