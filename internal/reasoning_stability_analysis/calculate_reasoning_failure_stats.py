@@ -266,7 +266,7 @@ def main():
     # 標準出力（簡素版）
     print(f"タスク別の無回答率:")
     print(f"\n{args.model_id}")
-    lst_header = ["task_id", "no_answer_ratio"]
+    lst_header = ["task_id", "reasoning_failure_ratio", "performance_in_completion", "performance"]
     header = ",".join(lst_header)
     print(header)
     for task_id, result in results.items():
