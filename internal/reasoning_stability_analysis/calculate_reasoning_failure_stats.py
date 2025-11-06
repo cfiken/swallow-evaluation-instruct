@@ -16,6 +16,7 @@ import pandas as pd
 from datasets import load_dataset
 
 from config_benchmarks import BENCHMARKS
+from utils import load_parquet_from_local
 
 
 def parse_args() -> argparse.Namespace:
@@ -45,8 +46,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         '--provider',
         type=str,
-        default='hosted_vllm',
-        help='プロバイダー名 (デフォルト: hosted_vllm)'
+        default=None,
+        help='LLMプロバイダー名（例：hosted_vllm, 省略可）'
     )
     parser.add_argument(
         '--task_ids',
@@ -55,21 +56,30 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help='分析対象のタスクID（指定なしの場合は全タスク）'
     )
+    parser.add_argument(
+        '--lighteval-output-dir',
+        type=str,
+        default=None,
+        help='ローカルストレージからParquetファイルを読み込む場合のディレクトリパス'
+    )
     return parser.parse_args()
 
 
-def build_hf_dataset_id(model_id: str, hf_organization: str, provider: str) -> str:
+def build_hf_dataset_id(model_id: str, hf_organization: str, provider: Optional[str]) -> str:
     """HuggingFaceのデータセットIDを構築する
     
     Args:
         model_id: モデルID
         hf_organization: HuggingFace組織名
-        provider: プロバイダー名
+        provider: プロバイダー名（Noneの場合はproviderなし）
         
     Returns:
         構築されたデータセットID
     """
-    model_name = f"{provider}/{model_id}"
+    if provider:
+        model_name = f"{provider}/{model_id}"
+    else:
+        model_name = model_id
     return f"{hf_organization}/details_{model_name.replace('/', '__')}_private"
 
 
@@ -91,7 +101,9 @@ def load_and_analyze_task(
     hf_dataset_id: str,
     task_id: str,
     reasoning_starter: str,
-    model_id: str
+    model_id: str,
+    lighteval_output_dir: Optional[str] = None,
+    provider: Optional[str] = None
 ) -> dict:
     """タスクデータをロードして分析する
     
@@ -100,6 +112,8 @@ def load_and_analyze_task(
         task_id: タスクID
         reasoning_starter: 推論開始タグ
         model_id: モデルID
+        lighteval_output_dir: ローカルストレージのディレクトリ（Noneの場合はHFモード）
+        provider: プロバイダー名（ローカルモード用）
         
     Returns:
         分析結果の辞書
@@ -112,15 +126,27 @@ def load_and_analyze_task(
     if task_id not in BENCHMARKS:
         raise KeyError(f"タスクID '{task_id}' はBENCHMARKSに登録されていません")
     
-    # データセットのサブセット名を構築
-    subset = task_id.replace("|", "_").replace(":", "_")
+    benchmark_config = BENCHMARKS[task_id]
     
-    # データセットをロード
-    dataset = load_dataset(hf_dataset_id, name=subset, split="latest")
-    df_details = dataset.to_pandas()
+    # データをロード
+    if lighteval_output_dir is None:
+        # HuggingFaceモード
+        subset = task_id.replace("|", "_").replace(":", "_")
+        dataset = load_dataset(hf_dataset_id, name=subset, split="latest")
+        df_details = dataset.to_pandas()
+    else:
+        # ローカルストレージモード
+        file_pattern = benchmark_config["file_pattern"]
+        df_details = load_parquet_from_local(
+            lighteval_output_dir,
+            model_id,
+            provider,
+            task_id,
+            file_pattern
+        )
     
     # 分析関数を取得して実行
-    analysis_function = BENCHMARKS[task_id]
+    analysis_function = benchmark_config["analysis_function"]
     result = analysis_function(df_details, reasoning_starter)
     
     # model_idを結果に追加
@@ -178,15 +204,30 @@ def main():
     # コマンドライン引数のパース
     args = parse_args()
     
+    # モード判定
+    lighteval_output_dir = getattr(args, 'lighteval_output_dir', None)
+    is_local_mode = lighteval_output_dir is not None
+    
+    # ローカルモードの場合はhf_organizationをLOCALで上書き
+    hf_organization = "LOCAL" if is_local_mode else args.hf_organization
+    
     # HuggingFaceデータセットIDの構築
     hf_dataset_id = build_hf_dataset_id(
         args.model_id,
-        args.hf_organization,
+        hf_organization,
         args.provider
     )
     
-    print(f"データセットID: {hf_dataset_id}", file=sys.stderr)
-    print(f"モデルID: {args.model_id}", file=sys.stderr)
+    # モード情報を表示
+    if is_local_mode:
+        print(f"モード: local storage", file=sys.stderr)
+        print(f"lighteval output dir: {lighteval_output_dir}", file=sys.stderr)
+    else:
+        print(f"モード: HuggingFace", file=sys.stderr)
+        print(f"HF Dataset ID: {hf_dataset_id}", file=sys.stderr)
+    
+    print(f"Model ID: {args.model_id}", file=sys.stderr)
+    print(f"LLM Provider: {args.provider}", file=sys.stderr)
     
     # 対象タスクIDの取得
     task_ids = get_task_ids(args.task_ids)
@@ -201,7 +242,9 @@ def main():
                 hf_dataset_id,
                 task_id,
                 args.reasoning_starter,
-                args.model_id
+                args.model_id,
+                lighteval_output_dir,
+                args.provider if is_local_mode else None
             )
             results[task_id] = result
             print(f"  ✓ 完了", file=sys.stderr)
@@ -219,10 +262,14 @@ def main():
     # 標準出力（簡素版）
     print(f"タスク別の無回答率:")
     print(f"\n{args.model_id}")
+    lst_header = ["task_id", "no_answer_ratio"]
+    header = ",".join(lst_header)
+    print(header)
     for task_id, result in results.items():
-        no_answer_ratio = result.get('no_answer_ratio', 'N/A')
-        print(f"{task_id}\t{no_answer_ratio}")
-    
+        lst_values = [result.get(metric_name, 'N/A') for metric_name in lst_header[1:]]
+        str_values = ",".join(map(lambda v: f"{v:.3f}", lst_values))
+        print(f"{task_id},{str_values}")
+
     # JSONファイル出力
     json_path = save_results_json(results, hf_dataset_id)
     print(f"\nJSONファイル保存: {json_path}", file=sys.stderr)
