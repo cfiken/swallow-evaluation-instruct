@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = "==3.10.14"
 resolution-markers = [
     "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra != 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra != 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra != 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra != 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra != 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra != 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm')",
@@ -1111,6 +1111,7 @@ dependencies = [
     { name = "beautifulsoup4" },
     { name = "colorlog" },
     { name = "datasets" },
+    { name = "emoji" },
     { name = "fsspec", version = "2025.3.0", source = { registry = "https://pypi.org/simple" } },
     { name = "fuzzywuzzy" },
     { name = "gitpython" },
@@ -1123,6 +1124,7 @@ dependencies = [
     { name = "nagisa" },
     { name = "nltk" },
     { name = "numpy", version = "1.26.4", source = { registry = "https://pypi.org/simple" } },
+    { name = "pip" },
     { name = "protobuf", version = "3.20.3", source = { registry = "https://pypi.org/simple" } },
     { name = "pycountry" },
     { name = "pytablewriter" },
@@ -1132,6 +1134,8 @@ dependencies = [
     { name = "sacrebleu" },
     { name = "scikit-learn" },
     { name = "sentencepiece" },
+    { name = "spacy" },
+    { name = "syllapy" },
     { name = "termcolor" },
     { name = "torch", version = "2.7.1", source = { registry = "https://pypi.org/simple" }, marker = "(sys_platform == 'darwin' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm')" },
     { name = "torch", version = "2.7.1+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(sys_platform != 'darwin' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm')" },
@@ -1168,6 +1172,7 @@ requires-dist = [
     { name = "colorlog" },
     { name = "datasets", specifier = ">=2.14.0" },
     { name = "diskcache", marker = "extra == 'litellm'" },
+    { name = "emoji" },
     { name = "fsspec", specifier = ">=2023.12.2" },
     { name = "fuzzywuzzy", specifier = ">=0.18.0" },
     { name = "gitpython", specifier = ">=3.1.41" },
@@ -1190,6 +1195,7 @@ requires-dist = [
     { name = "openai", marker = "extra == 'extended-tasks'" },
     { name = "optimum", marker = "extra == 'optimum'", specifier = "==1.12.0" },
     { name = "peft", marker = "extra == 'adapters'", specifier = "==0.3.0" },
+    { name = "pip" },
     { name = "pre-commit", marker = "extra == 'quality'" },
     { name = "protobuf", specifier = "==3.20.*" },
     { name = "pycountry" },
@@ -1205,8 +1211,10 @@ requires-dist = [
     { name = "sacrebleu" },
     { name = "scikit-learn" },
     { name = "sentencepiece", specifier = ">=0.1.99" },
+    { name = "spacy" },
     { name = "spacy", extras = ["ja", "ko", "th"], marker = "extra == 'multilingual'" },
     { name = "stanza", marker = "extra == 'multilingual'" },
+    { name = "syllapy" },
     { name = "tensorboardx", marker = "extra == 'nanotron'" },
     { name = "tensorboardx", marker = "extra == 'tensorboardx'" },
     { name = "termcolor", specifier = "==2.3.0" },
@@ -2983,13 +2991,9 @@ auto-detector = [
 ]
 lighteval = [
     { name = "datasets" },
-    { name = "emoji" },
     { name = "lighteval", extra = ["extended-tasks", "litellm", "math", "vllm"], marker = "extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra != 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm')" },
     { name = "litellm" },
     { name = "openai" },
-    { name = "pip" },
-    { name = "spacy" },
-    { name = "syllapy" },
     { name = "transformers" },
 ]
 vllm = [
@@ -3000,16 +3004,12 @@ vllm = [
 [package.metadata]
 requires-dist = [
     { name = "datasets", marker = "extra == 'lighteval'", specifier = "<4.0.0" },
-    { name = "emoji", marker = "extra == 'lighteval'" },
     { name = "lighteval", extras = ["math", "extended-tasks", "litellm", "vllm"], marker = "extra == 'lighteval'", editable = "lighteval" },
     { name = "litellm", marker = "extra == 'lighteval'", specifier = ">=1.75.8" },
     { name = "openai", marker = "extra == 'lighteval'", specifier = ">=1.40.0" },
     { name = "pandas", marker = "extra == 'aggregate-results'", specifier = ">=2.2.3" },
-    { name = "pip", marker = "extra == 'lighteval'" },
     { name = "protobuf", marker = "extra == 'auto-detector'" },
     { name = "sentencepiece", marker = "extra == 'auto-detector'" },
-    { name = "spacy", marker = "extra == 'lighteval'" },
-    { name = "syllapy", marker = "extra == 'lighteval'" },
     { name = "transformers", marker = "extra == 'auto-detector'" },
     { name = "transformers", marker = "extra == 'lighteval'", specifier = ">=4.51.0" },
     { name = "transformers", marker = "extra == 'vllm'", specifier = ">=4.55.0" },
