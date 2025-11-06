@@ -1,9 +1,13 @@
-from aggregation_functions import extractive_match_metric, bleu_metric, mt_bench_metric
+from aggregation_functions import extractive_match_metric, bleu_metric, mt_bench_metric, ifeval_metric
 
 BENCHMARKS = {
     "swallow|japanese_mt_bench|0": {
         "analysis_function": mt_bench_metric,
         "file_pattern": "details_swallow|japanese_mt_bench|0_*.parquet"
+    },
+    "swallow|mifeval_ja|0": {
+        "analysis_function": ifeval_metric,
+        "file_pattern": "details_swallow|mifeval_ja|0_*.parquet"
     },
     "swallow|jamcqa|0": {
         "analysis_function": extractive_match_metric,
@@ -63,10 +67,6 @@ EXTENDED = {
     "swallow|jemhopqa_cot|0": {
         "analysis_function": extractive_match_metric,
         "file_pattern": "details_swallow|jemhopqa_cot|0_*.parquet"
-    },
-    "swallow|mifeval_ja|0": {
-        "analysis_function": extractive_match_metric,
-        "file_pattern": "details_swallow|mifeval_ja|0_*.parquet"
     },    
     "swallow|swallow_jmmlu|0": {
         "analysis_function": extractive_match_metric,
