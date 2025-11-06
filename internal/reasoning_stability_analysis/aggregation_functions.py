@@ -19,7 +19,7 @@ def extractive_match_metric(df_details, reasoning_starter: str) -> dict:
             num_non_closed_reasoning += 1
         else:
             num_closed_reasoning += 1
-            is_correct_in_closed_reasoning += is_correct
+            is_correct_in_closed_reasoning += record["metrics"]["extractive_match"]
     
     dict_results = {
         "num_responses": num_examples,
