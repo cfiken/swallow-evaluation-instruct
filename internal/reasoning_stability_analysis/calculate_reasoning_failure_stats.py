@@ -7,6 +7,7 @@ HuggingFaceからデータセットをダウンロードし、
 """
 
 import argparse
+import copy
 import json
 import os
 import sys
@@ -16,6 +17,7 @@ import pandas as pd
 from datasets import load_dataset
 
 from config_benchmarks import BENCHMARKS
+from aggregation_functions import DUMMY_RESULT
 from utils import load_parquet_from_local
 
 
@@ -235,6 +237,7 @@ def main():
     
     # 各タスクの分析
     results = {}
+    num_succeeded = 0
     for i, task_id in enumerate(task_ids, 1):
         print(f"\n[{i}/{len(task_ids)}] タスク {task_id} を処理中...", file=sys.stderr)
         try:
@@ -247,17 +250,18 @@ def main():
                 args.provider if is_local_mode else None
             )
             results[task_id] = result
+            num_succeeded += 1
             print(f"  ✓ 完了", file=sys.stderr)
         except Exception as e:
             print(f"  ✗ 警告: タスク {task_id} の処理に失敗しました: {e}", file=sys.stderr)
-            continue
+            results[task_id] = copy.deepcopy(DUMMY_RESULT)
+            results[task_id]['model_id'] = args.model_id
     
-    # 結果が1つもない場合はエラー
-    if not results:
-        print("\nエラー: すべてのタスクの処理に失敗しました", file=sys.stderr)
-        sys.exit(1)
+    # 成功したタスクが1つもない場合は警告
+    if num_succeeded == 0:
+        print("\n警告: すべてのタスクの処理に失敗しました", file=sys.stderr)
     
-    print(f"\n成功したタスク: {len(results)}/{len(task_ids)}", file=sys.stderr)
+    print(f"\n成功したタスク: {num_succeeded}/{len(task_ids)}", file=sys.stderr)
     
     # 標準出力（簡素版）
     print(f"タスク別の無回答率:")

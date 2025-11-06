@@ -1,3 +1,14 @@
+
+DUMMY_RESULT = {
+    'num_responses': float('nan'),
+    'num_non_closed_reasoning': float('nan'),
+    'num_closed_reasoning': float('nan'),
+    'no_answer_ratio': float('nan'),
+    'performance_in_has_answer': float('nan'),
+    'performance_overall': float('nan')
+}
+
+
 def extractive_match_metric(df_details, reasoning_starter: str) -> dict:
     """Extractive Match Metric Benchmarks
 
