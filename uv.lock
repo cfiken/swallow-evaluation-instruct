@@ -631,6 +631,14 @@ wheels = [
 ]
 
 [[package]]
+name = "en-core-web-sm"
+version = "3.8.0"
+source = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
+wheels = [
+    { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl", hash = "sha256:1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85" },
+]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1168,6 +1176,7 @@ dependencies = [
     { name = "colorlog" },
     { name = "datasets" },
     { name = "emoji" },
+    { name = "en-core-web-sm" },
     { name = "fsspec", version = "2025.3.0", source = { registry = "https://pypi.org/simple" } },
     { name = "fuzzywuzzy" },
     { name = "gitpython" },
@@ -1180,7 +1189,6 @@ dependencies = [
     { name = "nagisa" },
     { name = "nltk" },
     { name = "numpy", version = "1.26.4", source = { registry = "https://pypi.org/simple" } },
-    { name = "pip" },
     { name = "protobuf", version = "3.20.3", source = { registry = "https://pypi.org/simple" } },
     { name = "pycountry" },
     { name = "pytablewriter" },
@@ -1229,6 +1237,7 @@ requires-dist = [
     { name = "datasets", specifier = ">=2.14.0" },
     { name = "diskcache", marker = "extra == 'litellm'" },
     { name = "emoji" },
+    { name = "en-core-web-sm", url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" },
     { name = "fsspec", specifier = ">=2023.12.2" },
     { name = "fuzzywuzzy", specifier = ">=0.18.0" },
     { name = "gitpython", specifier = ">=3.1.41" },
@@ -1251,7 +1260,6 @@ requires-dist = [
     { name = "openai", marker = "extra == 'extended-tasks'" },
     { name = "optimum", marker = "extra == 'optimum'", specifier = "==1.12.0" },
     { name = "peft", marker = "extra == 'adapters'", specifier = "==0.3.0" },
-    { name = "pip" },
     { name = "pre-commit", marker = "extra == 'quality'" },
     { name = "protobuf", specifier = "==3.20.*" },
     { name = "pycountry" },
@@ -1267,7 +1275,7 @@ requires-dist = [
     { name = "sacrebleu" },
     { name = "scikit-learn" },
     { name = "sentencepiece", specifier = ">=0.1.99" },
-    { name = "spacy" },
+    { name = "spacy", specifier = "==3.8.7" },
     { name = "spacy", extras = ["ja", "ko", "th"], marker = "extra == 'multilingual'" },
     { name = "stanza", marker = "extra == 'multilingual'" },
     { name = "syllapy" },
@@ -2116,15 +2124,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/c4/043192375eaa4463254e8e61f0e2ec9a846b983929a8d0a7122e0a6d6fff/pillow-12.0.0-cp310-cp310-win32.whl", hash = "sha256:bd87e140e45399c818fac4247880b9ce719e4783d767e030a883a970be632275", size = 6295431, upload-time = "2025-10-15T18:21:42.518Z" },
     { url = "https://files.pythonhosted.org/packages/92/c6/c2f2fc7e56301c21827e689bb8b0b465f1b52878b57471a070678c0c33cd/pillow-12.0.0-cp310-cp310-win_amd64.whl", hash = "sha256:455247ac8a4cfb7b9bc45b7e432d10421aea9fc2e74d285ba4072688a74c2e9d", size = 7000412, upload-time = "2025-10-15T18:21:44.404Z" },
     { url = "https://files.pythonhosted.org/packages/b2/d2/5f675067ba82da7a1c238a73b32e3fd78d67f9d9f80fbadd33a40b9c0481/pillow-12.0.0-cp310-cp310-win_arm64.whl", hash = "sha256:6ace95230bfb7cd79ef66caa064bbe2f2a1e63d93471c3a2e1f1348d9f22d6b7", size = 2435903, upload-time = "2025-10-15T18:21:46.29Z" },
-]
-
-[[package]]
-name = "pip"
-version = "25.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fe/6e/74a3f0179a4a73a53d66ce57fdb4de0080a8baa1de0063de206d6167acc2/pip-25.3.tar.gz", hash = "sha256:8d0538dbbd7babbd207f261ed969c65de439f6bc9e5dbd3b3b9a77f25d95f343", size = 1803014, upload-time = "2025-10-25T00:55:41.394Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/3c/d717024885424591d5376220b5e836c2d5293ce2011523c9de23ff7bf068/pip-25.3-py3-none-any.whl", hash = "sha256:9655943313a94722b7774661c21049070f6bbb0a1516bf02f7c8d5d9201514cd", size = 1778622, upload-time = "2025-10-25T00:55:39.247Z" },
 ]
 
 [[package]]
@@ -3756,9 +3755,8 @@ version = "0.0.32.post1"
 source = { registry = "https://download.pytorch.org/whl/cu128" }
 dependencies = [
     { name = "numpy", version = "1.26.4", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (sys_platform == 'darwin' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm')" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform == 'darwin' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm')" },
-    { name = "torch", version = "2.8.0", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine == 'aarch64' and platform_python_implementation != 'CPython' and sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (platform_machine != 'aarch64' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (platform_python_implementation == 'CPython' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform != 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm')" },
-    { name = "torch", version = "2.8.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform == 'darwin' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (sys_platform == 'darwin' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform == 'darwin' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm')" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform != 'darwin' and sys_platform != 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform == 'darwin' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (sys_platform == 'linux' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-aggregate-results' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-lighteval') or (extra == 'extra-35-swallow-evaluation-instruct-private-auto-detector' and extra == 'extra-35-swallow-evaluation-instruct-private-vllm')" },
+    { name = "torch", version = "2.8.0+cu128", source = { registry = "https://download.pytorch.org/whl/cu128" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'linux')" },
 ]
 wheels = [
     { url = "https://download.pytorch.org/whl/cu128/xformers-0.0.32.post1-cp39-abi3-manylinux_2_28_x86_64.whl" },

@@ -88,7 +88,7 @@ dependencies = [
     "langdetect>=1.0.0,<2.0.0", # M-IFEval-Ja
     "janome", # M-IFEval-Ja, WMT20
     "nagisa", # WMT20
-    "syllapy", "emoji", "spacy", "pip" # IFBench
+    "syllapy", "emoji", "spacy==3.8.7", "en_core_web_sm", # IFBench
 ]
 
 [project.optional-dependencies]
@@ -128,3 +128,7 @@ Issues = "https://github.com/huggingface/lighteval/issues"
 
 [project.scripts]
 lighteval = "lighteval.__main__:app"
+
+[tool.uv.sources]
+# IFBench
+en_core_web_sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
