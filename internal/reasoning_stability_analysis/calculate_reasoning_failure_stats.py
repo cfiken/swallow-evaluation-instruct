@@ -171,8 +171,21 @@ def save_results_json(results: dict, hf_dataset_id: str) -> str:
     # 親ディレクトリを作成（スラッシュが含まれる場合はサブディレクトリも作成）
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
+    # 構造を model_id -> task_id -> metrics に変更
+    # results は Dict[task_id, metrics + model_id] の形式
+    restructured = {}
+    for task_id, metrics_with_model in results.items():
+        model_id = metrics_with_model.get('model_id', 'unknown')
+        # model_id を除いたメトリクスを取得
+        metrics = {k: v for k, v in metrics_with_model.items() if k != 'model_id'}
+        
+        # model_id -> task_id -> metrics の階層構造を作成
+        if model_id not in restructured:
+            restructured[model_id] = {}
+        restructured[model_id][task_id] = metrics
+    
     with open(output_path, 'w', encoding='utf-8') as f:
-        json.dump(results, f, indent=4, ensure_ascii=False)
+        json.dump(restructured, f, ensure_ascii=False)
     
     return output_path
 
@@ -195,6 +208,10 @@ def save_results_csv(results: dict, hf_dataset_id: str) -> str:
     df = pd.DataFrame(results).T
     df.index.name = 'task_id'
     df.reset_index(inplace=True)
+    
+    # 列の順序を変更: model_id を左端, task_id を2番目
+    other_cols = [col for col in df.columns if col not in ['model_id', 'task_id']]
+    df = df[['model_id', 'task_id'] + other_cols]
     
     df.to_csv(output_path, index=False, encoding='utf-8')
     
