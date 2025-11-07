@@ -1,3 +1,6 @@
+import math
+import json
+
 
 DUMMY_RESULT = {
     'num_responses': float('nan'),
@@ -74,6 +77,12 @@ def ifeval_metric(df_details, reasoning_starter: str) -> dict:
 
     return dict_results
 
+def _calculate_pass_at_k(n: int, c: int, k: int) -> float:
+    """Calculates 1 - comb(n - c, k) / comb(n, k)."""
+    if n - c < k:
+        return 1.0
+    return 1.0 - math.prod(1.0 - k / i for i in range(n - c + 1, n + 1))
+
 def pass_at_k_metric(df_details, reasoning_starter: str) -> dict:
     """Pass@K Metric Benchmarks
     performance_in_completion is defined as the conditional average on the any one of the K responses correctly completed.
@@ -85,22 +94,49 @@ def pass_at_k_metric(df_details, reasoning_starter: str) -> dict:
     num_closed_reasoning = 0
     score_in_closed_reasoning = 0
     score_overall = 0
+    lst_metric_name_candidates = ["humaneval_pass@1:10", "jhumaneval_pass@1:10", "codegen_pass@1:10"]
     for record in df_details.to_dict(orient="records"):
+        # instruction-level Pass@K score lookup
         dict_metrics = record["metrics"]
-        if "humaneval_pass@1:10" in dict_metrics:
-            score = dict_metrics["humaneval_pass@1:10"]
-        elif "jhumaneval_pass@1:10" in dict_metrics:
-            score = dict_metrics["jhumaneval_pass@1:10"]
+        for metric_name in lst_metric_name_candidates:
+            if metric_name in dict_metrics:
+                score = dict_metrics[metric_name]
+                break
         else:
             raise ValueError("pass@k metric not found in the record metrics.")
-        score_overall += score
+        
+        # response-level unit-test results
+        lst_lst_unit_test_results = json.loads(record["specifics"]["results"])
+        
+        # responses
         lst_responses = list(record["predictions"])
-        lst_is_non_closed_reasoning = [response.startswith(reasoning_starter) for response in lst_responses]
-        num_non_closed_reasoning += sum(lst_is_non_closed_reasoning)
-        num_closed_reasoning += len(lst_is_non_closed_reasoning) - sum(lst_is_non_closed_reasoning)
-        num_examples += len(lst_responses)
-        if not all(lst_is_non_closed_reasoning):
-            score_in_closed_reasoning += score
+        num_examples_i = 0
+        passed_i = 0
+        passed_in_completion_i = 0
+        num_non_closed_reasoning_i = 0
+        num_closed_reasoning_i = 0
+        for response, lst_unit_results in zip(lst_responses, lst_lst_unit_test_results):
+            _passed = 1 if all([result == True for result in lst_unit_results]) else 0
+            if response.startswith(reasoning_starter):
+                num_non_closed_reasoning_i += 1
+            else:
+                num_closed_reasoning_i += 1
+                passed_in_completion_i += _passed
+        
+            num_examples_i += 1
+            passed_i += _passed
+        
+        pass_at_1_i = _calculate_pass_at_k(n=num_examples_i, c=passed_i, k=1)
+        pass_at_1_in_closed_reasoning_i = _calculate_pass_at_k(n=num_closed_reasoning_i, c=passed_in_completion_i, k=1)
+        
+        # sanity check
+        assert math.isclose(pass_at_1_i, score, abs_tol=1e-5), "Pass@1 score mismatch."
+        
+        num_non_closed_reasoning += num_non_closed_reasoning_i
+        num_closed_reasoning += num_closed_reasoning_i
+        num_examples += num_examples_i
+        score_overall += pass_at_1_i
+        score_in_closed_reasoning += pass_at_1_in_closed_reasoning_i
         num_instructions += 1
 
     dict_results = {
