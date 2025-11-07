@@ -5,13 +5,13 @@
 # cd "$(dirname "$0")"
 
 # デフォルト値
-MODEL_ID="tokyotech-llm/Qwen3-Swallow-8B-v0.1-SFT-exp11-LR1.5E-5-iter0023000"
-HF_ORGANIZATION="tokyotech-llm"
+LIGHTEVAL_OUTPUT_DIR="/home/sakae/temp/lighteval-outputs"
+MODEL_ID="Qwen/Qwen3-8B/reasoning"
 REASONING_STARTER="<think>"
-PROVIDER="hosted_vllm"
+LLM_PROVIDER="hosted_vllm"
 
 python calculate_reasoning_failure_stats.py \
     --model_id "$MODEL_ID" \
-    --hf_organization "$HF_ORGANIZATION" \
+    --lighteval-output-dir "$LIGHTEVAL_OUTPUT_DIR" \
     --reasoning_starter "$REASONING_STARTER" \
-    --provider "$PROVIDER"
+    --provider "$LLM_PROVIDER"
