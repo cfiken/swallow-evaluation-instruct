@@ -74,6 +74,46 @@ def ifeval_metric(df_details, reasoning_starter: str) -> dict:
 
     return dict_results
 
+def pass_at_k_metric(df_details, reasoning_starter: str) -> dict:
+    """Pass@K Metric Benchmarks
+    performance_in_completion is defined as the conditional average on the any one of the K responses correctly completed.
+    """
+    num_examples = 0
+    num_instructions = 0
+    
+    num_non_closed_reasoning = 0
+    num_closed_reasoning = 0
+    score_in_closed_reasoning = 0
+    score_overall = 0
+    for record in df_details.to_dict(orient="records"):
+        dict_metrics = record["metrics"]
+        if "humaneval_pass@1:10" in dict_metrics:
+            score = dict_metrics["humaneval_pass@1:10"]
+        elif "jhumaneval_pass@1:10" in dict_metrics:
+            score = dict_metrics["jhumaneval_pass@1:10"]
+        else:
+            raise ValueError("pass@k metric not found in the record metrics.")
+        score_overall += score
+        lst_responses = list(record["predictions"])
+        lst_is_non_closed_reasoning = [response.startswith(reasoning_starter) for response in lst_responses]
+        num_non_closed_reasoning += sum(lst_is_non_closed_reasoning)
+        num_closed_reasoning += len(lst_is_non_closed_reasoning) - sum(lst_is_non_closed_reasoning)
+        num_examples += len(lst_responses)
+        if not all(lst_is_non_closed_reasoning):
+            score_in_closed_reasoning += score
+        num_instructions += 1
+
+    dict_results = {
+        "num_responses": num_examples,
+        "num_non_closed_reasoning": num_non_closed_reasoning,
+        "num_closed_reasoning": num_closed_reasoning,
+        "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
+        "performance_in_completion": score_in_closed_reasoning / num_instructions,
+        "performance": score_overall / num_instructions
+    }
+
+    return dict_results
+
 
 def bleu_metric(df_details, reasoning_starter: str) -> dict:
     """BLEU Metric Benchmarks
