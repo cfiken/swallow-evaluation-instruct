@@ -1275,7 +1275,7 @@ requires-dist = [
     { name = "sacrebleu" },
     { name = "scikit-learn" },
     { name = "sentencepiece", specifier = ">=0.1.99" },
-    { name = "spacy", specifier = "==3.8.7" },
+    { name = "spacy", specifier = ">=3.8,<3.9" },
     { name = "spacy", extras = ["ja", "ko", "th"], marker = "extra == 'multilingual'" },
     { name = "stanza", marker = "extra == 'multilingual'" },
     { name = "syllapy" },
