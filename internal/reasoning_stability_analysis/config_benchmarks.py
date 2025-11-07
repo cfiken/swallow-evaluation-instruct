@@ -37,16 +37,9 @@ BENCHMARKS = {
         "analysis_function": pass_at_k_metric,
         "file_pattern": "details_swallow|swallow_jhumaneval|0_*.parquet"
     },
-}
-
-EXTENDED = {    
     "swallow|hellaswag|0": {
         "analysis_function": extractive_match_metric,
         "file_pattern": "details_swallow|hellaswag|0_*.parquet"
-    },
-    "swallow|lcb:codegeneration_v5_v6|0": {
-        "analysis_function": extractive_match_metric,
-        "file_pattern": "details_swallow|lcb:codegeneration_v5_v6|0_*.parquet"
     },
     "swallow|mmlu_pro_english|0": {
         "analysis_function": extractive_match_metric,
@@ -59,23 +52,30 @@ EXTENDED = {
     "swallow|math_500|0": {
         "analysis_function": extractive_match_metric,
         "file_pattern": "details_swallow|math_500|0_*.parquet"
-    },
+    },        
     "swallow|aime|0": {
         "analysis_function": extractive_match_metric,
-        "file_pattern": "details_swallow|aime|0_*.parquet"
+        "file_pattern": "details_swallow|aime:*|0_*.parquet"
     },
+    "swallow|lcb:codegeneration_v5_v6|0": {
+        "analysis_function": pass_at_k_metric,
+        "file_pattern": "details_swallow|lcb:codegeneration_v5_v6|0_*.parquet"
+    },
+    "swallow|english_mt_bench|0": {
+        "analysis_function": mt_bench_metric,
+        "file_pattern": "details_swallow|english_mt_bench|0_*.parquet"
+    },
+}
+
+EXTENDED = {
     "swallow|jemhopqa_cot|0": {
         "analysis_function": extractive_match_metric,
         "file_pattern": "details_swallow|jemhopqa_cot|0_*.parquet"
     },    
     "swallow|swallow_jmmlu|0": {
         "analysis_function": extractive_match_metric,
-        "file_pattern": "details_swallow|swallow_jmmlu|0_*.parquet"
+        "file_pattern": "details_swallow|swallow_jmmlu:*|0_*.parquet"
     },    
-    "swallow|english_mt_bench|0": {
-        "analysis_function": extractive_match_metric,
-        "file_pattern": "details_swallow|english_mt_bench|0_*.parquet"
-    },
     "swallow|humaneval|0": {
         "analysis_function": extractive_match_metric,
         "file_pattern": "details_swallow|humaneval|0_*.parquet"
