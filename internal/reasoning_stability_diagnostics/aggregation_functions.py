@@ -1,5 +1,36 @@
+from typing import Optional
 import math
 import json
+
+from utils import most_frequent_char_ngram
+
+
+def is_non_closed_reasoning(
+    reasoning_content: str,
+    reasoning_starter: Optional[str] = None,
+    repetition_ngram: int = 50,
+    top_ngram_freq_repetition_threshold: int = 10
+) -> bool:
+    """レスポンスがnon-closed reasoning（推論が閉じていない）かどうかを判定
+    
+    Args:
+        response: 判定対象のレスポンステキスト
+        reasoning_starter: 推論開始マーカー
+        repetition_ngram: N-gram のサイズ (デフォルト: 50)
+        top_ngram_freq_repetition_threshold: 最頻N-gramの閾値 (デフォルト: 10)
+        
+    Returns:
+        True if non-closed reasoning, False otherwise
+    """
+    if reasoning_starter is not None:
+        # 条件1: reasoning_starterで始まる
+        return reasoning_content.startswith(reasoning_starter)
+    else:
+        # 条件2: 最頻N-gramのfrequencyが閾値以上
+        ngram_stats = most_frequent_char_ngram(reasoning_content, n=repetition_ngram)
+        if ngram_stats["frequency"] >= top_ngram_freq_repetition_threshold:
+            return True    
+        return False
 
 
 DUMMY_RESULT = {
@@ -12,7 +43,7 @@ DUMMY_RESULT = {
 }
 
 
-def extractive_match_metric(df_details, reasoning_starter: str) -> dict:
+def extractive_match_metric(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
     """Extractive Match Metric Benchmarks
 
     Extractive match metrics evaluate how well the aggregated
@@ -29,7 +60,7 @@ def extractive_match_metric(df_details, reasoning_starter: str) -> dict:
     for record in df_details.to_dict(orient="records"):
         is_correct += record["metrics"]["extractive_match"]
         
-        if record["predictions"][0].startswith(reasoning_starter):
+        if is_non_closed_reasoning(record["predictions"][0], reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
             num_non_closed_reasoning += 1
         else:
             num_closed_reasoning += 1
@@ -46,7 +77,7 @@ def extractive_match_metric(df_details, reasoning_starter: str) -> dict:
 
     return dict_results
 
-def ifeval_metric(df_details, reasoning_starter: str) -> dict:
+def ifeval_metric(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
     """IFEval Metric Benchmarks
     """
     records = list(df_details.to_dict(orient="records"))
@@ -60,7 +91,7 @@ def ifeval_metric(df_details, reasoning_starter: str) -> dict:
         score = 1 if record["metrics"]["inst_level_strict_acc"][0] else 0
         is_correct += score
         
-        if record["predictions"][0].startswith(reasoning_starter):
+        if is_non_closed_reasoning(record["predictions"][0], reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
             num_non_closed_reasoning += 1
         else:
             num_closed_reasoning += 1
@@ -83,7 +114,7 @@ def _calculate_pass_at_k(n: int, c: int, k: int) -> float:
         return 1.0
     return 1.0 - math.prod(1.0 - k / i for i in range(n - c + 1, n + 1))
 
-def pass_at_k_metric(df_details, reasoning_starter: str) -> dict:
+def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
     """Pass@K Metric Benchmarks
     performance_in_completion is defined as the conditional average on the any one of the K responses correctly completed.
     """
@@ -117,7 +148,7 @@ def pass_at_k_metric(df_details, reasoning_starter: str) -> dict:
         num_closed_reasoning_i = 0
         for response, lst_unit_results in zip(lst_responses, lst_lst_unit_test_results):
             _passed = 1 if all([result == True for result in lst_unit_results]) else 0
-            if response.startswith(reasoning_starter):
+            if is_non_closed_reasoning(response, reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
                 num_non_closed_reasoning_i += 1
             else:
                 num_closed_reasoning_i += 1
@@ -151,7 +182,7 @@ def pass_at_k_metric(df_details, reasoning_starter: str) -> dict:
     return dict_results
 
 
-def bleu_metric(df_details, reasoning_starter: str) -> dict:
+def bleu_metric(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
     """BLEU Metric Benchmarks
 
     BLEU metrics doesn't support performance_in_has_answer.
@@ -163,7 +194,7 @@ def bleu_metric(df_details, reasoning_starter: str) -> dict:
     num_closed_reasoning = 0
     for record in df_details.to_dict(orient="records"):
         
-        if record["predictions"][0].startswith(reasoning_starter):
+        if is_non_closed_reasoning(record["predictions"][0], reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
             num_non_closed_reasoning += 1
         else:
             num_closed_reasoning += 1
@@ -180,7 +211,7 @@ def bleu_metric(df_details, reasoning_starter: str) -> dict:
     return dict_results
 
 
-def mt_bench_metric(df_details, reasoning_starter: str) -> dict:
+def mt_bench_metric(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
     """MT-Bench Metric Benchmarks
     """
     records = list(df_details.to_dict(orient="records"))
@@ -202,7 +233,7 @@ def mt_bench_metric(df_details, reasoning_starter: str) -> dict:
         for score, response in zip(lst_scores, lst_responses):
             num_examples += 1
             
-            if response.startswith(reasoning_starter):
+            if is_non_closed_reasoning(response, reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
                 num_non_closed_reasoning += 1
             else:
                 num_closed_reasoning += 1

@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Optional
-from collections import defaultdict
+from collections import defaultdict, Counter
 from fnmatch import fnmatch
 import pandas as pd
 
@@ -77,3 +77,32 @@ def load_parquet_from_local(
     # 全ファイルを読み込んで結合
     dfs = [pd.read_parquet(f) for f in selected_files]
     return pd.concat(dfs, ignore_index=True)
+
+
+def most_frequent_char_ngram(text: str, n: int = 50) -> dict:
+    """
+    与えられた text から char-Ngram の最頻値を計算し、
+    {"top_ngram": 最頻Ngram, "frequency": 出現回数, "fraction": 最頻Ngramの割合} を返す。
+
+    - text がN文字未満なら {"top_ngram": "", "frequency": 0, "fraction": 0.0} を返す
+    - 同率最多が複数ある場合は任意のものを返す
+    """
+    empty_return = {"top_ngram": "", "frequency": 0, "fraction": 0.0}
+    if text is None:
+        return empty_return
+    
+    L = len(text)
+    if L < n:
+        return empty_return
+
+    counts = Counter()
+    for i in range(L - n + 1):
+        w = text[i:i+n]
+        counts[w] += 1
+
+    # 最頻値（同率の場合は任意）
+    top_ngram, top_freq = counts.most_common(1)[0]
+
+    total = L - n + 1  # 全Ngram数
+    fraction = top_freq / total
+    return {"top_ngram": top_ngram, "frequency": top_freq, "fraction": fraction}

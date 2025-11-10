@@ -41,9 +41,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--reasoning_starter',
-        type=str,
-        default='<think>',
-        help='推論開始タグ (デフォルト: <think>)'
+        type=lambda x: None if x.lower() == 'none' else x,
+        required=True,
+        help='推論開始タグ (例: <think>)。gpt-oss系列の場合は"None"を指定してください'
     )
     parser.add_argument(
         '--provider',
@@ -63,6 +63,18 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help='ローカルストレージからParquetファイルを読み込む場合のディレクトリパス'
+    )
+    parser.add_argument(
+        '--repetition-ngram',
+        type=int,
+        default=50,
+        help='N-gram サイズ (デフォルト: 50)'
+    )
+    parser.add_argument(
+        '--top-ngram-freq-repetition-threshold',
+        type=int,
+        default=10,
+        help='最頻N-gram頻度の閾値 (デフォルト: 10)'
     )
     return parser.parse_args()
 
@@ -102,20 +114,24 @@ def get_task_ids(specified_task_ids: Optional[list[str]]) -> list[str]:
 def load_and_analyze_task(
     hf_dataset_id: str,
     task_id: str,
-    reasoning_starter: str,
+    reasoning_starter: Optional[str],
     model_id: str,
     lighteval_output_dir: Optional[str] = None,
-    provider: Optional[str] = None
+    provider: Optional[str] = None,
+    repetition_ngram: int = 50,
+    top_ngram_freq_repetition_threshold: int = 10
 ) -> dict:
     """タスクデータをロードして分析する
     
     Args:
         hf_dataset_id: HuggingFaceデータセットID
         task_id: タスクID
-        reasoning_starter: 推論開始タグ
+        reasoning_starter: 推論開始タグ（Noneの場合はN-gramのみでチェック）
         model_id: モデルID
         lighteval_output_dir: ローカルストレージのディレクトリ（Noneの場合はHFモード）
         provider: プロバイダー名（ローカルモード用）
+        repetition_ngram: N-gram のサイズ
+        top_ngram_freq_repetition_threshold: 最頻N-gramの閾値
         
     Returns:
         分析結果の辞書
@@ -149,7 +165,12 @@ def load_and_analyze_task(
     
     # 分析関数を取得して実行
     analysis_function = benchmark_config["analysis_function"]
-    result = analysis_function(df_details, reasoning_starter)
+    result = analysis_function(
+        df_details,
+        reasoning_starter,
+        repetition_ngram=repetition_ngram,
+        top_ngram_freq_repetition_threshold=top_ngram_freq_repetition_threshold
+    )
     
     # model_idを結果に追加
     result['model_id'] = model_id
@@ -264,7 +285,9 @@ def main():
                 args.reasoning_starter,
                 args.model_id,
                 lighteval_output_dir,
-                args.provider if is_local_mode else None
+                args.provider if is_local_mode else None,
+                args.repetition_ngram,
+                args.top_ngram_freq_repetition_threshold
             )
             results[task_id] = result
             num_succeeded += 1
