@@ -9,7 +9,8 @@ def is_non_closed_reasoning(
     reasoning_content: str,
     reasoning_starter: Optional[str] = None,
     repetition_ngram: int = 50,
-    top_ngram_freq_repetition_threshold: int = 10
+    top_ngram_freq_repetition_threshold: int = 10,
+    num_chars_threshold: int = 20000
 ) -> bool:
     """レスポンスがnon-closed reasoning（推論が閉じていない）かどうかを判定
     
@@ -28,7 +29,7 @@ def is_non_closed_reasoning(
     else:
         # 条件2: 最頻N-gramのfrequencyが閾値以上
         ngram_stats = most_frequent_char_ngram(reasoning_content, n=repetition_ngram)
-        if ngram_stats["frequency"] >= top_ngram_freq_repetition_threshold:
+        if (ngram_stats["frequency"] >= top_ngram_freq_repetition_threshold) and len(reasoning_content) >= num_chars_threshold:
             return True    
         return False
 
@@ -233,7 +234,8 @@ def mt_bench_metric(df_details, reasoning_starter: Optional[str], repetition_ngr
         for score, response in zip(lst_scores, lst_responses):
             num_examples += 1
             
-            if is_non_closed_reasoning(response, reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
+            if is_non_closed_reasoning(response, reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold, 
+                                       num_chars_threshold=8000):
                 num_non_closed_reasoning += 1
             else:
                 num_closed_reasoning += 1
