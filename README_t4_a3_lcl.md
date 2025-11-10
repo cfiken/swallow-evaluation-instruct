@@ -322,6 +322,17 @@ max-samples=10くらいに設定してモデルが生成した回答を眺めて
 vLLMログに `Aborted request` が出力されている，またはlightevalログに `Timeout` が出力されている場合は，推論に時間がかかりすぎてAPI呼び出しがタイムアウトしている．  
 この場合は環境変数 `REQUEST_TIMEOUT` （単位は秒）に十分に大きな値を設定すること．
 
+#### 4 ) [gpt-oss系列限定] コード生成タスクでBadRequestErrorが多発している
+
+**このパターンは gpt-oss とその派生モデル かつ LiveCodeBench のようなコード生成タスクに限定される．** 
+
+vLLMログに `BadRequestError` が大量に出力されている場合は，推論失敗によるリトライで時間を無駄にしている可能性がある．  
+この場合は `max_n` を1にして，同時に `LITELLM_CONCURRENT_CALLS` を 100--200 にしてみてほしい．  
+
+LiveCodeBenchや(J)HumanEvalは，通常は1リクエストで10応答 (n=10) を得るのだが，ひとつでも推論に失敗するとBadRequestErrorでのこり9個もぜんぶ破棄されるので
+`n=1` にしてそのかわりに並列リクエスト数を増やすことで，破棄を減らすという対策である．  
+推論失敗時に BadRequestError が起きるgpt-oss系列のみで有効な対策であり，gpt-oss系列以外には意味がない．  
+
 ### 3.7 vLLMのreasoning_parserが対応していない推論型モデル
 
 vLLMには推論過程を除去する reasoning parser がビルトインされているが，parserが対応していない推論型モデルについてはRuntimeErrorが発生する．  
