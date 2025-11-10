@@ -189,3 +189,4 @@ qsub_task en mmlu_pro
 # qsub_task en gpqa_diamond_n16
 # qsub_task en math_500_n16
 # qsub_task en aime_2024_2025_n16
+# qsub_task en ifbench

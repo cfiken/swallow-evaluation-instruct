@@ -55,4 +55,5 @@ TASKS=(
     # "en gpqa_diamond_n16"
     # "en math_500_n16"
     # "en aime_2024_2025_n16"
+    # "en ifbench"
 )
