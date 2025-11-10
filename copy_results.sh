@@ -45,6 +45,7 @@ printf '  %s\n' "${all_date_dirs[@]}"
 echo
 
 not_found_tasks=()
+copied_tasks=()
 
 for task in "${tasks[@]}"; do
   latest_dir_for_task=""
@@ -68,31 +69,47 @@ for task in "${tasks[@]}"; do
   echo "[TASK] ${task} -> latest dir: ${latest_dir_for_task}"
   SRC_DIR="$SRC_ROOT/$latest_dir_for_task"
 
+  copied_any=false
+
   # 該当タスク + サブタスクのファイルを全部コピー
   while IFS= read -r file; do
     [[ -z "$file" ]] && continue
 
-    # details/ より後ろを取り出して archive 配下にぶら下げる
+    # details/ より後ろを取り出して DST_ROOT 配下にぶら下げる
     # 例:
-    #  file = /.../lighteval/outputs/details/hosted_vllm/deepseek-ai/.../reasoning_swallow/2025-.../details_swallow|...parquet
-    #  rel  = hosted_vllm/deepseek-ai/.../reasoning_swallow/2025-.../details_swallow|...parquet
+    #  file = .../details/hosted_vllm/.../reasoning_swallow/2025-.../details_swallow|...parquet
+    #  rel  = hosted_vllm/.../reasoning_swallow/2025-.../details_swallow|...parquet
     rel_path="${file#*details/}"
-
     dest="$DST_ROOT/$rel_path"
 
     mkdir -p "$(dirname "$dest")"
     cp -p "$file" "$dest"
+    copied_any=true
+
     echo "  Copied: $file"
     echo "       -> $dest"
   done < <(find "$SRC_DIR" -maxdepth 1 -type f -name "*|${task}*|*.parquet" -print)
+
+  if "$copied_any"; then
+    copied_tasks+=("$task")
+  else
+    # 念のため：latest_dir は見つかったが、その後の find にマッチしなかった場合
+    not_found_tasks+=("$task")
+  fi
 done
 
 echo
-if [[ "${#not_found_tasks[@]}" -gt 0 ]]; then
+if ((${#copied_tasks[@]} > 0)); then
+  echo "✅ Copied tasks:"
+  for t in "${copied_tasks[@]}"; do
+    echo "  ✅ $t"
+  done
+fi
+
+if ((${#not_found_tasks[@]} > 0)); then
+  echo
   echo "❌ Not found tasks:"
   for t in "${not_found_tasks[@]}"; do
     echo "  ❌ $t"
   done
-else
-  echo "✅ All tasks found and copied successfully!"
 fi
