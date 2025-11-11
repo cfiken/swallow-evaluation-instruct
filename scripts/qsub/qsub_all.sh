@@ -50,6 +50,12 @@ esac
 RESULTS_DIR="${REPO_PATH}/results/${PROVIDER_SUBDIR}${MODEL_NAME}${CUSTOM_SETTINGS_SUBDIR}"
 SCRIPTS_DIR="${REPO_PATH}/scripts/qsub"
 
+## Login to HuggingFace
+echo "🤗 Logging in to HuggingFace..."
+export HUGGINGFACE_HUB_CACHE=$HUGGINGFACE_CACHE
+export HF_HOME=$HUGGINGFACE_CACHE
+hf auth login --token $HF_TOKEN
+
 # Load task-definition and common functions
 source "$(dirname "$0")/conf/load_config.sh"
 source "${REPO_PATH}/scripts/qsub/common_funcs.sh"
