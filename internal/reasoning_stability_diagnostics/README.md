@@ -20,8 +20,7 @@ JMMLUやJEMHopQAなどの"言語別平均に含めない準用および任意の
 逆に言うと，推論の不安定性でスコアがどのくらい損なわれてるのかわかります．  
 
 解析対象のモデルは Qwen3-Swallow に対応しています．  
-**2025-11-11 の commit b86db6b 以降に評価した評価詳細ならば GPT-OSS-Swallow にも対応しています．** それ以前に行った評価詳細は非対応です．  
-（GPT-OSS-Swallow の推論失敗を判定できるように評価詳細のフォーマットを微修正しています）
+**2025-11-11 の PR [#101](https://github.com/swallow-llm/swallow-evaluation-instruct-private/pull/101) 以降に評価した評価詳細ならば GPT-OSS-Swallow にも対応しています．** それ以前に出力した評価詳細は非対応です．参考：[#101](https://github.com/swallow-llm/swallow-evaluation-instruct-private/pull/101)  
 
 ## 環境構築
 
@@ -70,8 +69,8 @@ pipenv run python calculate_reasoning_failure_stats.py \
 
 - `--reasoning_starter`: （必須）推論開始タグを指定します
   - 例: `--reasoning_starter "<think>"`
-  - **Qwen3系列は <think>, gpt-oss系列は <think_dummy> を指定してください．**  
-  - **gpt-oss系列は 2025-11-11 の commit b86db6b 以降の評価詳細のみ対応しています．**
+  - **Qwen3系列は `<think>` を，gpt-oss系列は `<think_dummy>` を指定してください．**  
+  - **gpt-oss系列は 2025-11-11 の PR [#101](https://github.com/swallow-llm/swallow-evaluation-instruct-private/pull/101) 以降に生成した評価詳細のみ対応しています．**
 
 gpt-oss系列の例:
 ```bash
@@ -81,8 +80,6 @@ pipenv run python calculate_reasoning_failure_stats.py \
     --reasoning_starter "<think_dummy>" \
     --provider "hosted_vllm"
 ```
-
-
 
 ### HuggingFaceモードで実行
 
@@ -186,12 +183,13 @@ JSONファイルは以下の階層構造で保存されます：
 ### 推論失敗率
 
 SWEの評価詳細に推論過程は保存されてなくて応答文しかないのですけれど，  
-推論が閉じてない場合は推論過程そのものを応答文とみなすというSWEの仕様を活用して，以下のいずれかの条件を満たす場合を「推論が完了していない」と定義しています：
+推論が閉じてなければ推論過程そのものを応答文とみなすというSWEの仕様を活用して，評価詳細に保存されている応答文が推論開始タグから始まる場合を「推論が完了していない」と定義しています．  
 
-1. **推論開始タグによる判定**: モデルの応答文が推論開始タグ（`--reasoning_starter`で指定、例: `<think>`）から始まる場合
-   - 推論開始タグがない（`--reasoning_starter "None"`）場合は、この判定はスキップされます
-2. **N-gramベースの判定**: 応答文が2万文字以上かつ，応答文中で同じ文字N-gram（デフォルト: 50文字）が一定回数以上（デフォルト: 10回）繰り返される場合
-   - 推論ループなどで同じパターンが繰り返される異常を検出します
+```
+# 応答文の例
+推論失敗: <think>We need to determine which compound has the most ...
+推論失敗ではない: The retrovirus has an RNA genome, so the first ...
+```
 
 推論失敗率は，推論が完了していない応答の数を全応答数で割ったものです．  
 設問1件につき複数の応答をするベンチマークは1件ずつ調べます．たとえばJHumanEvalは164問で1問につき10応答なので，全応答数は1,640件です．  
