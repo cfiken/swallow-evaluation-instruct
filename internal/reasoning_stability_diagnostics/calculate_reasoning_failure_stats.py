@@ -43,7 +43,8 @@ def parse_args() -> argparse.Namespace:
         '--reasoning_starter',
         type=lambda x: None if x.lower() == 'none' else x,
         required=True,
-        help='推論開始タグ (例: <think>)。gpt-oss系列の場合は"None"を指定してください'
+        choices=["<think>", "<think_dummy>", "None"],
+        help='推論開始タグ (例: <think>)。gpt-oss系列の場合は"<think_dummy>"を指定してください'
     )
     parser.add_argument(
         '--provider',
