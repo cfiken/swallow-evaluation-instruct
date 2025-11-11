@@ -27,11 +27,17 @@ def load_parquet_from_local(
     Raises:
         FileNotFoundError: ディレクトリまたはファイルが見つからない場合
     """
+    # model_id がローカルモデルで絶対パスで書かれている場合は相対パスに変換
+    # base_path の構築の際に model_id が絶対パスだと lighteval_output_dir の部分が無視されてしまうため
+    model_path = Path(model_id)
+    if model_path.is_absolute():
+        model_path = model_path.relative_to(model_path.anchor)
+
     # ベースディレクトリ構築
     if provider:
-        base_path = Path(lighteval_output_dir) / "details" / provider / model_id
+        base_path = Path(lighteval_output_dir) / "details" / provider / model_path
     else:
-        base_path = Path(lighteval_output_dir) / "details" / model_id
+        base_path = Path(lighteval_output_dir) / "details" / model_path
     
     if not base_path.exists():
         raise FileNotFoundError(f"ディレクトリが存在しません: {base_path}")
