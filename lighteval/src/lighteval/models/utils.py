@@ -113,7 +113,7 @@ def replace_none_with_empty_string(string_or_none: Union[str, None]) -> str:
 def starts_with_thinking_token(text: str) -> bool:
     if text.startswith("<think>"):
         return True
-    if re.match(r"^<[a-zA-Z_-:]{4,10}>", text):
+    if re.match(r"^<[a-zA-Z_\-:]{4,10}>", text):
         return True
     return False
     
