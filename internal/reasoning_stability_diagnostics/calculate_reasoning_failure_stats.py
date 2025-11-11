@@ -41,9 +41,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         '--reasoning_starter',
-        type=str,
-        default='<think>',
-        help='推論開始タグ (デフォルト: <think>)'
+        type=lambda x: None if x.lower() == 'none' else x,
+        required=True,
+        choices=["<think>", "<think_dummy>", "None"],
+        help='推論開始タグ (例: <think>)。gpt-oss系列の場合は"<think_dummy>"を指定してください'
     )
     parser.add_argument(
         '--provider',
@@ -63,6 +64,29 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help='ローカルストレージからParquetファイルを読み込む場合のディレクトリパス'
+    )
+    parser.add_argument(
+        '--repetition-ngram',
+        type=int,
+        default=50,
+        help='N-gram サイズ (デフォルト: 50)'
+    )
+    parser.add_argument(
+        '--top-ngram-freq-repetition-threshold',
+        type=int,
+        default=10,
+        help='最頻N-gram頻度の閾値 (デフォルト: 10)'
+    )
+    parser.add_argument(
+        '--output-basename',
+        type=str,
+        default=None,
+        help='出力ファイルのベース名（指定なしの場合はhf_dataset_idを使用）'
+    )
+    parser.add_argument(
+        '--append',
+        action='store_true',
+        help='既存ファイルに追記する（CSVはヘッダーなし、JSONLは追記）'
     )
     return parser.parse_args()
 
@@ -102,20 +126,24 @@ def get_task_ids(specified_task_ids: Optional[list[str]]) -> list[str]:
 def load_and_analyze_task(
     hf_dataset_id: str,
     task_id: str,
-    reasoning_starter: str,
+    reasoning_starter: Optional[str],
     model_id: str,
     lighteval_output_dir: Optional[str] = None,
-    provider: Optional[str] = None
+    provider: Optional[str] = None,
+    repetition_ngram: int = 50,
+    top_ngram_freq_repetition_threshold: int = 10
 ) -> dict:
     """タスクデータをロードして分析する
     
     Args:
         hf_dataset_id: HuggingFaceデータセットID
         task_id: タスクID
-        reasoning_starter: 推論開始タグ
+        reasoning_starter: 推論開始タグ（Noneの場合はN-gramのみでチェック）
         model_id: モデルID
         lighteval_output_dir: ローカルストレージのディレクトリ（Noneの場合はHFモード）
         provider: プロバイダー名（ローカルモード用）
+        repetition_ngram: N-gram のサイズ
+        top_ngram_freq_repetition_threshold: 最頻N-gramの閾値
         
     Returns:
         分析結果の辞書
@@ -149,7 +177,12 @@ def load_and_analyze_task(
     
     # 分析関数を取得して実行
     analysis_function = benchmark_config["analysis_function"]
-    result = analysis_function(df_details, reasoning_starter)
+    result = analysis_function(
+        df_details,
+        reasoning_starter,
+        repetition_ngram=repetition_ngram,
+        top_ngram_freq_repetition_threshold=top_ngram_freq_repetition_threshold
+    )
     
     # model_idを結果に追加
     result['model_id'] = model_id
@@ -157,17 +190,18 @@ def load_and_analyze_task(
     return result
 
 
-def save_results_json(results: dict, hf_dataset_id: str) -> str:
+def save_results_json(results: dict, output_basename: str, append: bool = False) -> str:
     """結果をJSONファイルに保存する
     
     Args:
         results: 分析結果の辞書
-        hf_dataset_id: データセットID（ファイル名に使用）
+        output_basename: 出力ファイルのベース名
+        append: 追記モードかどうか
         
     Returns:
         保存したファイルのパス
     """
-    output_path = f'results/{hf_dataset_id}.json'
+    output_path = f'results/{output_basename}.json'
     # 親ディレクトリを作成（スラッシュが含まれる場合はサブディレクトリも作成）
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
@@ -184,23 +218,26 @@ def save_results_json(results: dict, hf_dataset_id: str) -> str:
             restructured[model_id] = {}
         restructured[model_id][task_id] = metrics
     
-    with open(output_path, 'w', encoding='utf-8') as f:
+    mode = 'a' if append else 'w'
+    with open(output_path, mode, encoding='utf-8') as f:
         json.dump(restructured, f, ensure_ascii=False)
+        f.write('\n')
     
     return output_path
 
 
-def save_results_csv(results: dict, hf_dataset_id: str) -> str:
+def save_results_csv(results: dict, output_basename: str, append: bool = False) -> str:
     """結果をCSV形式で保存する
     
     Args:
         results: 分析結果の辞書
-        hf_dataset_id: データセットID（ファイル名に使用）
+        output_basename: 出力ファイルのベース名
+        append: 追記モードかどうか
         
     Returns:
         保存したファイルのパス
     """
-    output_path = f'results/{hf_dataset_id}.csv'
+    output_path = f'results/{output_basename}.csv'
     # 親ディレクトリを作成（スラッシュが含まれる場合はサブディレクトリも作成）
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
@@ -213,7 +250,71 @@ def save_results_csv(results: dict, hf_dataset_id: str) -> str:
     other_cols = [col for col in df.columns if col not in ['model_id', 'task_id']]
     df = df[['model_id', 'task_id'] + other_cols]
     
-    df.to_csv(output_path, index=False, encoding='utf-8')
+    # appendモードの場合はヘッダーなしで追記
+    mode = 'a' if append else 'w'
+    header = not append
+    df.to_csv(output_path, mode=mode, header=header, index=False, encoding='utf-8', na_rep='#N/A')
+    
+    return output_path
+
+
+def save_results_csv_oneliner(results: dict, output_basename: str, append: bool = False) -> str:
+    """結果をワンライナー形式のCSV（wide format）で保存する
+    
+    model_idをインデックス、task_id+メトリクス名をカラムとした形式で保存する。
+    各モデルが1行で表現される。
+    
+    Args:
+        results: 分析結果の辞書
+        output_basename: 出力ファイルのベース名
+        append: 追記モードかどうか
+        
+    Returns:
+        保存したファイルのパス
+    """
+    output_path = f'results/{output_basename}.oneliner.csv'
+    # 親ディレクトリを作成（スラッシュが含まれる場合はサブディレクトリも作成）
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    # Long format DataFrameを作成
+    df_long = pd.DataFrame(results).T
+    df_long.index.name = 'task_id'
+    df_long.reset_index(inplace=True)
+    
+    # model_idとtask_idを分離し、その他の列をメトリクスとして扱う
+    metric_cols = [col for col in df_long.columns if col not in ['model_id', 'task_id']]
+    
+    # Wide formatに変換: model_idをインデックス、task_id_metricをカラムに
+    df_wide = df_long.set_index(['model_id', 'task_id'])[metric_cols].unstack(level='task_id')
+    
+    # カラム名を task_id_metric の形式にフラット化
+    df_wide.columns = [f'{task_id}_{metric}' for metric, task_id in df_wide.columns]
+    
+    # インデックスをリセットしてmodel_idを通常の列にする
+    df_wide.reset_index(inplace=True)
+    
+    # BENCHMARKS.keys()の順序でカラムを並び替え
+    # まず model_id 列を取得
+    model_id_col = df_wide[['model_id']]
+    
+    # BENCHMARKSの順序でタスクIDを取得
+    ordered_task_ids = list(BENCHMARKS.keys())
+    
+    # 各タスクについて、存在するメトリクスカラムを順序通りに追加
+    ordered_cols = ['model_id']
+    for task_id in ordered_task_ids:
+        # このタスクに関連するカラム（task_id_metric形式）を探す
+        task_cols = [col for col in df_wide.columns if col.startswith(f'{task_id}_')]
+        ordered_cols.extend(task_cols)
+    
+    # 存在しないカラムを除外して並び替え
+    available_cols = [col for col in ordered_cols if col in df_wide.columns]
+    df_wide = df_wide[available_cols]
+    
+    # appendモードの場合はヘッダーなしで追記
+    mode = 'a' if append else 'w'
+    header = not append
+    df_wide.to_csv(output_path, mode=mode, header=header, index=False, encoding='utf-8', na_rep='#N/A')
     
     return output_path
 
@@ -264,7 +365,9 @@ def main():
                 args.reasoning_starter,
                 args.model_id,
                 lighteval_output_dir,
-                args.provider if is_local_mode else None
+                args.provider if is_local_mode else None,
+                args.repetition_ngram,
+                args.top_ngram_freq_repetition_threshold
             )
             results[task_id] = result
             num_succeeded += 1
@@ -291,13 +394,20 @@ def main():
         str_values = ",".join(map(lambda v: f"{v:.3f}", lst_values))
         print(f"{task_id},{str_values}")
 
+    # 出力ファイルのベース名を決定
+    output_basename = args.output_basename if args.output_basename else hf_dataset_id
+    
     # JSONファイル出力
-    json_path = save_results_json(results, hf_dataset_id)
+    json_path = save_results_json(results, output_basename, args.append)
     print(f"\nJSONファイル保存: {json_path}", file=sys.stderr)
     
     # CSV出力
-    csv_path = save_results_csv(results, hf_dataset_id)
+    csv_path = save_results_csv(results, output_basename, args.append)
     print(f"CSVファイル保存: {csv_path}", file=sys.stderr)
+    
+    # ワンライナーCSV出力
+    csv_oneliner_path = save_results_csv_oneliner(results, output_basename, args.append)
+    print(f"ワンライナーCSVファイル保存: {csv_oneliner_path}", file=sys.stderr)
 
 
 if __name__ == "__main__":

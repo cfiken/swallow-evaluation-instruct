@@ -260,7 +260,7 @@ class LiteLLMClient(LightevalModel):
                         # content が None の場合は reasoning_content で置換
                         if choice.message.content is None:
                             logger.info("Response is empty, replacing with reasoning content.")
-                            choice.message.content = replace_none_content_with_reasoning_content(choice.message)
+                            choice.message.content = replace_none_content_with_reasoning_content(choice.message, prepend_think_dummy_token=True)
                             
                 return response
             except litellm.BadRequestError as e:
