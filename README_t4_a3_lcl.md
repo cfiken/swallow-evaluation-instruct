@@ -142,7 +142,8 @@ bash scripts/qsub/utils/save_and_check_qstat.sh
 評価結果の詳細は `lighteval/outputs/results` 以下に `.json` ファイルとして， \
 モデルが生成した回答の詳細は `lighteval/outputs/outputs` 以下に `.pqt` ファイルとして保存されている． \
 `.pqt`ファイルは pandas を用いて dataframe として開くことができる． \
-（`scripts/utils/details_viewer.ipynb`参照）
+（`scripts/utils/details_viewer.ipynb`参照）  
+[評価結果の詳細](./TIPS.md)に，評価詳細 dataframe の項目について簡易な説明がある．  
 
 これらのjsonファイルおよびpqtファイルは，HuggingFace Datasetsに自動アップロードして共有したりブラウザで閲覧（要有料プラン）することができる．
 事前にHuggingFace CLIで認証したうえで，lightevalを以下の引数で実行すれば，jsonとpqtが自動的にアップロードされる [Saving and reading results](https://huggingface.co/docs/lighteval/v0.8.0/en/saving-and-reading-results)．  

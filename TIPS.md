@@ -15,7 +15,8 @@ path = "{output_dir}/details/{モデル名}/{タイムスタンプ}/details_{Tas
 df = pd.read_parquet(path)
 ```
 
-表に含まれる列はベンチマークにより異なりますが，基本的には "instruction" 列に設問，"gold" 列に正解，"predictions" 列にモデルの応答文，"specifics" 列（Dict形式）に応答文から抽出したモデルの回答が格納されます．
+表に含まれる列はベンチマークにより異なりますが，基本的には "instruction" 列に設問，"gold" 列に正解，"metrics" 列に採点結果，"predictions" 列にモデルの応答文，"specifics" 列（Dict形式）に応答文から抽出したモデルの回答が格納されます．  
+Qwen3のような推論型モデルの評価詳細では "predictions"列が `<think>` のような推論タグから始まる場合がありますが，これは推論が閉じなかった等の理由で推論過程が最終回答として扱われたことを意味します．参考：[評価の方針](./EVALUATION_POLICY.md)
 
 ### vLLMが対応していない推論型モデルを評価する
 
