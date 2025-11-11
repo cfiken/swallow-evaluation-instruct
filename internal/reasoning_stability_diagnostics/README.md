@@ -82,6 +82,8 @@ pipenv run python calculate_reasoning_failure_stats.py \
     --provider "hosted_vllm"
 ```
 
+
+
 ### HuggingFaceモードで実行
 
 評価詳細がHuggingFaceに自動アップロードされている場合に使用します．
@@ -111,6 +113,17 @@ CSV・JSONファイルの保存先は以下の規則で決まります：
 results/tokyotech-llm/details_hosted_vllm__tokyotech-llm__Qwen3-Swallow-8B-v0.1-SFT-exp11-LR1.5E-5-iter0023000_private.csv
 results/tokyotech-llm/details_hosted_vllm__tokyotech-llm__Qwen3-Swallow-8B-v0.1-SFT-exp11-LR1.5E-5-iter0023000_private.json
 ```
+
+拡張子を除くファイル名部分を `--output-basename` で指定することや `--append` で既存ファイルに追記することもできます．  
+
+`./result/all_model_results.{csv,json}` に追記していく例:
+```
+pipenv run python calculate_reasoning_failure_stats.py \
+(中略)
+--output-basename "result_all" \
+--append
+```
+
 
 コンソールには以下のような簡易的なCSV形式で表示されます：
 

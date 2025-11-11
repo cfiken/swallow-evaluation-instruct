@@ -77,6 +77,17 @@ def parse_args() -> argparse.Namespace:
         default=10,
         help='最頻N-gram頻度の閾値 (デフォルト: 10)'
     )
+    parser.add_argument(
+        '--output-basename',
+        type=str,
+        default=None,
+        help='出力ファイルのベース名（指定なしの場合はhf_dataset_idを使用）'
+    )
+    parser.add_argument(
+        '--append',
+        action='store_true',
+        help='既存ファイルに追記する（CSVはヘッダーなし、JSONLは追記）'
+    )
     return parser.parse_args()
 
 
@@ -179,17 +190,18 @@ def load_and_analyze_task(
     return result
 
 
-def save_results_json(results: dict, hf_dataset_id: str) -> str:
+def save_results_json(results: dict, output_basename: str, append: bool = False) -> str:
     """結果をJSONファイルに保存する
     
     Args:
         results: 分析結果の辞書
-        hf_dataset_id: データセットID（ファイル名に使用）
+        output_basename: 出力ファイルのベース名
+        append: 追記モードかどうか
         
     Returns:
         保存したファイルのパス
     """
-    output_path = f'results/{hf_dataset_id}.json'
+    output_path = f'results/{output_basename}.json'
     # 親ディレクトリを作成（スラッシュが含まれる場合はサブディレクトリも作成）
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
@@ -206,23 +218,26 @@ def save_results_json(results: dict, hf_dataset_id: str) -> str:
             restructured[model_id] = {}
         restructured[model_id][task_id] = metrics
     
-    with open(output_path, 'w', encoding='utf-8') as f:
+    mode = 'a' if append else 'w'
+    with open(output_path, mode, encoding='utf-8') as f:
         json.dump(restructured, f, ensure_ascii=False)
+        f.write('\n')
     
     return output_path
 
 
-def save_results_csv(results: dict, hf_dataset_id: str) -> str:
+def save_results_csv(results: dict, output_basename: str, append: bool = False) -> str:
     """結果をCSV形式で保存する
     
     Args:
         results: 分析結果の辞書
-        hf_dataset_id: データセットID（ファイル名に使用）
+        output_basename: 出力ファイルのベース名
+        append: 追記モードかどうか
         
     Returns:
         保存したファイルのパス
     """
-    output_path = f'results/{hf_dataset_id}.csv'
+    output_path = f'results/{output_basename}.csv'
     # 親ディレクトリを作成（スラッシュが含まれる場合はサブディレクトリも作成）
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
@@ -235,7 +250,10 @@ def save_results_csv(results: dict, hf_dataset_id: str) -> str:
     other_cols = [col for col in df.columns if col not in ['model_id', 'task_id']]
     df = df[['model_id', 'task_id'] + other_cols]
     
-    df.to_csv(output_path, index=False, encoding='utf-8')
+    # appendモードの場合はヘッダーなしで追記
+    mode = 'a' if append else 'w'
+    header = not append
+    df.to_csv(output_path, mode=mode, header=header, index=False, encoding='utf-8')
     
     return output_path
 
@@ -315,12 +333,15 @@ def main():
         str_values = ",".join(map(lambda v: f"{v:.3f}", lst_values))
         print(f"{task_id},{str_values}")
 
+    # 出力ファイルのベース名を決定
+    output_basename = args.output_basename if args.output_basename else hf_dataset_id
+    
     # JSONファイル出力
-    json_path = save_results_json(results, hf_dataset_id)
+    json_path = save_results_json(results, output_basename, args.append)
     print(f"\nJSONファイル保存: {json_path}", file=sys.stderr)
     
     # CSV出力
-    csv_path = save_results_csv(results, hf_dataset_id)
+    csv_path = save_results_csv(results, output_basename, args.append)
     print(f"CSVファイル保存: {csv_path}", file=sys.stderr)
 
 
