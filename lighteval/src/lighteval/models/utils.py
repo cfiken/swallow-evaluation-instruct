@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 import os
+import re
 from itertools import islice
 from typing import Optional, Union
 
@@ -108,14 +109,22 @@ def replace_none_with_empty_string(string_or_none: Union[str, None]) -> str:
         return ""
     else:
         return string_or_none
+
+def starts_with_thinking_token(text: str) -> bool:
+    if text.startswith("<think>"):
+        return True
+    if re.match(r"^<[a-zA-Z_-:]{4,10}>", text):
+        return True
+    return False
     
-def replace_none_content_with_reasoning_content(message: Message) -> str:
+def replace_none_content_with_reasoning_content(message: Message, prepend_think_dummy_token: bool = False) -> str:
     """
     MessageオブジェクトのcontentがNoneの場合、reasoning_content属性を返します。
     両方ともNoneの場合は空文字列を返します。
 
     Args:
         message (Message): contentおよびreasoning_content属性を持つMessageオブジェクト
+        prepend_think_dummy (bool): reasoning_contentがthinking tokenで始まらない場合に<think_dummy>を文頭に追加する
 
     Returns:
         str: contentがNoneでなければそのまま、contentがNoneかつreasoning_contentが存在すればその値、どちらもNoneなら空文字列
@@ -123,8 +132,12 @@ def replace_none_content_with_reasoning_content(message: Message) -> str:
     if message is None:
         return ""
     if message.content is None:
-        response = getattr(message, "reasoning_content", "")
-        response = "" if response is None else response
+        reasoning_content = getattr(message, "reasoning_content", "")
+        reasoning_content = "" if reasoning_content is None else reasoning_content
+        if prepend_think_dummy_token and len(reasoning_content) >= 1:
+            if not starts_with_thinking_token(reasoning_content):
+                reasoning_content = "<think_dummy>" + reasoning_content
+        response = reasoning_content
     else:
         response = message.content
     
