@@ -65,10 +65,6 @@ BENCHMARKS = {
         "analysis_function": mt_bench_metric,
         "file_pattern": "details_swallow|english_mt_bench|0_*.parquet"
     },
-    "swallow|humaneval|0": {
-        "analysis_function": pass_at_k_metric,
-        "file_pattern": "details_swallow|humaneval|0_*.parquet"
-    },
 }
 
 EXTENDED = {
