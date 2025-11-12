@@ -21,6 +21,7 @@ JMMLUやJEMHopQAなどの"言語別平均に含めない準用および任意の
 
 解析対象のモデルは Qwen3-Swallow に対応しています．  
 **2025-11-11 の PR [#101](https://github.com/swallow-llm/swallow-evaluation-instruct-private/pull/101) 以降に評価した評価詳細ならば GPT-OSS-Swallow にも対応しています．** それ以前に出力した評価詳細は非対応です．参考：[#101](https://github.com/swallow-llm/swallow-evaluation-instruct-private/pull/101)  
+応答文が `<think>` のような推論開始タグから始まる場合を「推論が完了していない」=「推論失敗」であると判定しています．
 
 ## 環境構築
 
