@@ -252,7 +252,10 @@ def save_results_csv(results: dict, output_basename: str, append: bool = False) 
     
     # appendモードの場合はヘッダーなしで追記
     mode = 'a' if append else 'w'
-    header = not append
+    if append and os.path.exists(output_path):
+        header = False
+    else:
+        header = True
     df.to_csv(output_path, mode=mode, header=header, index=False, encoding='utf-8', na_rep='#N/A')
     
     return output_path
@@ -311,9 +314,12 @@ def save_results_csv_oneliner(results: dict, output_basename: str, append: bool 
     available_cols = [col for col in ordered_cols if col in df_wide.columns]
     df_wide = df_wide[available_cols]
     
-    # appendモードの場合はヘッダーなしで追記
+    # appendモード & ファイルが存在する場合はヘッダーなしで追記
     mode = 'a' if append else 'w'
-    header = not append
+    if append and os.path.exists(output_path):
+        header = False
+    else:
+        header = True
     df_wide.to_csv(output_path, mode=mode, header=header, index=False, encoding='utf-8', na_rep='#N/A')
     
     return output_path
