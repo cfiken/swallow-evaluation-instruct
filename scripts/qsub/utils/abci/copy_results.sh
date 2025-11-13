@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+umask 007 # Set default permissions to rwxrwx---
 
 SRC_ROOT="${1:-}"
 if [[ -z "$SRC_ROOT" ]]; then
@@ -83,7 +84,7 @@ for task in "${tasks[@]}"; do
     dest="$DST_ROOT/$rel_path"
 
     mkdir -p "$(dirname "$dest")"
-    cp -p "$file" "$dest"
+    cp "$file" "$dest"
     copied_any=true
 
     echo "  Copied: $file"
