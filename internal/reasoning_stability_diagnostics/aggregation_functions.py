@@ -6,7 +6,7 @@ from utils import most_frequent_char_ngram
 
 
 def is_non_closed_reasoning(
-    reasoning_content: str,
+    reasoning_content: str | None,
     reasoning_starter: Optional[str] = None,
     repetition_ngram: int = 50,
     top_ngram_freq_repetition_threshold: int = 10,
@@ -23,6 +23,10 @@ def is_non_closed_reasoning(
     Returns:
         True if non-closed reasoning, False otherwise
     """
+    # reasoning_contentがNoneの場合はTrueを返す
+    if reasoning_content is None:
+        return True
+    
     if reasoning_starter is not None:
         # 条件1: reasoning_starterで始まる
         return reasoning_content.startswith(reasoning_starter)
