@@ -126,13 +126,14 @@ def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ng
     num_closed_reasoning = 0
     score_in_closed_reasoning = 0
     score_overall = 0
+    original_score_overall = 0
     lst_metric_name_candidates = ["humaneval_pass@1:10", "jhumaneval_pass@1:10", "codegen_pass@1:10"]
     for record in df_details.to_dict(orient="records"):
         # instruction-level Pass@K score lookup
         dict_metrics = record["metrics"]
         for metric_name in lst_metric_name_candidates:
             if metric_name in dict_metrics:
-                score = dict_metrics[metric_name]
+                score_i = dict_metrics[metric_name]
                 break
         else:
             raise ValueError("pass@k metric not found in the record metrics.")
@@ -162,9 +163,9 @@ def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ng
         pass_at_1_in_closed_reasoning_i = _calculate_pass_at_k(n=num_closed_reasoning_i, c=passed_in_completion_i, k=1)
         
         # sanity check
-        if not math.isclose(pass_at_1_i, score, abs_tol=1e-3):
+        if not math.isclose(pass_at_1_i, score_i, abs_tol=1e-3):
             # debugging output
-            print(pass_at_1_i, score, num_examples_i, passed_i)            
+            print(pass_at_1_i, score_i, num_examples_i, passed_i)            
         
         num_non_closed_reasoning += num_non_closed_reasoning_i
         num_closed_reasoning += num_closed_reasoning_i
@@ -172,6 +173,7 @@ def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ng
         score_overall += pass_at_1_i
         score_in_closed_reasoning += pass_at_1_in_closed_reasoning_i
         num_instructions += 1
+        original_score_overall += score_i
 
     dict_results = {
         "num_responses": num_examples,
@@ -181,6 +183,9 @@ def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ng
         "performance_in_completion": score_in_closed_reasoning / num_instructions,
         "performance": score_overall / num_instructions
     }
+    
+    original_performance = original_score_overall / num_instructions
+    assert math.isclose(score_overall / num_instructions, original_performance, abs_tol=1e-2), "Pass@K performance calculation mismatch."
 
     return dict_results
 
