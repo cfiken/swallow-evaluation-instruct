@@ -102,7 +102,7 @@ for task in "${tasks[@]}"; do
     dest="$DST_ROOT/$rel_path"
 
     mkdir -p "$(dirname "$dest")"
-    cp "$file" "$dest"
+    cp --no-preserve=mode "$file" "$dest"
     copied_any=true
 
     echo "  Copied: $file"
