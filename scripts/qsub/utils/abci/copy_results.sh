@@ -72,7 +72,7 @@ for task in "${tasks[@]}"; do
   # 各 task について、その task 名（＋サブタスク）を含むファイルがある「最新」ディレクトリを探す
   for d in "${all_date_dirs[@]}"; do
     mapfile -t found < <(
-      find "$SRC_ROOT/$d" -maxdepth 1 -type f -name "*|${task}*|*.parquet" -print
+      find "$SRC_ROOT/$d" -maxdepth 1 -type f -name "*|${task}[:|]*.parquet" -print
     )
     if ((${#found[@]} > 0)); then
       latest_dir_for_task="$d"
@@ -107,7 +107,7 @@ for task in "${tasks[@]}"; do
 
     echo "  Copied: $file"
     echo "       -> $dest"
-  done < <(find "$SRC_DIR" -maxdepth 1 -type f -name "*|${task}*|*.parquet" -print)
+  done < <(find "$SRC_DIR" -maxdepth 1 -type f -name "*|${task}[:|]*.parquet" -print)
 
   if "$copied_any"; then
     copied_tasks+=("$task")
