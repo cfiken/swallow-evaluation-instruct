@@ -10,7 +10,7 @@ HF_ORGANIZATION="tokyotech-llm"
 REASONING_STARTER="<think>"
 LLM_PROVIDER="hosted_vllm"
 
-python calculate_reasoning_failure_stats.py \
+uv run python calculate_reasoning_failure_stats.py \
     --model_id "$MODEL_ID" \
     --hf_organization "$HF_ORGANIZATION" \
     --reasoning_starter "$REASONING_STARTER" \

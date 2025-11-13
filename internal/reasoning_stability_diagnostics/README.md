@@ -25,18 +25,11 @@ JMMLUやJEMHopQAなどの"言語別平均に含めない準用および任意の
 
 ## 環境構築
 
-本スクリプトは Pipenv を使用した環境構築に対応しています．  
-だれかuvに対応させてくれるとうれしいです．  
-
-Pipenvで仮想環境を構築してアクティベートするコマンドは以下の通り．  
+本スクリプトは uv を使用した環境構築に対応しています．コマンドは以下の通り．  
 
 ```bash
-pip install pipenv
-
-cd internal/reasoning_stability_diagnostics
-pipenv install
-# 仮想環境に入る
-pipenv shell
+uv run python calculate_reasoning_failure_stats.py \
+(実行時引数は後述します)
 ```
 
 唯一の注意点は datasets パッケージは 4.0.0 未満 を使用することです．  
@@ -59,7 +52,7 @@ pipenv shell
 
 ```bash
 cd internal/reasoning_stability_analysis
-pipenv run python calculate_reasoning_failure_stats.py \
+uv run python calculate_reasoning_failure_stats.py \
     --model_id "Qwen/Qwen3-8B/reasoning" \
     --lighteval-output-dir "{lighteval実行時引数のoutput-dir}" \
     --reasoning_starter "<think>" \
@@ -75,7 +68,7 @@ pipenv run python calculate_reasoning_failure_stats.py \
 
 gpt-oss系列の例:
 ```bash
-pipenv run python calculate_reasoning_failure_stats.py \
+uv run python calculate_reasoning_failure_stats.py \
     --model_id "tokyotech-llm/GPT-OSS-Swallow-v0.1-ablation-LR-3.0E-5-iter0012500" \
     --lighteval-output-dir "{lighteval実行時引数のoutput-dir}" \
     --reasoning_starter "<think_dummy>" \
@@ -89,7 +82,7 @@ pipenv run python calculate_reasoning_failure_stats.py \
 
 ```bash
 cd internal/reasoning_stability_analysis
-pipenv run python calculate_reasoning_failure_stats.py \
+uv run python calculate_reasoning_failure_stats.py \
     --model_id "tokyotech-llm/Qwen3-Swallow-8B-v0.1-SFT-exp11-LR1.5E-5-iter0023000" \
     --hf_organization "tokyotech-llm" \
     --reasoning_starter "<think>" \
@@ -116,7 +109,7 @@ results/tokyotech-llm/details_hosted_vllm__tokyotech-llm__Qwen3-Swallow-8B-v0.1-
 
 `./result/all_model_results.{csv,json}` に追記していく例:
 ```
-pipenv run python calculate_reasoning_failure_stats.py \
+uv run python calculate_reasoning_failure_stats.py \
 (中略)
 --output-basename "result_all" \
 --append
