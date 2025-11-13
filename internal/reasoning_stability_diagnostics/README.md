@@ -63,8 +63,9 @@ uv run python calculate_reasoning_failure_stats.py \
 
 - `--reasoning_starter`: （必須）推論開始タグを指定します
   - 例: `--reasoning_starter "<think>"`
-  - **Qwen3系列は `<think>` を，gpt-oss系列は `<think_dummy>` を指定してください．**  
-  - **gpt-oss系列は 2025-11-11 の PR [#101](https://github.com/swallow-llm/swallow-evaluation-instruct-private/pull/101) 以降に生成した評価詳細のみ対応しています．**
+  - **Qwen3系列は `<think>` を指定してください．
+  - **gpt-oss系列 および 評価時に `reasoning-parser=deepseek_r1` を指定したモデル（たとえば DeepSeek-R1-Distill．[評価プリセット一覧](https://docs.google.com/spreadsheets/d/1lMMaZmv6FwIZC6EArFLaApvc99gkuXh7uGb8AMnhzB4/edit?gid=1116916961#gid=1116916961&range=A10)）は `<think_dummy>` を指定してください．**  
+  - **<think_dummy> は 2025-11-11 の PR [#101](https://github.com/swallow-llm/swallow-evaluation-instruct-private/pull/101) 以降に生成した評価詳細のみ対応しています．**
 
 gpt-oss系列の例:
 ```bash
