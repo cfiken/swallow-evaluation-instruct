@@ -8,7 +8,7 @@ set -euo pipefail
 
 # Load Args
 ## Default Values
-TASK_NAME=""; NODE_KIND=""; MODEL_NAME=""; REPO_PATH=""; SERVICE=""; CUSTOM_SETTINGS=""; PROVIDER=""; CUSTOM_JOB_ID=""; MAX_SAMPLES=""; UPLOAD_DETAILS_TO_HUGGINGFACE=""
+TASK_NAME=""; NODE_KIND=""; MODEL_NAME=""; REPO_PATH=""; SERVICE=""; CUSTOM_SETTINGS=""; PROVIDER=""; CUSTOM_JOB_ID=""; MAX_SAMPLES=""; UPLOAD_DETAILS_TO_HUGGINGFACE=""; COPY_DETAILS_TO_SHARED_DIR="false";
 STDOUT_STDERR_DIR=""; : "${CUDA_VISIBLE_DEVICES:=}"
 
 ## Parse Args
@@ -26,6 +26,7 @@ while [[ $# -gt 0 ]]; do
     --max-samples) MAX_SAMPLES=$2;;               # Optional
     --stdout-stderr-dir) STDOUT_STDERR_DIR="$2";;   # Optional
     --upload-details-to-huggingface) UPLOAD_DETAILS_TO_HUGGINGFACE="$2";; #optional
+    --copy-details-to-shared-dir) COPY_DETAILS_TO_SHARED_DIR="$2";; # optional
     *) echo "💀 Error: Unknown option: $1" >&2;;
   esac
   shift 2
@@ -98,3 +99,11 @@ fi
 
 # Aggregate Results
 aggregate_result "${MODEL_NAME_CONFIG}" "${RAW_RESULT_DIR}" "${AGGREGATED_OUTPUTS_DIR}" "${REPO_PATH}" "${CUSTOM_SETTINGS_PATH}" "${CUSTOM_SETTINGS_NAME}" "${CUSTOM_SETTINGS_VERSION}"
+
+# Copy Results to Shared Directory
+if [[ "$COPY_DETAILS_TO_SHARED_DIR" == "true" ]]; then
+  echo "📁 Copying result details to shared directory..."
+  # Convert outputs/results → outputs/details
+  RAW_DETAIL_DIR="${RAW_RESULT_DIR/outputs\/results/outputs/details}"
+  bash "${REPO_PATH}/scripts/qsub/utils/abci/copy_results.sh" "${RAW_DETAIL_DIR}"
+fi

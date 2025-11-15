@@ -14,6 +14,7 @@ CUSTOM_SETTINGS=""          # Default: "". A custom setting name to use. (e.g. "
 PREDOWNLOAD_MODEL="true"    # Default: "true". A pre-download a model before qsub.
 MAX_SAMPLES=""              # Default: "". A maximum number of samples in benchmark to evaluate. Set it for debugging.
 UPLOAD_DETAILS="false"      # Default: "false". Set "true" if you want to upload the outputs to huggingface.
+COPY_DETAILS="false"      # abci only. Default: "false". Set "true" if you want to copy the outputs to a shared directory "/groups/gag51395/share/se_eval_details".
 
 ## Environmental Settings
 SERVICE=""                  # A service to use. ["tsubame", "abci", "local"]
@@ -34,6 +35,13 @@ if [[ "$ENABLE_ENV" == "enable_env" ]]; then
   PRIORITY="$ENV_PRIORITY"
   CUDA_VISIBLE_DEVICES="$ENV_CUDA_VISIBLE_DEVICES"
 fi
+
+# check COPY_DETAILS is true only when SERVICE is abci
+if [[ "$COPY_DETAILS" == "true" && "$SERVICE" != "abci" ]]; then
+  echo "💀 Error: COPY_DETAILS can be true only when SERVICE is abci"
+  exit 1
+fi
+
 
 # Load .env and define dirs
 source "$(dirname "$0")/../../.env"
@@ -71,6 +79,9 @@ if [[ -n "${MAX_SAMPLES}" ]]; then
 fi
 if [[ "${UPLOAD_DETAILS}" == "true" ]]; then
   OPTIONAL_ARGS+=(--upload-details-to-huggingface ${UPLOAD_DETAILS})
+fi
+if [[ "${COPY_DETAILS}" == "true" ]]; then
+  OPTIONAL_ARGS+=(--copy-details-to-shared-dir ${COPY_DETAILS})
 fi
 
 
