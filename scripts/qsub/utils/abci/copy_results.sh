@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+cd "$(dirname "$0")"
 set -euo pipefail
 umask 007 # Set default permissions to rwxrwx---
 
