@@ -8,4 +8,5 @@ dependencies = [
     "datasets<4.0.0",
     "pandas>=2.0.0",
     "pysbd>=0.3.4",
+    "sacrebleu"
 ]
