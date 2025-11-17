@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+cd "$(dirname "$0")"
 set -euo pipefail
 umask 007 # Set default permissions to rwxrwx---
 
@@ -12,42 +13,59 @@ DST_ROOT="/groups/gag51395/share/se_eval_details"
 
 mkdir -p "$DST_ROOT"
 
-tasks=(
-  "japanese_mt_bench"
-  "mifeval_ja"
-  "jamcqa"
-  "wmt20:en-ja"
-  "wmt20:ja-en"
-  "mmlu_prox_japanese"
-  "swallow_gpqa_ja"
-  "math_100_japanese"
-  "swallow_jhumaneval"
-  "english_mt_bench"
-  "hellaswag"
-  "mmlu_pro_english"
-  "gpqa:diamond"
-  "math_500"
-  "aime"
-  "lcb:codegeneration_v5_v6"
-  # "mmlu_english"
-  # "mmlu_prox_english"
-  # "jemhopqa"
-  # "jemhopqa_cot"
-  # "swallow_jmmlu"
-  # "japanese_mt_bench_truncate_6144"
-  # "humaneval"
-  # "humanevalplus"
-  # "jgpqa:diamond"
-  # "jgpqa_N16:diamond"
-  # "swallow_gpqa_ja_N16"
-  # "math_100_japanese_N16"
-  # "gpqa_N16"
-  # "gpqa_N16:diamond"
-  # "math_500_N16"
-  # "aime_N16"
-  # "jamcqa_cot"
-  # "ifbench_singleturn"
+# タスク名は task_settings.csv の第一列から取得する
+TASK_SETTINGS_CSV=../../../generation_settings/task_settings.csv
+if [[ ! -f "$TASK_SETTINGS_CSV" ]]; then
+  echo "Task settings file not found: $TASK_SETTINGS_CSV" >&2
+  exit 1
+fi
+# Load the first column from task_settings.csv so the copy targets stay in sync with generation settings
+mapfile -t tasks < <(
+  awk -F',' 'NR > 1 && $1 != "" { gsub(/\r/, "", $1); print $1 }' "$TASK_SETTINGS_CSV"
 )
+if ((${#tasks[@]} == 0)); then
+  echo "No tasks found in $TASK_SETTINGS_CSV" >&2
+  exit 1
+fi
+
+# tasks=(
+#   "japanese_mt_bench"
+#   "mifeval_ja"
+#   "jamcqa"
+#   "wmt20:en-ja"
+#   "wmt20:ja-en"
+#   "mmlu_prox_japanese"
+#   "swallow_gpqa_ja"
+#   "math_100_japanese"
+#   "swallow_jhumaneval"
+#   "english_mt_bench"
+#   "hellaswag"
+#   "mmlu_pro_english"
+#   "gpqa:diamond"
+#   "math_500"
+#   "aime"
+#   "lcb:codegeneration_v5_v6"
+#   "mmlu_english"
+#   "mmlu_prox_english"
+#   "jemhopqa_cot_f1_score_quasi"
+#   "jemhopqa_cot"
+#   "swallow_jmmlu"
+#   "japanese_mt_bench_truncate_6144"
+#   "humaneval"
+#   "humanevalplus"
+#   "jgpqa:diamond"
+#   "jgpqa_N16:diamond"
+#   "swallow_gpqa_ja_N16"
+#   "math_100_japanese_N16"
+#   "gpqa_N16"
+#   "gpqa_N16:diamond"
+#   "math_500_N16"
+#   "aime_N16"
+#   "jamcqa_cot"
+#   "ifbench_singleturn"
+# )
+
+
 
 # reasoning_swallow 直下の日付ディレクトリ一覧
 mapfile -t all_date_dirs < <(
