@@ -1,6 +1,7 @@
 from typing import Optional
 import math
 import json
+from copy import deepcopy
 
 from utils import most_frequent_char_ngram
 from bleu_scorer import bleu_score
@@ -12,7 +13,11 @@ DUMMY_RESULT = {
     'reasoning_failure_ratio': float('nan'),
     'performance_in_completion': float('nan'),
     'performance': float('nan'),
-    "performance_delta": float('nan')
+    "performance_delta": float('nan'),
+    "reserved_1": float('nan'),
+    "reserved_2": float('nan'),
+    "reserved_3": float('nan'),
+    "reserved_4": float('nan'),
 }
 
 def is_non_closed_reasoning(
@@ -73,15 +78,16 @@ def extractive_match_metric(df_details, reasoning_starter: Optional[str], repeti
     performance_in_completion = is_correct_in_closed_reasoning / num_closed_reasoning
     performance = is_correct / num_examples
     
-    dict_results = {
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
         "performance_in_completion": performance_in_completion,
         "performance": performance,
-        "performance_delta": performance_in_completion - performance
-    }
+        "performance_delta": performance_in_completion - performance,
+    })
 
     return dict_results
 
@@ -108,15 +114,16 @@ def ifeval_metric(df_details, reasoning_starter: Optional[str], repetition_ngram
     performance_in_completion = is_correct_in_closed_reasoning / num_closed_reasoning
     performance = is_correct / num_examples
     
-    dict_results = {
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
         "performance_in_completion": performance_in_completion,
         "performance": performance,
-        "performance_delta": performance_in_completion - performance
-    }
+        "performance_delta": performance_in_completion - performance,
+    })
 
     return dict_results
 
@@ -189,15 +196,16 @@ def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ng
     performance_in_completion = score_in_closed_reasoning / num_instructions
     performance = score_overall / num_instructions
     
-    dict_results = {
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
         "performance_in_completion": performance_in_completion,
         "performance": performance,
-        "performance_delta": performance_in_completion - performance
-    }
+        "performance_delta": performance_in_completion - performance,
+    })
     
     original_performance = original_score_overall / num_instructions
     assert math.isclose(performance, original_performance, abs_tol=1e-2), "Pass@K performance calculation mismatch."
@@ -244,15 +252,16 @@ def _bleu_metric_common(df_details, reasoning_starter: Optional[str], repetition
     bleu_overall = bleu_score(predictions=predictions, golds=golds, trg_lang=trg_lang)
     bleu_in_closed_reasoning = bleu_score(predictions=predictions_in_closed_reasoning, golds=golds_in_closed_reasoning, trg_lang=trg_lang)
     
-    dict_results = {
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
         "performance_in_completion": bleu_in_closed_reasoning,
         "performance": bleu_overall,
-        "performance_delta": bleu_in_closed_reasoning - bleu_overall
-    }
+        "performance_delta": bleu_in_closed_reasoning - bleu_overall,
+    })
 
     return dict_results
 
@@ -302,14 +311,15 @@ def mt_bench_metric(df_details, reasoning_starter: Optional[str], repetition_ngr
     performance_in_completion = score_in_closed_reasoning / num_closed_reasoning / 10
     performance = score_overall / num_examples / 10
     
-    dict_results = {
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
         "performance_in_completion": performance_in_completion,
         "performance": performance,
-        "performance_delta": performance_in_completion - performance
-    }
+        "performance_delta": performance_in_completion - performance,
+    })
 
     return dict_results
