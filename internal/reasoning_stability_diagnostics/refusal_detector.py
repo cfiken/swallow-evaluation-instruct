@@ -2,8 +2,15 @@ import os, copy
 import time
 
 import re
-import pysbd
 import unicodedata
+
+import warnings
+
+# pysbd の SyntaxWarning を抑制
+warnings.filterwarnings("ignore", category=SyntaxWarning)
+
+import pysbd
+
 
 def is_hard_refusal(response: str):
     THRESHOLD = 100
