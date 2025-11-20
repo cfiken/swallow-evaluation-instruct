@@ -297,6 +297,7 @@ def _bleu_metric_common(df_details, reasoning_starter: Optional[str], repetition
 def bleu_metric_ja(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
     """BLEU Metric Benchmarks xx-to-Japanese
     """
+    # sentences in lighteval details are already tokenized for Japanese BLEU calculation, thus trg_lang=""
     return _bleu_metric_common(df_details, reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold, trg_lang="")
 
 
