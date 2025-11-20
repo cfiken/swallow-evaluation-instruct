@@ -1,4 +1,4 @@
-from aggregation_functions import extractive_match_metric, bleu_metric, mt_bench_metric, ifeval_metric, pass_at_k_metric
+from aggregation_functions import extractive_match_metric, mt_bench_metric, ifeval_metric, pass_at_k_metric, bleu_metric_ja, bleu_metric_en
 
 BENCHMARKS = {
     "swallow|japanese_mt_bench|0": {
@@ -14,11 +14,11 @@ BENCHMARKS = {
         "file_pattern": "details_swallow|jamcqa|0_*.parquet"
     },
     "swallow|wmt20:en-ja|0": {
-        "analysis_function": bleu_metric,
+        "analysis_function": bleu_metric_ja,
         "file_pattern": "details_swallow|wmt20:en-ja|0_*.parquet"
     },
     "swallow|wmt20:ja-en|0": {
-        "analysis_function": bleu_metric,
+        "analysis_function": bleu_metric_en,
         "file_pattern": "details_swallow|wmt20:ja-en|0_*.parquet"
     },
     "swallow|swallow_gpqa_ja|0": {

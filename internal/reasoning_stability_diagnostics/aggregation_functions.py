@@ -1,9 +1,32 @@
 from typing import Optional
 import math
 import json
+from copy import deepcopy
 
 from utils import most_frequent_char_ngram
+from bleu_scorer import bleu_score
+from refusal_detector import is_refusal
 
+def is_refusal_fast(response: str, first_n_chars: int = 1000) -> bool:
+    """拒否応答かどうかを高速に判定する簡易版"""
+    if not response:
+        return False
+    text = response[:first_n_chars]
+    return is_refusal(text)
+
+DUMMY_RESULT = {
+    'num_responses': float('nan'),
+    'num_non_closed_reasoning': float('nan'),
+    'num_closed_reasoning': float('nan'),
+    'reasoning_failure_ratio': float('nan'),
+    'performance_in_completion': float('nan'),
+    'performance': float('nan'),
+    "performance_delta": float('nan'),
+    "refusal_ratio": float('nan'),
+    "reserved_2": float('nan'),
+    "reserved_3": float('nan'),
+    "reserved_4": float('nan'),
+}
 
 def is_non_closed_reasoning(
     reasoning_content: str | None,
@@ -37,17 +60,6 @@ def is_non_closed_reasoning(
             return True    
         return False
 
-
-DUMMY_RESULT = {
-    'num_responses': float('nan'),
-    'num_non_closed_reasoning': float('nan'),
-    'num_closed_reasoning': float('nan'),
-    'reasoning_failure_ratio': float('nan'),
-    'performance_in_completion': float('nan'),
-    'performance': float('nan')
-}
-
-
 def extractive_match_metric(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
     """Extractive Match Metric Benchmarks
 
@@ -62,6 +74,7 @@ def extractive_match_metric(df_details, reasoning_starter: Optional[str], repeti
     num_closed_reasoning = 0
     is_correct_in_closed_reasoning = 0
     is_correct = 0
+    num_refusal = 0
     for record in df_details.to_dict(orient="records"):
         is_correct += record["metrics"]["extractive_match"]
         
@@ -70,15 +83,24 @@ def extractive_match_metric(df_details, reasoning_starter: Optional[str], repeti
         else:
             num_closed_reasoning += 1
             is_correct_in_closed_reasoning += record["metrics"]["extractive_match"]
+        if is_refusal_fast(record["predictions"][0]):
+            num_refusal += 1
     
-    dict_results = {
+    performance_in_completion = is_correct_in_closed_reasoning / num_closed_reasoning
+    performance = is_correct / num_examples
+    refusal_ratio = num_refusal / num_examples
+    
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
-        "performance_in_completion": is_correct_in_closed_reasoning / num_closed_reasoning,
-        "performance": is_correct / num_examples
-    }
+        "performance_in_completion": performance_in_completion,
+        "performance": performance,
+        "performance_delta": performance_in_completion - performance,
+        "refusal_ratio": refusal_ratio,
+    })
 
     return dict_results
 
@@ -92,6 +114,7 @@ def ifeval_metric(df_details, reasoning_starter: Optional[str], repetition_ngram
     num_closed_reasoning = 0
     is_correct_in_closed_reasoning = 0
     is_correct = 0
+    num_refusal = 0
     for record in df_details.to_dict(orient="records"):
         score = 1 if record["metrics"]["inst_level_strict_acc"][0] else 0
         is_correct += score
@@ -101,15 +124,24 @@ def ifeval_metric(df_details, reasoning_starter: Optional[str], repetition_ngram
         else:
             num_closed_reasoning += 1
             is_correct_in_closed_reasoning += score
+        if is_refusal_fast(record["predictions"][0]):
+            num_refusal += 1
     
-    dict_results = {
+    performance_in_completion = is_correct_in_closed_reasoning / num_closed_reasoning
+    performance = is_correct / num_examples
+    refusal_ratio = num_refusal / num_examples
+    
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
-        "performance_in_completion": is_correct_in_closed_reasoning / num_closed_reasoning,
-        "performance": is_correct / num_examples
-    }
+        "performance_in_completion": performance_in_completion,
+        "performance": performance,
+        "performance_delta": performance_in_completion - performance,
+        "refusal_ratio": refusal_ratio,
+    })
 
     return dict_results
 
@@ -131,6 +163,7 @@ def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ng
     score_in_closed_reasoning = 0
     score_overall = 0
     original_score_overall = 0
+    num_refusal = 0
     lst_metric_name_candidates = ["humaneval_pass@1:10", "jhumaneval_pass@1:10", "codegen_pass@1:10"]
     for record in df_details.to_dict(orient="records"):
         # instruction-level Pass@K score lookup
@@ -159,6 +192,8 @@ def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ng
             else:
                 num_closed_reasoning_i += 1
                 passed_in_completion_i += _passed
+            if is_refusal_fast(response):
+                num_refusal += 1
         
             num_examples_i += 1
             passed_i += _passed
@@ -179,48 +214,96 @@ def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ng
         num_instructions += 1
         original_score_overall += score_i
 
-    dict_results = {
+    performance_in_completion = score_in_closed_reasoning / num_instructions
+    performance = score_overall / num_instructions
+    refusal_ratio = num_refusal / num_examples
+    
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
-        "performance_in_completion": score_in_closed_reasoning / num_instructions,
-        "performance": score_overall / num_instructions
-    }
+        "performance_in_completion": performance_in_completion,
+        "performance": performance,
+        "performance_delta": performance_in_completion - performance,
+        "refusal_ratio": refusal_ratio,
+    })
     
     original_performance = original_score_overall / num_instructions
-    assert math.isclose(score_overall / num_instructions, original_performance, abs_tol=1e-2), "Pass@K performance calculation mismatch."
+    assert math.isclose(performance, original_performance, abs_tol=1e-2), "Pass@K performance calculation mismatch."
 
     return dict_results
 
 
-def bleu_metric(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
-    """BLEU Metric Benchmarks
+def _bleu_metric_common(df_details, reasoning_starter: Optional[str], repetition_ngram: int, top_ngram_freq_repetition_threshold: int, trg_lang: str) -> dict:
+    """BLEU Metric Benchmarks (共通実装)
 
     BLEU metrics doesn't support performance_in_has_answer.
+    
+    Args:
+        df_details: データフレーム
+        reasoning_starter: 推論開始マーカー
+        repetition_ngram: N-gramのサイズ
+        top_ngram_freq_repetition_threshold: 最頻N-gramの閾値
+        trg_lang: ターゲット言語 ("ja" または "en")
     """
     records = list(df_details.to_dict(orient="records"))
     num_examples = len(records)
     
     num_non_closed_reasoning = 0
     num_closed_reasoning = 0
+    num_refusal = 0
+    predictions = []
+    golds = []
+    predictions_in_closed_reasoning = []
+    golds_in_closed_reasoning = []
     for record in df_details.to_dict(orient="records"):
+        
+        # prediction and gold are tokenized sentences used for BLEU calculation
+        prediction = record["metrics"]["bleu"]["preds"][0]
+        gold = record["metrics"]["bleu"]["golds"][0]
+        predictions.append(prediction)
+        golds.append(gold)
         
         if is_non_closed_reasoning(record["predictions"][0], reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
             num_non_closed_reasoning += 1
         else:
             num_closed_reasoning += 1
+            predictions_in_closed_reasoning.append(prediction)
+            golds_in_closed_reasoning.append(gold)
+        if is_refusal_fast(record["predictions"][0]):
+            num_refusal += 1
+            
+    bleu_overall = bleu_score(predictions=predictions, golds=golds, trg_lang=trg_lang)
+    bleu_in_closed_reasoning = bleu_score(predictions=predictions_in_closed_reasoning, golds=golds_in_closed_reasoning, trg_lang=trg_lang)
+    refusal_ratio = num_refusal / num_examples
     
-    dict_results = {
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
-        "performance_in_completion": float("nan"),
-        "performance": float("nan")
-    }
+        "performance_in_completion": bleu_in_closed_reasoning,
+        "performance": bleu_overall,
+        "performance_delta": bleu_in_closed_reasoning - bleu_overall,
+        "refusal_ratio": refusal_ratio,
+    })
 
     return dict_results
+
+
+def bleu_metric_ja(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
+    """BLEU Metric Benchmarks xx-to-Japanese
+    """
+    return _bleu_metric_common(df_details, reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold, trg_lang="")
+
+
+def bleu_metric_en(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
+    """BLEU Metric Benchmarks xx-to-English
+    """
+    return _bleu_metric_common(df_details, reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold, trg_lang="en")
 
 
 def mt_bench_metric(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
@@ -233,6 +316,7 @@ def mt_bench_metric(df_details, reasoning_starter: Optional[str], repetition_ngr
     num_closed_reasoning = 0
     score_in_closed_reasoning = 0
     score_overall = 0
+    num_refusal = 0
     for record in df_details.to_dict(orient="records"):
         lst_1st_turn_scores = list(record["metrics"]["judge_score_overall_turn_1"])
         lst_2nd_turn_scores = list(record["metrics"]["judge_score_overall_turn_2"])
@@ -251,15 +335,24 @@ def mt_bench_metric(df_details, reasoning_starter: Optional[str], repetition_ngr
             else:
                 num_closed_reasoning += 1
                 score_in_closed_reasoning += score
+            if is_refusal_fast(response):
+                num_refusal += 1
             score_overall += score
     
-    dict_results = {
+    performance_in_completion = score_in_closed_reasoning / num_closed_reasoning / 10
+    performance = score_overall / num_examples / 10
+    refusal_ratio = num_refusal / num_examples
+    
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
         "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
-        "performance_in_completion": score_in_closed_reasoning / num_closed_reasoning / 10,
-        "performance": score_overall / num_examples / 10,
-    }
+        "performance_in_completion": performance_in_completion,
+        "performance": performance,
+        "performance_delta": performance_in_completion - performance,
+        "refusal_ratio": refusal_ratio,
+    })
 
     return dict_results
