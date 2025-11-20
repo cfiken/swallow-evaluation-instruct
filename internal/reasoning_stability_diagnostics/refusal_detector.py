@@ -37,13 +37,13 @@ def is_hard_refusal(response: str):
 
 
 def is_refusal(response: str) -> bool:
-    """先頭2文だけを対象に拒否判定"""
+    """先頭3文だけを対象に拒否判定"""
     if not response:
         return False
     text = _normalize(response)
     sents = _segment_first_n(text, n=3)
     
-    # 先頭1文からN(=2)文目までを順番に連結する
+    # 先頭1文からN文目までを順番に連結する
     # lst_first_n_sentences[0] =sents[0],
     # lst_first_n_sentences[1] =sents[0]+sents[1], ...
     lst_first_n_sentences = ["\n".join(sents[:i+1]) for i in range(len(sents))]
