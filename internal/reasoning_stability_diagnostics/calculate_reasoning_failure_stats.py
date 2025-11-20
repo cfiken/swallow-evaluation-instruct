@@ -303,14 +303,12 @@ def save_results_csv_oneliner(results: dict, output_basename: str, append: bool 
     # BENCHMARKSの順序でタスクIDを取得
     ordered_task_ids = list(BENCHMARKS.keys())
     
-    # メトリクスごとにタスクをグループ化（metric1のすべてのタスク、metric2のすべてのタスク...）
+    # 各タスクについて、存在するメトリクスカラムを順序通りに追加
     ordered_cols = ['model_id']
-    for metric in metric_cols:
-        for task_id in ordered_task_ids:
-            # task_id_metric 形式のカラム名
-            col_name = f'{task_id}_{metric}'
-            if col_name in df_wide.columns:
-                ordered_cols.append(col_name)
+    for task_id in ordered_task_ids:
+        # このタスクに関連するカラム（task_id_metric形式）を探す
+        task_cols = [col for col in df_wide.columns if col.startswith(f'{task_id}_')]
+        ordered_cols.extend(task_cols)
     
     # 存在しないカラムを除外して並び替え
     available_cols = [col for col in ordered_cols if col in df_wide.columns]
