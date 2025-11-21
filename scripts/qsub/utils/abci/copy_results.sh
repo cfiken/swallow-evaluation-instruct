@@ -9,7 +9,7 @@ if [[ -z "$SRC_ROOT" ]]; then
   exit 1
 fi
 
-DST_ROOT="/groups/gag51395/share/se_eval_details"
+DST_ROOT="/groups/gag51395/share/se_inst/details"
 
 mkdir -p "$DST_ROOT"
 
