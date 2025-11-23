@@ -7,6 +7,12 @@ from utils import most_frequent_char_ngram
 from bleu_scorer import bleu_score
 from refusal_detector import is_refusal
 
+def safe_divide(numerator: float, denominator: float, default: float = float('nan')) -> float:
+    """安全な除算を行う。分母が0の場合はデフォルト値を返す"""
+    if denominator == 0:
+        return default
+    return numerator / denominator
+
 def is_refusal_fast(response: str, first_n_chars: int = 1000) -> bool:
     """拒否応答かどうかを高速に判定する簡易版"""
     if not response:
@@ -86,9 +92,9 @@ def extractive_match_metric(df_details, reasoning_starter: Optional[str], repeti
         if is_refusal_fast(record["predictions"][0]):
             num_refusal += 1
     
-    performance_in_completion = is_correct_in_closed_reasoning / num_closed_reasoning
-    performance = is_correct / num_examples
-    refusal_ratio = num_refusal / num_examples
+    performance_in_completion = safe_divide(is_correct_in_closed_reasoning, num_closed_reasoning)
+    performance = safe_divide(is_correct, num_examples)
+    refusal_ratio = safe_divide(num_refusal, num_examples)
     
     dict_results = deepcopy(DUMMY_RESULT)
     dict_results.update({
