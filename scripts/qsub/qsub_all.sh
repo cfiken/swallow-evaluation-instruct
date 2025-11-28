@@ -105,7 +105,7 @@ if [ ${PREDOWNLOAD_MODEL} = "true" ]; then
   fi
   source "${REPO_PATH}/.common_envs/bin/activate"
   echo "🤖 Downloading ${MODEL_NAME} ..."
-  huggingface-cli download $MODEL_NAME --cache-dir $HUGGINGFACE_CACHE --token $HF_TOKEN
+  hf download $MODEL_NAME --cache-dir $HUGGINGFACE_CACHE --token $HF_TOKEN
   deactivate
   echo "✅ \`${MODEL_NAME}\` was successfully downloaded at \`${HUGGINGFACE_CACHE}\`."
 else
