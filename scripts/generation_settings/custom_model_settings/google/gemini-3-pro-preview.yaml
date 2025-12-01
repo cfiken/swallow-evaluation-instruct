@@ -1,0 +1,11 @@
+default:
+  max_n : 1
+  temperature : 1.0
+  reasoning_effort: high
+  version: "1"
+
+max_n_1:
+  max_n : 1
+  temperature : 1.0
+  reasoning_effort: high
+  version: "1"
