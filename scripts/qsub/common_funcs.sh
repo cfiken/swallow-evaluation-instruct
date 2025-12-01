@@ -16,6 +16,7 @@ init_common(){
     export HF_TOKEN=$HF_TOKEN
     export OPENAI_API_KEY=$OPENAI_API_KEY
     export DEEPINFRA_API_KEY=$DEEPINFRA_API_KEY
+    export OPENROUTER_API_KEY=$OPENROUTER_API_KEY
     export UV_CACHE_DIR=$UV_CACHE
     export VLLM_CACHE_ROOT=$VLLM_CACHE
     export REPO_PATH=$REPO_PATH
@@ -416,6 +417,11 @@ serve_litellm(){
             MODEL_NAME_CONFIG="hosted_vllm/$MODEL_NAME"
             RAW_RESULT_DIR="$RAW_OUTPUT_DIR/results/$MODEL_NAME_CONFIG$CUSTOM_SETTINGS_SUBDIR"
             ;;
+        "openrouter")
+            local BASE_URL=""  # Litellm automatically select the endpoint of OpenRouter.Do not need to set BASE_URL here.
+            MODEL_NAME_CONFIG="openrouter/$MODEL_NAME"
+            RAW_RESULT_DIR="$RAW_OUTPUT_DIR/results/$MODEL_NAME_CONFIG$CUSTOM_SETTINGS_SUBDIR"
+            ;;
         *)
             echo "💀 Error: Invalid provider. Must be one of: openai, deepinfra, vllm."
             exit 1
@@ -504,6 +510,7 @@ serve_litellm(){
         case $PROVIDER in
             "openai") API_KEY=$OPENAI_API_KEY ;;
             "deepinfra") API_KEY=$DEEPINFRA_API_KEY ;;
+            "openrouter") API_KEY=$OPENROUTER_API_KEY ;;
             *) echo "❌ Invalid provider. Must be one of: openai, deepinfra."
                 exit 1
                 ;;
@@ -521,6 +528,9 @@ serve_litellm(){
         ## reasoning_parser is only needed when using a swallow's parser
         OPTIONAL_BASE_PARAMS+=("reasoning_parser: $REASONING_PARSER_FOR_LIGHTEVAL")
     fi
+    if [[ $BASE_URL != "" ]]; then
+        OPTIONAL_BASE_PARAMS+=("base_url: $BASE_URL")
+    fi
     echo "🔍 OPTIONAL_BASE_PARAMS: ${OPTIONAL_BASE_PARAMS[@]}"
 
     ## Create YAML file
@@ -529,7 +539,6 @@ serve_litellm(){
 model:
     base_params:
         model_name: $MODEL_NAME_CONFIG
-        base_url: $BASE_URL
 $(printf '        %s\n' "${OPTIONAL_BASE_PARAMS[@]}")
 $GEN_PARAMS
 EOL
