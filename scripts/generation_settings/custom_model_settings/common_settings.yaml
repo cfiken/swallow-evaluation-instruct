@@ -9,3 +9,7 @@ ignore_reasoning_tag_common:
 deepseek_r1_common:
   reasoning_parser: "deepseek_r1"
   version: "1"
+
+deepseek_r1_markup_common:
+  reasoning_parser: "deepseek_r1_markup"
+  version: "1"
