@@ -1,3 +1,5 @@
 default:
   max_n : 1
-  version: "2"
+  temperature: 1.0
+  max_new_tokens: 65536
+  version: "3"
