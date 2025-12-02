@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# How-to-use: bash scripts/tsubame/qsub_all.sh
+# How-to-use: bash scripts/qsub/qsub_all.sh
 set -euo pipefail
 ########################################################
 
