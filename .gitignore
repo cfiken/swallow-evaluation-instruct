@@ -176,10 +176,6 @@ cython_debug/
 .pypirc
 
 
-# Added
-## eval env
-uv.lock
-pyproject.toml
 
 ## outputs
 results/
