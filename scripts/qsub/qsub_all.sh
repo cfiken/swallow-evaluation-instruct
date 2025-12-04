@@ -6,10 +6,10 @@ set -euo pipefail
 # Set Args
 ## Common Settings
 NODE_KIND=""                # A node kind to use. tsubame: ["node_q", "node_f", "cpu_16"], local: ["cpu", "gpu_*" (*: GPU number)], abci: ["rt_HG", "rt_HF", "rt_HC"]
-MODEL_NAME=""               # A model name (HuggingFace ID) to use.
+MODEL_NAME=""               # A model name (HuggingFace ID) to use. If you use OpenRouter, set the model name registered in OpenRouter. (e.g. google/gemini-3-pro-preview ref: https://openrouter.ai/google/gemini-3-pro-preview/api)
 
 ## Special Settings
-PROVIDER="vllm"             # Default: "vllm". A provider to host the model. ["vllm", "openai", "deepinfra"]
+PROVIDER="vllm"             # Default: "vllm". A provider to host the model. ["vllm", "openai", "deepinfra","openrouter"]
 CUSTOM_SETTINGS=""          # Default: "". A custom setting name to use. (e.g. "reasoning", "coding", "flashattn_incompatible")
 PREDOWNLOAD_MODEL="true"    # Default: "true". A pre-download a model before qsub.
 MAX_SAMPLES=""              # Default: "". A maximum number of samples in benchmark to evaluate. Set it for debugging.
@@ -53,6 +53,7 @@ case $PROVIDER in
     openai) PROVIDER_SUBDIR="" ;;
     vllm) PROVIDER_SUBDIR="hosted_vllm/" ;;
     deepinfra) PROVIDER_SUBDIR="deepinfra/" ;;
+    openrouter) PROVIDER_SUBDIR="openrouter/" ;;
     *) echo "❌ unknown provider ${PROVIDER}"; exit 1 ;;
 esac
 RESULTS_DIR="${REPO_PATH}/results/${PROVIDER_SUBDIR}${MODEL_NAME}${CUSTOM_SETTINGS_SUBDIR}"
