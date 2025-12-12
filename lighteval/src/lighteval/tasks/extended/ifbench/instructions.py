@@ -1185,8 +1185,8 @@ class LastWordFirstNextChecker(Instruction):
         for i in range(len(sentences) - 1):
             last_sentence_split = sentences[i].rstrip("".join(string.punctuation) + " ").split()
             next_sentence_split = sentences[i + 1].lstrip("".join(string.punctuation) + " ").split()
-            if not (last_sentence_split and next_sentence_split):
-                continue
+            if len(last_sentence_split) == 0 or len(next_sentence_split) == 0:
+                return False
             last_word = last_sentence_split[-1]
             first_word = next_sentence_split[0]
             if last_word.lower() != first_word.lower():
