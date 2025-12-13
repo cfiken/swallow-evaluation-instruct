@@ -488,6 +488,8 @@ class AlphabetLoopChecker(Instruction):
         """Checks if each word of the response starts with the next letter of the alphabet."""
         value = value.translate(str.maketrans("", "", string.punctuation))
         words = value.strip("".join(string.punctuation) + " ").split()
+        if not words:
+            return False
         alphabet = string.ascii_lowercase
         correct_letter = words[0][0].lower()
         if correct_letter not in alphabet:  # numbers are fails
@@ -871,12 +873,18 @@ class EmojiSentenceChecker(Instruction):
         sentences = instructions_util.split_into_sentences(value)
         for i, sentence in enumerate(sentences):
             stripped = sentence.translate(str.maketrans("", "", string.punctuation)).strip()
+            # check for empty string
+            if not stripped:
+                return False
             last_char = stripped[-1]
             # because blank spaces are treated oddly
             second_last_char = stripped[-2] if len(stripped) > 1 else stripped[-1]
             if not emoji.is_emoji(last_char) and not emoji.is_emoji(second_last_char):
                 if i < len(sentences) - 1:
                     stripped = sentences[i + 1].translate(str.maketrans("", "", string.punctuation)).strip()
+                    # fixed empty string
+                    if not stripped:
+                        return False
                     first_char = stripped[0]
                     if not emoji.is_emoji(first_char):
                         return False
@@ -1220,6 +1228,8 @@ class ParagraphLastFirstWordMatchChecker(Instruction):
             if not paragraph:
                 continue
             words = paragraph.strip("".join(string.punctuation) + " ").split()
+            if not words:
+                continue
             if words[0] != words[-1]:
                 return False
         return True
