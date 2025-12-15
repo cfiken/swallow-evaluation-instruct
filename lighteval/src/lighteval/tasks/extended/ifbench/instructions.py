@@ -25,7 +25,6 @@ from collections import Counter
 
 import emoji
 import nltk
-import spacy
 import syllapy
 
 from lighteval.tasks.extended.ifbench import instructions_utils as instructions_util
@@ -71,14 +70,6 @@ class Instruction:
         if not RESOURCES_DOWNLOADED:
             nltk.download("punkt_tab")
             nltk.download("averaged_perceptron_tagger_eng")
-
-            try:
-                spacy.load("en_core_web_sm")
-            except OSError:
-                logger.info("Downloading the spacy en_core_web_sm model\n(don't worry, this will only happen once)")
-                from spacy.cli import download
-
-                download("en_core_web_sm")
             RESOURCES_DOWNLOADED = True
 
     def build_description(self, **kwargs):
