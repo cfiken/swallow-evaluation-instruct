@@ -3,7 +3,7 @@ import math
 import json
 from copy import deepcopy
 
-from utils import most_frequent_char_ngram
+from utils import most_frequent_char_ngram, normalize_multiple_extractions
 from bleu_scorer import bleu_score
 from refusal_detector import is_refusal
 
@@ -211,6 +211,107 @@ def pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ng
         if not math.isclose(pass_at_1_i, score_i, abs_tol=1e-3):
             # debugging output
             print(pass_at_1_i, score_i, num_examples_i, passed_i)            
+        
+        num_non_closed_reasoning += num_non_closed_reasoning_i
+        num_closed_reasoning += num_closed_reasoning_i
+        num_examples += num_examples_i
+        score_overall += pass_at_1_i
+        score_in_closed_reasoning += pass_at_1_in_closed_reasoning_i
+        num_instructions += 1
+        original_score_overall += score_i
+
+    performance_in_completion = score_in_closed_reasoning / num_instructions
+    performance = score_overall / num_instructions
+    refusal_ratio = num_refusal / num_examples
+    
+    dict_results = deepcopy(DUMMY_RESULT)
+    dict_results.update({
+        "num_responses": num_examples,
+        "num_non_closed_reasoning": num_non_closed_reasoning,
+        "num_closed_reasoning": num_closed_reasoning,
+        "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
+        "performance_in_completion": performance_in_completion,
+        "performance": performance,
+        "performance_delta": performance_in_completion - performance,
+        "refusal_ratio": refusal_ratio,
+    })
+    
+    original_performance = original_score_overall / num_instructions
+    assert math.isclose(performance, original_performance, abs_tol=1e-2), "Pass@K performance calculation mismatch."
+
+    return dict_results
+
+def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[str], repetition_ngram: int = 50, top_ngram_freq_repetition_threshold: int = 10) -> dict:
+    """Pass@K Metric Benchmarks
+    performance_in_completion is defined as the conditional average on the any one of the K responses correctly completed.
+    """
+    num_examples = 0
+    num_instructions = 0
+    
+    num_non_closed_reasoning = 0
+    num_closed_reasoning = 0
+    score_in_closed_reasoning = 0
+    score_overall = 0
+    original_score_overall = 0
+    num_refusal = 0
+    lst_metric_name_candidates = ["extractive_match_pass@1:8", "extractive_match_pass@1:16", "extractive_match_pass@1:32"]
+    for record in df_details.to_dict(orient="records"):
+        # instruction-level Pass@K score lookup
+        dict_metrics = record["metrics"]
+        for metric_name in lst_metric_name_candidates:
+            if metric_name in dict_metrics:
+                score_i = dict_metrics[metric_name]
+                break
+        else:
+            raise ValueError("pass@k metric not found in the record metrics.")
+        
+        # response-level predictions
+        lst_predictions = record["specifics"]["extracted_predictions"]
+        # we always have two predictions for each instruction
+        # e.g. ["27", "27", "81", "81", ...]
+        lst_tup_predictions = list(zip(lst_predictions[0::2], lst_predictions[1::2]))
+        # prediction frequency and correctness
+        # e.g. [{'answer': '2187', 'count': 2, 'is_correct': False},
+        # {'answer': '27', 'count': 1, 'is_correct': False},
+        # {'answer': '81', 'count': 12, 'is_correct': True},
+        # {'answer': '94', 'count': 1, 'is_correct': False}]
+        lst_dict_predictions_freq = record["specifics"]["extracted_predictions_freq"]
+        dict_answers = {item['answer']:item["is_correct"] for item in lst_dict_predictions_freq}
+        
+        # responses
+        lst_responses = list(record["predictions"])
+        assert len(lst_responses) == len(lst_tup_predictions), "Length mismatch between responses and extracted predictions."
+        
+        num_examples_i = 0
+        passed_i = 0
+        passed_in_completion_i = 0
+        num_non_closed_reasoning_i = 0
+        num_closed_reasoning_i = 0
+        for response, tup_prediction in zip(lst_responses, lst_tup_predictions):
+            lookup_key = normalize_multiple_extractions(tup_prediction)
+            _passed = 1 if dict_answers[lookup_key] else 0
+            
+            if is_non_closed_reasoning(response, reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
+                num_non_closed_reasoning_i += 1
+            else:
+                num_closed_reasoning_i += 1
+                passed_in_completion_i += _passed
+            if is_refusal_fast(response):
+                num_refusal += 1
+        
+            num_examples_i += 1
+            passed_i += _passed
+        
+        pass_at_1_i = _calculate_pass_at_k(n=num_examples_i, c=passed_i, k=1)
+        pass_at_1_in_closed_reasoning_i = _calculate_pass_at_k(n=num_closed_reasoning_i, c=passed_in_completion_i, k=1)
+        
+        # sanity check
+        if not math.isclose(pass_at_1_i, score_i, abs_tol=1e-3):
+            # debugging output
+            print(pass_at_1_i, score_i, num_examples_i, passed_i)
+            print(lst_dict_predictions_freq)
+            print(lst_predictions)
+            print("======")
         
         num_non_closed_reasoning += num_non_closed_reasoning_i
         num_closed_reasoning += num_closed_reasoning_i

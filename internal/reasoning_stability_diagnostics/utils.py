@@ -106,3 +106,28 @@ def most_frequent_char_ngram(text: str, n: int = 50) -> dict:
     total = L - n + 1  # 全Ngram数
     fraction = top_freq / total
     return {"top_ngram": top_ngram, "frequency": top_freq, "fraction": fraction}
+
+
+def normalize_multiple_extractions(extracted_list) -> str:
+    """抽出結果をdeduplicateおよびstringに変換
+    
+    Args:
+        extracted_list: 抽出結果のリスト
+        
+    Returns:
+        str: ハッシュ化された結果
+    """
+    if not extracted_list:
+        return "EMPTY"
+    if len(extracted_list) == 1:
+        return str(extracted_list[0])
+
+    normalized = [str(x) for x in extracted_list]
+    unique_extractions = sorted(set(normalized))
+
+    if len(unique_extractions) == 1:
+        return unique_extractions[0]
+
+    # 複数ある場合は重複を除去したうえでソートして連結した文字列を返す
+    combined = "|".join(unique_extractions)
+    return combined
