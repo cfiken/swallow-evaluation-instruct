@@ -72,7 +72,7 @@ for subset in ("diamond", "main", "extended"):
 # Pass@K and Maj@K variant
 lst_jgpqa_passk_majk = []
 for jgpqa_task in lst_jgpqa_tasks:
-    for num_samples in [16, 32, 64, 128, 256]:
+    for num_samples in [8, 16, 32, 64, 128, 256]:
         lst_k = powers_of_two_up_to_n(num_samples)
         _lst_pass_at_k_metrics = create_passk_metrics(base_metric=gpqa_ja_instruct_metric, k_values=lst_k, num_samples=num_samples)
         _lst_maj_at_k_metrics = create_majk_metrics(base_metric=gpqa_ja_instruct_metric, k_values=lst_k, num_samples=num_samples)
