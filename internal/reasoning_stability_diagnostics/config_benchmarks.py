@@ -97,3 +97,5 @@ EXTENDED_BENCHMARKS = {
         "file_pattern": "details_swallow|aime_N16:*|0_*.parquet"
     },    
 }
+
+BENCHMARKS.update(EXTENDED_BENCHMARKS)

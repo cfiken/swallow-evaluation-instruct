@@ -16,7 +16,7 @@ from typing import Optional
 import pandas as pd
 from datasets import load_dataset
 
-from config_benchmarks import BENCHMARKS, EXTENDED_BENCHMARKS
+from config_benchmarks import BENCHMARKS
 from aggregation_functions import DUMMY_RESULT
 from utils import load_parquet_from_local
 
@@ -58,11 +58,6 @@ def parse_args() -> argparse.Namespace:
         nargs='*',
         default=None,
         help='分析対象のタスクID（指定なしの場合は全タスク）'
-    )
-    parser.add_argument(
-        '--add_extended_benchmarks',
-        action='store_true',
-        help='N=16設定のタスクを含める。例：swallow|math_100_japanese_N16|0'
     )
     parser.add_argument(
         '--lighteval-output-dir',
@@ -341,10 +336,6 @@ def main():
     
     # ローカルモードの場合はhf_organizationをLOCALで上書き
     hf_organization = "LOCAL" if is_local_mode else args.hf_organization
-    
-    # 拡張ベンチマークの追加
-    if args.add_extended_benchmarks:
-        BENCHMARKS.update(EXTENDED_BENCHMARKS)
     
     # HuggingFaceデータセットIDの構築
     hf_dataset_id = build_hf_dataset_id(
