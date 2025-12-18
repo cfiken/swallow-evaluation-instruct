@@ -13,3 +13,9 @@ deepseek_r1_common:
 deepseek_r1_markup_common:
   reasoning_parser: "deepseek_r1_markup"
   version: "1"
+
+reasoning-stochastic_common_qwen3:
+  reasoning_parser: "qwen3"
+  temperature: 0.6
+  top_p: 0.95 
+  version: "1"
