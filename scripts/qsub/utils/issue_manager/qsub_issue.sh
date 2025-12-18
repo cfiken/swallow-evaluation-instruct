@@ -7,6 +7,12 @@ ISSUE_ID=$1
 
 source "$(dirname $0)/issues/${ISSUE_ID}"
 
+# check COPY_DETAILS is true only when SERVICE is abci
+if [[ "$COPY_DETAILS" == "true" && "$SERVICE" != "abci" ]]; then
+  echo "💀 Error: COPY_DETAILS can be true only when SERVICE is abci"
+  exit 1
+fi
+
 # Load .env and define dirs
 source "$(dirname "$0")/../../../../.env"
 mkdir -p "${REPO_PATH}/scripts/qsub/utils/issue_manager/issues_status"
@@ -18,8 +24,16 @@ case $PROVIDER in
     openai) PROVIDER_SUBDIR="" ;;
     vllm) PROVIDER_SUBDIR="hosted_vllm/" ;;
     deepinfra) PROVIDER_SUBDIR="deepinfra/" ;;
+    openrouter) PROVIDER_SUBDIR="openrouter/" ;;
     *) echo "❌ unknown provider ${PROVIDER}"; exit 1 ;;
 esac
+
+## Login to HuggingFace
+echo "🤗 Logging in to HuggingFace..."
+export HUGGINGFACE_HUB_CACHE=$HUGGINGFACE_CACHE
+export HF_HOME=$HUGGINGFACE_CACHE
+hf auth login --token $HF_TOKEN
+
 # Load task-definition and common functions
 source "$(dirname "$0")/../../conf/load_config.sh"
 source "${REPO_PATH}/scripts/qsub/common_funcs.sh"
@@ -35,6 +49,9 @@ if [[ -n "${MAX_SAMPLES}" ]]; then
 fi
 if [[ "${UPLOAD_DETAILS}" == "true" ]]; then
   OPTIONAL_ARGS+=(--upload-details-to-huggingface ${UPLOAD_DETAILS})
+fi
+if [[ "${COPY_DETAILS}" == "true" ]]; then
+  OPTIONAL_ARGS+=(--copy-details-to-shared-dir ${COPY_DETAILS})
 fi
 
 # Check service

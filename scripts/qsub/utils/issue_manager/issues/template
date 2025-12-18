@@ -8,10 +8,12 @@ MODEL_NAMES=(
 )
 
 ## Special Settings
-PROVIDER="vllm"             # Default: "vllm". A provider to host the model. ["vllm", "openai", "deepinfra"]
+PROVIDER="vllm"             # Default: "vllm". A provider to host the model. ["vllm", "openai", "deepinfra","openrouter"]
 CUSTOM_SETTINGS=""          # Default: "". A custom setting name to use. (e.g. "reasoning", "coding", "flashattn_incompatible")
 PREDOWNLOAD_MODEL="true"    # Default: "true". A pre-download a model before qsub.
 MAX_SAMPLES=""              # Default: "". A maximum number of samples in benchmark to evaluate. Set it for debugging.
+UPLOAD_DETAILS="false"      # Default: "false". Set "true" if you want to upload the outputs to huggingface.
+COPY_DETAILS="false"        # abci only. Default: "false". Set "true" if you want to copy the outputs to a shared directory "/groups/gag51395/share/se_eval_details".
 
 ## Environmental Settings
 SERVICE=""                  # A service to use. ["tsubame", "abci", "local"]
