@@ -89,11 +89,11 @@ EXTENDED_BENCHMARKS = {
         "file_pattern": "details_swallow|math_100_japanese_N16|0_*.parquet"
     },    
     "swallow|gpqa_N16:diamond|0": {
-        "analysis_function": extractive_match_metric,
-        "file_pattern": "details_swallow|gpqa:diamond|0_*.parquet"
+        "analysis_function": extractive_match_pass_at_k_metric,
+        "file_pattern": "details_swallow|gpqa_N16:diamond|0_*.parquet"
     },
     "swallow|aime_N16|0": {
-        "analysis_function": extractive_match_metric,
+        "analysis_function": extractive_match_pass_at_k_metric,
         "file_pattern": "details_swallow|aime_N16:*|0_*.parquet"
     },    
 }
