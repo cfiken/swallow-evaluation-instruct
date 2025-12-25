@@ -254,6 +254,7 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
     score_overall = 0
     original_score_overall = 0
     num_refusal = 0
+    num_empty_predictions = 0
     lst_metric_name_candidates = ["extractive_match_pass@1:8", "extractive_match_pass@1:16", "extractive_match_pass@1:32"]
     for record in df_details.to_dict(orient="records"):
         # instruction-level Pass@K score lookup
@@ -281,13 +282,13 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
         
         # number of empty predictions
         empty_prediction_lookup_key = normalize_multiple_extractions(None)
-        num_empty_predictions = dict_answers_freq.get(empty_prediction_lookup_key, 0)
+        num_empty_predictions_i = dict_answers_freq.get(empty_prediction_lookup_key, 0)
         
         # assume we failed to extract answers for last n responses
         # don't worry, it won't affect passed_i calculation.
         # For pass@1-in-completion metric, we'll simply replace it with pass@1 later.
-        if num_empty_predictions > 0:
-            lst_tup_predictions.extend([None] * num_empty_predictions)  
+        if num_empty_predictions_i > 0:
+            lst_tup_predictions.extend([None] * num_empty_predictions_i)  
         
         # responses
         lst_responses = list(record["predictions"])
@@ -325,7 +326,7 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
             print("======")
         
         # approximation: replace pass@1-in-completion with original pass@1 if there are empty predictions
-        if num_empty_predictions > 0:
+        if num_empty_predictions_i > 0:
             pass_at_1_in_closed_reasoning_i = pass_at_1_i
         
         num_examples += num_examples_i
@@ -335,6 +336,7 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
         num_non_closed_reasoning += num_non_closed_reasoning_i
         num_closed_reasoning += num_closed_reasoning_i
         score_in_closed_reasoning += pass_at_1_in_closed_reasoning_i
+        num_empty_predictions += num_empty_predictions_i
 
     performance_in_completion = score_in_closed_reasoning / num_instructions
     performance = score_overall / num_instructions
@@ -354,6 +356,9 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
     
     original_performance = original_score_overall / num_instructions
     assert math.isclose(performance, original_performance, abs_tol=1e-2), "Pass@K performance calculation mismatch."
+    
+    if num_empty_predictions > 0:
+        print(f"回答の抽出に失敗した応答がありました：{num_empty_predictions}件。")
 
     return dict_results
 
