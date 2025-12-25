@@ -3,7 +3,7 @@ import math
 import json
 from copy import deepcopy
 
-from utils import most_frequent_char_ngram, normalize_multiple_extractions
+from utils import most_frequent_char_ngram, normalize_multiple_extractions, convert_predictions_to_lookup_keys
 from bleu_scorer import bleu_score
 from refusal_detector import is_refusal
 
@@ -262,15 +262,14 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
         for metric_name in lst_metric_name_candidates:
             if metric_name in dict_metrics:
                 score_i = dict_metrics[metric_name]
+                num_trial = int(metric_name.split("@1:")[-1])
                 break
         else:
             raise ValueError("pass@k metric not found in the record metrics.")
         
         # response-level predictions
         lst_predictions = record["specifics"]["extracted_predictions"]
-        # we always have two predictions for each instruction
-        # e.g. ["27", "27", "81", "81", ...]
-        lst_tup_predictions = list(zip(lst_predictions[0::2], lst_predictions[1::2]))
+        
         # prediction frequency and correctness
         # e.g. [{'answer': '2187', 'count': 2, 'is_correct': False},
         # {'answer': '27', 'count': 1, 'is_correct': False},
@@ -280,6 +279,13 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
         dict_answers = {item['answer']:item["is_correct"] for item in lst_dict_predictions_freq}
         dict_answers_freq = {item['answer']:item["count"] for item in lst_dict_predictions_freq}
         
+        # Convert list of extracted predictions into list of answer lookup keys.
+        lst_prediction_lookup_keys = convert_predictions_to_lookup_keys(
+            lst_predictions=lst_predictions,
+            dict_answers=dict_answers,
+            num_trial=num_trial
+        )
+        
         # number of empty predictions
         empty_prediction_lookup_key = normalize_multiple_extractions(None)
         num_empty_predictions_i = dict_answers_freq.get(empty_prediction_lookup_key, 0)
@@ -288,19 +294,18 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
         # don't worry, it won't affect passed_i calculation.
         # For pass@1-in-completion metric, we'll simply replace it with pass@1 later.
         if num_empty_predictions_i > 0:
-            lst_tup_predictions.extend([None] * num_empty_predictions_i)  
+            lst_prediction_lookup_keys.extend([empty_prediction_lookup_key] * num_empty_predictions_i)  
         
         # responses
         lst_responses = list(record["predictions"])
-        assert len(lst_responses) == len(lst_tup_predictions), "Length mismatch between responses and extracted predictions."
+        assert len(lst_responses) == len(lst_prediction_lookup_keys), "Length mismatch between responses and extracted predictions."
         
         num_examples_i = 0
         passed_i = 0
         passed_in_completion_i = 0
         num_non_closed_reasoning_i = 0
         num_closed_reasoning_i = 0
-        for response, tup_prediction in zip(lst_responses, lst_tup_predictions):
-            lookup_key = normalize_multiple_extractions(tup_prediction)
+        for response, lookup_key in zip(lst_responses, lst_prediction_lookup_keys):
             _passed = 1 if dict_answers[lookup_key] else 0
             
             if is_non_closed_reasoning(response, reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):

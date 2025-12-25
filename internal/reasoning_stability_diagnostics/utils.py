@@ -131,3 +131,50 @@ def normalize_multiple_extractions(extracted_list) -> str:
     # 複数ある場合は重複を除去したうえでソートして連結した文字列を返す
     combined = "|".join(unique_extractions)
     return combined
+
+
+def convert_predictions_to_lookup_keys(
+    lst_predictions: list,
+    dict_answers: dict,
+    num_trial: int
+) -> list[str]:
+    """抽出された予測リストを回答ルックアップキーのリストに変換する
+    
+    Args:
+        lst_predictions: 抽出された予測のリスト
+        dict_answers: 回答の正誤を格納した辞書（キー：回答文字列）
+        num_trial: 試行回数
+        
+    Returns:
+        list[str]: ルックアップキーのリスト
+        
+    Raises:
+        ValueError: 抽出された予測が既知の回答にマッチできない場合
+    """
+    # 予測が期待通りの数の場合、2つずつペアにする
+    if len(lst_predictions) == num_trial * 2:
+        lst_tup_predictions = list(zip(lst_predictions[0::2], lst_predictions[1::2]))
+        lst_prediction_lookup_keys = [normalize_multiple_extractions(tup_pred) for tup_pred in lst_tup_predictions]
+    else:
+        # 予測数が期待と異なる場合、柔軟にマッチングを試みる
+        lst_prediction_lookup_keys = []
+        i = 0
+        while i < len(lst_predictions):
+            # まず2つの予測を試す
+            if i + 1 < len(lst_predictions):
+                _lst_pred = [lst_predictions[i], lst_predictions[i + 1]]
+                _lookup_key = normalize_multiple_extractions(_lst_pred)
+                if _lookup_key in dict_answers:
+                    lst_prediction_lookup_keys.append(_lookup_key)
+                    i += 2
+                    continue
+            # 単一の予測を試す
+            _lst_pred = [lst_predictions[i]]
+            _lookup_key = normalize_multiple_extractions(_lst_pred)
+            if _lookup_key in dict_answers:
+                lst_prediction_lookup_keys.append(_lookup_key)
+                i += 1
+                continue
+            raise ValueError("Extracted prediction could not be matched to any known answers.")
+    
+    return lst_prediction_lookup_keys
