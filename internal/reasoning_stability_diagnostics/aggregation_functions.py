@@ -277,6 +277,17 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
         # {'answer': '94', 'count': 1, 'is_correct': False}]
         lst_dict_predictions_freq = record["specifics"]["extracted_predictions_freq"]
         dict_answers = {item['answer']:item["is_correct"] for item in lst_dict_predictions_freq}
+        dict_answers_freq = {item['answer']:item["count"] for item in lst_dict_predictions_freq}
+        
+        # number of empty predictions
+        empty_prediction_lookup_key = normalize_multiple_extractions(None)
+        num_empty_predictions = dict_answers_freq.get(empty_prediction_lookup_key, 0)
+        
+        # assume we failed to extract answers for last n responses
+        # don't worry, it won't affect passed_i calculation.
+        # For pass@1-in-completion metric, we'll simply replace it with pass@1 later.
+        if num_empty_predictions > 0:
+            lst_tup_predictions.extend([None] * num_empty_predictions)  
         
         # responses
         lst_responses = list(record["predictions"])
@@ -313,13 +324,17 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
             print(lst_predictions)
             print("======")
         
-        num_non_closed_reasoning += num_non_closed_reasoning_i
-        num_closed_reasoning += num_closed_reasoning_i
+        # approximation: replace pass@1-in-completion with original pass@1 if there are empty predictions
+        if num_empty_predictions > 0:
+            pass_at_1_in_closed_reasoning_i = pass_at_1_i
+        
         num_examples += num_examples_i
-        score_overall += pass_at_1_i
-        score_in_closed_reasoning += pass_at_1_in_closed_reasoning_i
+        score_overall += pass_at_1_i        
         num_instructions += 1
         original_score_overall += score_i
+        num_non_closed_reasoning += num_non_closed_reasoning_i
+        num_closed_reasoning += num_closed_reasoning_i
+        score_in_closed_reasoning += pass_at_1_in_closed_reasoning_i
 
     performance_in_completion = score_in_closed_reasoning / num_instructions
     performance = score_overall / num_instructions
