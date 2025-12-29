@@ -47,6 +47,10 @@ class GenerationParameters:
     # OpenAI o3 など reasoning_effort をサポートするモデル用．
     # litellm backend の場合は litellm.completion(), vLLM backend の場合は tokenizer.apply_chat_template() に引き渡す．
     reasoning_effort: Optional[str] = None  # openai o3 など
+    
+    # chat template keyword arguments パラメータ
+    # litellm backend の場合は litellm.completion(extra_body={"chat_template_kwargs": {...}}) に引き渡す．
+    chat_template_kwargs: Optional[dict] = None
 
     # response format to be followed by the model,
     # more info here https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format

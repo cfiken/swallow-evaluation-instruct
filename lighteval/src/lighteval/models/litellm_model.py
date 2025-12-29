@@ -238,6 +238,13 @@ class LiteLLMClient(LightevalModel):
                     logger.info(f"Set reasoning_effort: {self.generation_parameters.reasoning_effort}")
                     # if not litellm.supports_reasoning(self.model):
                     #     logger.warning(f"Model {self.model} does not support reasoning. Setting reasoning_effort may raise an error.")
+                    
+                # chat template kwargs に対応
+                if getattr(self.generation_parameters, "chat_template_kwargs", None) is not None:
+                    if "extra_body" not in kwargs:
+                        kwargs["extra_body"] = {}
+                    kwargs["extra_body"]["chat_template_kwargs"] = self.generation_parameters.chat_template_kwargs
+                    logger.info(f"Set chat_template_kwargs: {self.generation_parameters.chat_template_kwargs}")
 
                 if kwargs.get("max_completion_tokens", None) is None:
                     kwargs["max_completion_tokens"] = max_new_tokens

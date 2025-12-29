@@ -41,6 +41,15 @@ class TestGenerationParameters:
                 "pretrained=deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B,dtype=float16,data_parallel_size=4,max_model_length=32768,gpu_memory_utilisation=0.8,generation_parameters={temperature: 0.7,top_p: 0.95}",
                 {"temperature": 0.7, "top_p": 0.95},
             ),
+            # Test nested dictionary (chat_template_kwargs)
+            (
+                "generation_parameters={temperature:0.7,top_p:0.95,chat_template_kwargs:{enable_thinking:false,add_generation_prompt:true}}",
+                {
+                    "temperature": 0.7, 
+                    "top_p": 0.95,
+                    "chat_template_kwargs": {"enable_thinking": False, "add_generation_prompt": True}
+                },
+            ),
         ],
     )
     def test_extract_num_samples(self, model_args: str, expected):
