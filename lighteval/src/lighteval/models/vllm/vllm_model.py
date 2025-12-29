@@ -119,6 +119,11 @@ class VLLMModelConfig:
             kwargs[name] = value
         # Noneのものは除外
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
+        
+        # chat_template_kwargsの内容をマージ
+        if self.generation_parameters.chat_template_kwargs is not None:
+            kwargs.update(self.generation_parameters.chat_template_kwargs)
+        
         return kwargs
 
 
