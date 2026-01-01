@@ -136,7 +136,8 @@ def normalize_multiple_extractions(extracted_list) -> str:
 def convert_predictions_to_lookup_keys(
     lst_predictions: list,
     dict_answers: dict,
-    num_trial: int
+    num_trial: int,
+    prioritize_single_extractions: bool = False
 ) -> list[str]:
     """抽出された予測リストを回答ルックアップキーのリストに変換する
     
@@ -160,21 +161,22 @@ def convert_predictions_to_lookup_keys(
         lst_prediction_lookup_keys = []
         i = 0
         while i < len(lst_predictions):
-            # まず2つの予測を試す
+            # configure lookup key candidates
+            lst_predictions_candidate = []
+            lst_predictions_candidate.append([lst_predictions[i]])
             if i + 1 < len(lst_predictions):
-                _lst_pred = [lst_predictions[i], lst_predictions[i + 1]]
+                lst_predictions_candidate.append([lst_predictions[i], lst_predictions[i+1]])
+            if not prioritize_single_extractions:
+                # default: 2つの予測を優先的に試す
+                lst_predictions_candidate = lst_predictions_candidate[::-1]
+            
+            for _lst_pred in lst_predictions_candidate:
                 _lookup_key = normalize_multiple_extractions(_lst_pred)
                 if _lookup_key in dict_answers:
                     lst_prediction_lookup_keys.append(_lookup_key)
-                    i += 2
-                    continue
-            # 単一の予測を試す
-            _lst_pred = [lst_predictions[i]]
-            _lookup_key = normalize_multiple_extractions(_lst_pred)
-            if _lookup_key in dict_answers:
-                lst_prediction_lookup_keys.append(_lookup_key)
-                i += 1
-                continue
-            raise ValueError("Extracted prediction could not be matched to any known answers.")
+                    i += len(_lst_pred)
+                    break
+            else:
+                raise ValueError("Extracted prediction could not be matched to any known answers.")
     
     return lst_prediction_lookup_keys

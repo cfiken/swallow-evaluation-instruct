@@ -2,6 +2,7 @@ from typing import Optional
 import math
 import json
 from copy import deepcopy
+from collections import Counter
 
 from utils import most_frequent_char_ngram, normalize_multiple_extractions, convert_predictions_to_lookup_keys
 from bleu_scorer import bleu_score
@@ -283,9 +284,25 @@ def extractive_match_pass_at_k_metric(df_details, reasoning_starter: Optional[st
         lst_prediction_lookup_keys = convert_predictions_to_lookup_keys(
             lst_predictions=lst_predictions,
             dict_answers=dict_answers,
-            num_trial=num_trial
+            num_trial=num_trial,
+            prioritize_single_extractions=False
         )
-        
+        # If there were any lookup keys that exceeded the expected number of trials,
+        # then retry by prioritizing single extractions.
+        _dict_answers_freq_actual = Counter(lst_prediction_lookup_keys)
+        is_too_few_predictions = False
+        for lookup_key, freq in _dict_answers_freq_actual.items():
+            if (freq < dict_answers_freq[lookup_key]) and lookup_key.find("|") == -1:
+                is_too_few_predictions = True
+                break
+        if is_too_few_predictions:
+            lst_prediction_lookup_keys = convert_predictions_to_lookup_keys(
+                lst_predictions=lst_predictions,
+                dict_answers=dict_answers,
+                num_trial=num_trial,
+                prioritize_single_extractions=True
+            )
+            
         # number of empty predictions
         empty_prediction_lookup_key = normalize_multiple_extractions(None)
         num_empty_predictions_i = dict_answers_freq.get(empty_prediction_lookup_key, 0)
