@@ -15,6 +15,7 @@ PREDOWNLOAD_MODEL="true"    # Default: "true". A pre-download a model before qsu
 MAX_SAMPLES=""              # Default: "". A maximum number of samples in benchmark to evaluate. Set it for debugging.
 UPLOAD_DETAILS="false"      # Default: "false". Set "true" if you want to upload the outputs to huggingface.
 COPY_DETAILS="false"      # abci only. Default: "false". Set "true" if you want to copy the outputs to a shared directory "/groups/gag51395/share/se_eval_details".
+AR_ID=""                    # Default: "". AR ID for jobs to run on reserved nodes on TSUBAME.
 
 ## Environmental Settings
 SERVICE=""                  # A service to use. ["tsubame", "abci", "local"]
@@ -139,17 +140,22 @@ qsub_task() {
   fi
 
   # Submit a job
+  if [[ -n "${AR_ID:-}" ]]; then
+    ar_qsub_args=("-ar" "${AR_ID}")
+  else
+    ar_qsub_args=()
+  fi
   local job_name="${lang}_${task}"
   case $SERVICE in
     "tsubame")
       h_rt=$(hrt "${NODE_KIND}" "${lang}_${task}") || { echo "❌ Cound not get h_rt for ${lang}_${task} on ${NODE_KIND}"; exit 1; }
-      qsub -g "${TSUBAME_GROUP}" -l "${NODE_KIND}"=1 -p "${PRIORITY}" -N "${job_name}" -l h_rt="${h_rt}" -o "${OUTDIR}" -e "${OUTDIR}" "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
+      qsub -g "${TSUBAME_GROUP}" -l "${NODE_KIND}"=1 -p "${PRIORITY}" -N "${job_name}" -l h_rt="${h_rt}" -o "${OUTDIR}" -e "${OUTDIR}" ${ar_qsub_args[@]} "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
         --task-name "${task_name}" "${common_qsub_args[@]}" "${OPTIONAL_ARGS[@]}"
       ;;
 
     "abci")
       wlt=$(walltime "${NODE_KIND}" "${lang}_${task}") || { echo "❌ Cound not get walltime for ${lang}_${task} on ${NODE_KIND}"; exit 1; }
-      qsub -P "${ABCI_GROUP}" -q "${NODE_KIND}" -l select=1 -N "${job_name}" -l walltime="${wlt}" -o "${OUTDIR}" -e "${OUTDIR}" -- "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
+      qsub -P "${ABCI_GROUP}" -q "${NODE_KIND}" -l select=1 -N "${job_name}" -l walltime="${wlt}" -o "${OUTDIR}" -e "${OUTDIR}" ${ar_qsub_args[@]} -- "${SCRIPTS_DIR}/evaluate_${task_framework}.sh" \
         --task-name "${task_name}" "${common_qsub_args[@]}" --stdout-stderr-dir "${OUTDIR}" "${OPTIONAL_ARGS[@]}"
       ;;
 
