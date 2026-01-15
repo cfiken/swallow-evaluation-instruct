@@ -426,18 +426,21 @@ class LiteLLMClient(LightevalModel):
                         if "model_response" in multi_turn_context[i]["content"]:
                             multi_turn_context[i]["content"] = multi_turn_context[i]["content"].format(model_response=turn_results[tmp_turn][0])
                             tmp_turn += 1
-                    temperature = requests[idx].temperature
-                    if temperature is not None:
-                        self.generation_parameters.temperature = temperature
+                    preset_temperature = requests[idx].temperature
+                    original_temperature = self.generation_parameters.temperature
+                    if original_temperature is None and preset_temperature is not None:
+                        self.generation_parameters.temperature = preset_temperature
 
                     # temperature=0のときはN回生成するのは無駄なのでnum_samples=1でAPI呼び出し、gen_textをnum_samples個複製
-                    if temperature is not None and temperature == 0:
+                    if self.generation_parameters.temperature is not None and self.generation_parameters.temperature == 0:
                         multi_turn_response = self.__call_api(multi_turn_context, return_logits, max_new_tokens, 1, stop_sequence)
                         gen_text = multi_turn_response.choices[0].message.content
                         tmp_results = [gen_text] * num_samples
                     else:
                         multi_turn_response = self.__call_api(multi_turn_context, return_logits, max_new_tokens, num_samples, stop_sequence)
                         tmp_results = [choice.message.content for choice in multi_turn_response.choices]
+
+                    self.generation_parameters.temperature = original_temperature
                     # max_gen_text_lengthで文字列をleft truncate（vllm_model.pyと同様の処理）
                     if request.max_gen_text_length is not None:
                         for i, text in enumerate(tmp_results):

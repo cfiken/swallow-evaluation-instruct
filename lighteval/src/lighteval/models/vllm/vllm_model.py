@@ -307,11 +307,12 @@ class VLLMModel(LightevalModel):
                         context_size = self.max_length
                         inputs_list[0] = inputs_list[0][-context_size:]
 
-                # change temperature as specified in the request
-                if request.temperature is not None:
-                    self._config.generation_parameters.temperature = request.temperature
+                preset_temperature = request.temperature
+                original_temperature = self._config.generation_parameters.temperature
+                if original_temperature is None and preset_temperature is not None:
+                    self._config.generation_parameters.temperature = preset_temperature
 
-                if request.temperature is not None and request.temperature == 0 and request.num_samples > 1:
+                if self._config.generation_parameters.temperature is not None and self._config.generation_parameters.temperature == 0 and request.num_samples > 1:
                     vllm_output = self._generate(
                         inputs=inputs_list,
                         max_new_tokens=max_new_tokens,
@@ -329,6 +330,8 @@ class VLLMModel(LightevalModel):
                         num_samples=request.num_samples,
                     )
                     vllm_outputs = [vllm_outputs[0].outputs[i] for i in range(request.num_samples)]
+
+                self._config.generation_parameters.temperature = original_temperature
 
                 # num_samples個分の回答を格納
                 gen_texts = []
