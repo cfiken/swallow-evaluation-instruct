@@ -57,7 +57,7 @@ case $PROVIDER in
     openrouter) PROVIDER_SUBDIR="openrouter/" ;;
     *) echo "❌ unknown provider ${PROVIDER}"; exit 1 ;;
 esac
-RESULTS_DIR="${REPO_PATH}/results/${PROVIDER_SUBDIR}${MODEL_NAME}${CUSTOM_SETTINGS_SUBDIR}"
+RESULTS_DIR="${STORE_PATH}/results/${PROVIDER_SUBDIR}${MODEL_NAME}${CUSTOM_SETTINGS_SUBDIR}"
 SCRIPTS_DIR="${REPO_PATH}/scripts/qsub"
 
 ## Login to HuggingFace
