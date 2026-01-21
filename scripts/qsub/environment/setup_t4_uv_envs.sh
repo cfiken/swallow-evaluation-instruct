@@ -21,6 +21,7 @@ fi
 # ----------------------------------------------------------------------
 declare -A defaults=(
   ["REPO_PATH"]="/gs/fs/tga-okazaki/{your_name}/swallow-evaluation-private"
+  ["STORE_PATH"]="/gs/fs/tga-okazaki/{your_name}/swallow-evaluation-private/results"
   ["HUGGINGFACE_CACHE"]="/gs/bs/tga-okazaki/{your_name}/cache/huggingface"
   ["UV_CACHE"]="/gs/bs/tga-okazaki/{your_name}/cache/uv"
   ["OPENAI_API_KEY"]="sk-iloveswallow"
@@ -39,6 +40,23 @@ for var in "${!defaults[@]}"; do
     exit 1
   fi
 done
+
+if [[ $REPO_PATH != $STORE_PATH ]]; then
+  if [[ ! -L $REPO_PATH/results ]]; then
+    echo "🗂️ Creating store directory at '${STORE_PATH}/results' and linking to '${REPO_PATH}/results'..."
+    mkdir -p $STORE_PATH/results
+    ln -s $STORE_PATH/results $REPO_PATH
+  fi
+  if [[ ! -L $REPO_PATH/lighteval/outputs ]]; then
+    echo "🗂️ Creating store directory at '${STORE_PATH}/lighteval/outputs' and linking to '${REPO_PATH}/lighteval/outputs'..."
+    mkdir -p $STORE_PATH/lighteval/outputs
+    ln -s $STORE_PATH/lighteval/outputs $REPO_PATH/lighteval
+  fi
+else
+  echo "🗂️ REPO_PATH and STORE_PATH are the same directory. No need to link."
+  mkdir -p $STORE_PATH/results
+  mkdir -p $STORE_PATH/lighteval/outputs
+fi
 
 
 # ----------------------------------------------------------------------
@@ -70,7 +88,7 @@ else
 fi
 
 echo "🔧 Creating shared virtual environment..."
-uv venv "${REPO_PATH}/.common_envs"
+uv venv --clear "${REPO_PATH}/.common_envs"
 source "${REPO_PATH}/.common_envs/bin/activate"
 
 echo "📥 Installing utilities..."
