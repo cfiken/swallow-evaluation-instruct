@@ -27,7 +27,7 @@ while read -r job_id state; do
   job_info=$(qstat -j "$job_id")
 
   task_kind=$(echo "$job_info" | grep job_name | awk '{print $2}')
-  model_name=$(echo "$job_info" |grep stderr_path_list | sed 's|.*results/\([^/]*\)/\([^/]*\).*|\1/\2|')
+  model_name=$(echo "$job_info" | grep stderr_path_list | sed 's|.*results/||; s|/ja/.*||; s|/en/.*||')
   slots=$(echo "$job_info" | grep parallel | awk '{print $5}')
   priority=$(echo "$job_info" | grep priority | awk '{print $2}')
 
@@ -57,7 +57,7 @@ term_width=$(tput cols)
 
 # 各カラム幅の合計  カラム間スペース数(6)
 fixed_width=$((10+8+8+8+10+25+6))
-max_model=100
+max_model=400
 available=$(( term_width - fixed_width ))
 (( available < 0 )) && available=0
 if (( available > max_model )); then
