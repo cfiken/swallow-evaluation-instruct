@@ -117,14 +117,16 @@ def ifeval_metric(df_details, reasoning_starter: Optional[str], repetition_ngram
     records = list(df_details.to_dict(orient="records"))
     num_examples = len(records)
     
+    num_instructions = 0
     num_non_closed_reasoning = 0
     num_closed_reasoning = 0
     is_correct_in_closed_reasoning = 0
     is_correct = 0
     num_refusal = 0
     for record in df_details.to_dict(orient="records"):
-        score = 1 if record["metrics"]["inst_level_strict_acc"][0] else 0
+        score = sum(1 if flag == True else 0 for flag in record["metrics"]["inst_level_strict_acc"])
         is_correct += score
+        num_instructions += len(record["metrics"]["inst_level_strict_acc"])
         
         if is_non_closed_reasoning(record["predictions"][0], reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
             num_non_closed_reasoning += 1
@@ -135,7 +137,7 @@ def ifeval_metric(df_details, reasoning_starter: Optional[str], repetition_ngram
             num_refusal += 1
     
     performance_in_completion = is_correct_in_closed_reasoning / num_closed_reasoning
-    performance = is_correct / num_examples
+    performance = is_correct / num_instructions
     refusal_ratio = num_refusal / num_examples
     
     dict_results = deepcopy(DUMMY_RESULT)
