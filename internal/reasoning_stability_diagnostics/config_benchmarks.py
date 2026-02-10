@@ -95,7 +95,11 @@ EXTENDED_BENCHMARKS = {
     "swallow|aime_N16|0": {
         "analysis_function": extractive_match_pass_at_k_metric,
         "file_pattern": "details_swallow|aime_N16:*|0_*.parquet"
-    },    
+    },
+    "swallow|ifbench_singleturn|0": {
+        "analysis_function": ifeval_metric,
+        "file_pattern": "details_swallow|ifbench_singleturn|0_*.parquet"
+    }
 }
 
 BENCHMARKS.update(EXTENDED_BENCHMARKS)
