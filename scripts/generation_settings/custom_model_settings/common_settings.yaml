@@ -24,3 +24,8 @@ reasoning-stochastic_common_gptoss:
   temperature: 0.6
   top_p: 0.95
   version: "1"
+
+reasoning-stochastic_common_gptoss_swallow_rl:
+  temperature: 1.0
+  top_p: 1.0
+  version: "1"
