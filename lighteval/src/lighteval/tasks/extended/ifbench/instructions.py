@@ -419,6 +419,8 @@ class NGramOverlapChecker(Instruction):
         n = 3
         ngrams = set(nltk.ngrams(value, n))
         ref_ngrams = set(nltk.ngrams(self._reference_text, n))
+        if not ngrams:
+            return False
         overlap = len(ngrams.intersection(ref_ngrams)) / len(ngrams)
         return self._percentage - 2 <= overlap * 100 <= self._percentage + 2
 
