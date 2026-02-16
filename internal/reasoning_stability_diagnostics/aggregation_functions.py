@@ -118,6 +118,7 @@ def ifeval_metric(df_details, reasoning_starter: Optional[str], repetition_ngram
     num_examples = len(records)
     
     num_instructions = 0
+    num_closed_instructions = 0
     num_non_closed_reasoning = 0
     num_closed_reasoning = 0
     is_correct_in_closed_reasoning = 0
@@ -125,27 +126,30 @@ def ifeval_metric(df_details, reasoning_starter: Optional[str], repetition_ngram
     num_refusal = 0
     for record in df_details.to_dict(orient="records"):
         score = sum(1 if flag == True else 0 for flag in record["metrics"]["inst_level_strict_acc"])
+        instructions_i = len(record["metrics"]["inst_level_strict_acc"])
+        
         is_correct += score
-        num_instructions += len(record["metrics"]["inst_level_strict_acc"])
+        num_instructions += instructions_i
         
         if is_non_closed_reasoning(record["predictions"][0], reasoning_starter, repetition_ngram, top_ngram_freq_repetition_threshold):
             num_non_closed_reasoning += 1
         else:
             num_closed_reasoning += 1
+            num_closed_instructions += instructions_i
             is_correct_in_closed_reasoning += score
         if is_refusal_fast(record["predictions"][0]):
             num_refusal += 1
     
-    performance_in_completion = is_correct_in_closed_reasoning / num_closed_reasoning
-    performance = is_correct / num_instructions
-    refusal_ratio = num_refusal / num_examples
+    performance_in_completion = safe_divide(is_correct_in_closed_reasoning, num_closed_instructions)
+    performance = safe_divide(is_correct, num_instructions)
+    refusal_ratio = safe_divide(num_refusal, num_examples)
     
     dict_results = deepcopy(DUMMY_RESULT)
     dict_results.update({
         "num_responses": num_examples,
         "num_non_closed_reasoning": num_non_closed_reasoning,
         "num_closed_reasoning": num_closed_reasoning,
-        "reasoning_failure_ratio": num_non_closed_reasoning / num_examples,
+        "reasoning_failure_ratio": safe_divide(num_non_closed_reasoning, num_examples),
         "performance_in_completion": performance_in_completion,
         "performance": performance,
         "performance_delta": performance_in_completion - performance,
