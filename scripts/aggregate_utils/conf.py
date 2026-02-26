@@ -1276,5 +1276,52 @@ AGGREGATE_CONF += [
             'task_key': 'swallow|ifbench_singleturn|0'
         }
     },
-    # 新しいベンチマークはここに追加していってください
+    # ここから下に新しいベンチマークを追加しないでください
 ]
+
+# Pass@k:8, Maj@k:8 の定義．数が多すぎるので自動で追加します
+NUM_SAMPLE = 8
+_AGGREGATE_CONF = []
+lst_dict_sampling_metric_tasks = [    
+    {
+        "task_id": "swallow|math_100_japanese_N{num_sample}|0",
+        "func": pick,
+        "metric_prefix": "extractive_match",
+        "display_name": "mclm_math_100_japanese_{metric}@{num_k}:{num_sample}",
+    },
+    {
+        "task_id": "swallow|gpqa_N{num_sample}:diamond|0",
+        "func": pick,
+        "metric_prefix": "extractive_match",
+        "display_name": "gpqa_diamond_{metric}@{num_k}:{num_sample}",
+    },
+    {
+        "task_id": "swallow|aime_N{num_sample}|0",
+        "func": micro_average,
+        "metric_prefix": "extractive_match",
+        "display_name": "aime_2024_2025_{metric}@{num_k}:{num_sample}",
+    }    
+]
+for config in lst_dict_sampling_metric_tasks:
+    task_id = config["task_id"]
+    metric_prefix = config["metric_prefix"]
+    display_name = config["display_name"]
+    function = config["func"]
+    for metric in ["pass", "maj"]:
+        for num_k in [1, 4, 8]:
+            _cfg = {
+                "display_name": display_name.format(metric=metric, num_k=num_k, num_sample=NUM_SAMPLE),
+                "func": function,
+                "func_args": {
+                    "metric_key": f"{metric_prefix}_{metric}@{num_k}:{NUM_SAMPLE}"
+                },
+                "target": {
+                    "task_key": task_id.format(num_sample=NUM_SAMPLE)
+                }
+            }
+            _AGGREGATE_CONF.append(_cfg)
+
+AGGREGATE_CONF.extend(_AGGREGATE_CONF)
+
+# 新しいベンチマークはここに追加していってください
+AGGREGATE_CONF += []
