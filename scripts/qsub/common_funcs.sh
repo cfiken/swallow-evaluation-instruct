@@ -72,6 +72,7 @@ init_service(){
             ## Set NUM_GPUS
             case $NODE_KIND in
                 "node_q") NUM_GPUS=1 ;;
+                "node_h") NUM_GPUS=2 ;;
                 "node_f") NUM_GPUS=4 ;;
                 *"cpu"*) NUM_GPUS=0 ;;
                 *) echo "❌ Unsupported NODE_KIND: $NODE_KIND"
@@ -501,7 +502,7 @@ serve_litellm(){
         VLLM_SERVER_PORT=""
 
         ## Check the node kind
-        if [[ $NODE_KIND == "node_q" || $NODE_KIND == "node_f" || $NODE_KIND == *"gpu"* ]]; then
+        if [[ $NODE_KIND == "node_q" || $NODE_KIND == "node_h" || $NODE_KIND == "node_f" || $NODE_KIND == *"gpu"* ]]; then
             echo "❌ You specified ${NODE_KIND} but OpenAI and DeepInfra do not use GPUs. Use CPU nodes instead."
             exit 1
         fi
