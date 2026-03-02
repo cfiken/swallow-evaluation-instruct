@@ -31,3 +31,5 @@ en_gpqa_diamond_n16,gpqa_N16:diamond,en/gpqa_diamond_n16,lighteval,08:00:00,08:0
 en_math_500_n16,math_500_N16,en/math_500_n16,lighteval,20:00:00,24:00:00,20:00:00,24:00:00
 en_aime_2024_2025_n16,aime_N16,en/aime_2024_2025_n16,lighteval,04:30:00,04:30:00,04:30:00,04:30:00
 en_ifbench,ifbench_singleturn,en/ifbench,lighteval,04:00:00,01:00:00,02:00:00,01:00:00
+ja_polymath,polymath_japanese,ja/polymath_japanese,lighteval,10:00:00,10:00:00,10:00:00,10:00:00
+ja_polymath_top_n16,polymath_japanese_N16:top,ja/polymath_top_n16,lighteval,24:00:00,24:00:00,24:00:00,24:00:00
