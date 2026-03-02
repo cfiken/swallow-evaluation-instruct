@@ -1279,8 +1279,8 @@ AGGREGATE_CONF += [
     # ここから下に新しいベンチマークを追加しないでください
 ]
 
-# Pass@k:8, Maj@k:8 の定義．数が多すぎるので自動で追加します
-NUM_SAMPLE = 8
+# Pass@k:4, Maj@k:4 の定義．数が多すぎるので自動で追加します
+NUM_SAMPLE = 4
 _AGGREGATE_CONF = []
 lst_dict_sampling_metric_tasks = [    
     {
@@ -1308,7 +1308,7 @@ for config in lst_dict_sampling_metric_tasks:
     display_name = config["display_name"]
     function = config["func"]
     for metric in ["pass", "maj"]:
-        for num_k in [1, 4, 8]:
+        for num_k in [1, 4]:
             _cfg = {
                 "display_name": display_name.format(metric=metric, num_k=num_k, num_sample=NUM_SAMPLE),
                 "func": function,
