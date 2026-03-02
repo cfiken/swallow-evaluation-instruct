@@ -3,11 +3,9 @@ from lighteval.metrics.dynamic_metrics import (
     LatexExtractionConfig,
     multilingual_extractive_match_metric,
 )
-from lighteval.metrics.sample_metric_utils import create_majk_metrics, create_passk_metrics, powers_of_two_up_to_n
 from lighteval.tasks.lighteval_task import LightevalTaskConfig
 from lighteval.tasks.requests import Doc
 from lighteval.utils.language import Language
-from copy import deepcopy
 
 
 POLYMATH_JAPANESE_QUERY_TEMPLATE = """
@@ -45,11 +43,16 @@ def wrap_answer_with_latex_boxes(str_answer: str):
 
 
 def polymath_japanese_prompt_fn(line, task_name: str = None):
+    difficulty = None
+    if isinstance(line.get("id"), str) and "-" in line["id"]:
+        difficulty = line["id"].split("-", 1)[0]
+
     return Doc(
         task_name=task_name,
         query=POLYMATH_JAPANESE_QUERY_TEMPLATE.format(Question=line["question"]),
         choices=[wrap_answer_with_latex_boxes(line["answer"])],
         gold_index=0,
+        specific={"difficulty": difficulty},
     )
 
 
@@ -84,26 +87,3 @@ for split in POLYMATH_JAPANESE_ALL_SPLITS:
         version=1,
     )
     lst_polymath_japanese_tasks.append(_task)
-
-
-# Pass@K and Maj@K variant
-lst_polymath_japanese_passk_majk = []
-for polymath_task in lst_polymath_japanese_tasks:
-    for num_samples in [8, 16, 32, 64, 128, 256]:
-        lst_k = powers_of_two_up_to_n(num_samples)
-        _lst_pass_at_k_metrics = create_passk_metrics(
-            base_metric=latex_gold_metric,
-            k_values=lst_k,
-            num_samples=num_samples,
-        )
-        _lst_maj_at_k_metrics = create_majk_metrics(
-            base_metric=latex_gold_metric,
-            k_values=lst_k,
-            num_samples=num_samples,
-        )
-
-        task_config = deepcopy(polymath_task)
-        split = polymath_task.name.split(":")[1]
-        task_config.name = f"polymath_japanese_N{num_samples}:{split}"
-        task_config.metric = _lst_pass_at_k_metrics + _lst_maj_at_k_metrics
-        lst_polymath_japanese_passk_majk.append(task_config)
