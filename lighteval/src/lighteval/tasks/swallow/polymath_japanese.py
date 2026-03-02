@@ -106,6 +106,7 @@ POLYMATH_JAPANESE_EVAL_VARIANTS = [
     ("medium", ["medium"]),
     ("high", ["high"]),
     ("top", ["top"]),
+    ("all", ["low", "medium", "high", "top"]),
     ("medium_plus", ["medium", "high", "top"]),
     ("high_plus", ["high", "top"]),
 ]
@@ -114,7 +115,7 @@ lst_polymath_japanese_tasks = []
 for variant_name, evaluation_splits in POLYMATH_JAPANESE_EVAL_VARIANTS:
     _name = f"polymath_japanese:{variant_name}"
     _metrics = [latex_gold_metric]
-    if variant_name in {"medium_plus", "high_plus"}:
+    if variant_name in {"all", "medium_plus", "high_plus"}:
         _metrics = [latex_gold_metric, polymath_difficulty_breakdown_metric]
 
     _task = LightevalTaskConfig(
