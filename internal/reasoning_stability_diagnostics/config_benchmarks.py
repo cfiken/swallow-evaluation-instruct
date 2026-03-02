@@ -99,7 +99,19 @@ EXTENDED_BENCHMARKS = {
     "swallow|ifbench_singleturn|0": {
         "analysis_function": ifeval_metric,
         "file_pattern": "details_swallow|ifbench_singleturn|0_*.parquet"
-    }
+    },
+    "swallow|math_100_japanese_N4|0": {
+        "analysis_function": extractive_match_pass_at_k_metric,
+        "file_pattern": "details_swallow|math_100_japanese_N4|0_*.parquet"
+    },    
+    "swallow|gpqa_N4:diamond|0": {
+        "analysis_function": extractive_match_pass_at_k_metric,
+        "file_pattern": "details_swallow|gpqa_N4:diamond|0_*.parquet"
+    },
+    "swallow|aime_N4|0": {
+        "analysis_function": extractive_match_pass_at_k_metric,
+        "file_pattern": "details_swallow|aime_N4:*|0_*.parquet"
+    },
 }
 
 BENCHMARKS.update(EXTENDED_BENCHMARKS)
