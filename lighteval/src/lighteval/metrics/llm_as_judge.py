@@ -320,6 +320,8 @@ class JudgeLM:
                 try:
                     response = self.client.chat.completions.create(**request_kwargs)
                     text = response.choices[0].message.content
+                    if text is None and hasattr(response.choices[0].message, "parsed"):
+                        text = response.choices[0].message.parsed
                     return text
                 except TypeError:
                     # Fallback to parse() for SDK/API compatibility
