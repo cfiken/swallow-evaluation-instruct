@@ -121,11 +121,12 @@ llm_judge_mt_bench_swallow_gpt4o_judge = SampleLevelMetricGrouping(
     category=MetricCategory.LLM_AS_JUDGE_MULTI_TURN,
     use_case=MetricUseCase.SUMMARIZATION,
     sample_level_fn=JudgeLLMMTBenchSwallow(
-        judge_model_name="gpt-4o-2024-08-06",
+        judge_model_name="gpt-5.2-2025-12-11",
         template=gpt_judge_mt_bench_prompt,
         process_judge_response=process_judge_response_gpt,
         judge_backend="openai",
-        short_judge_name="gpt-4o",
+        short_judge_name="gpt-5.2",
+        reasoning_effort="none",
     ).compute,
     corpus_level_fn={
         f"judge_score_{category}_turn_1_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES

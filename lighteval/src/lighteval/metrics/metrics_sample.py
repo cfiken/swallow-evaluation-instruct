@@ -865,7 +865,7 @@ class StringDistance:
 
 
 class JudgeLLM:
-    available_models_openai = ["gpt-3.5-turbo", "gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-4o-2024-08-06"]
+    available_models_openai = ["gpt-3.5-turbo", "gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-4o-2024-08-06", "gpt-5.2-2025-12-11"]
 
     def __init__(
         self,
@@ -875,6 +875,7 @@ class JudgeLLM:
         judge_backend: Literal["litellm", "openai", "transformers", "vllm", "tgi"],
         short_judge_name: str | None = None,
         response_format: BaseModel = None,
+        reasoning_effort: str | None = None,
     ) -> None:
         match judge_backend:
             case "openai":
@@ -908,6 +909,7 @@ class JudgeLLM:
             url=url,
             judge_backend=judge_backend,
             response_format=response_format,
+            reasoning_effort=reasoning_effort,
         )
 
     def compute(self, predictions: list[str], formatted_doc: Doc, **kwargs) -> dict[str, float]:
