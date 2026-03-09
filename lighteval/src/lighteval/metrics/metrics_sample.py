@@ -865,7 +865,15 @@ class StringDistance:
 
 
 class JudgeLLM:
-    available_models_openai = ["gpt-3.5-turbo", "gpt-4o", "gpt-4-turbo", "gpt-4", "gpt-4o-2024-08-06", "gpt-5.2-2025-12-11"]
+    available_models_openai = [
+        "gpt-3.5-turbo",
+        "gpt-4o",
+        "gpt-4-turbo",
+        "gpt-4",
+        "gpt-4o-2024-08-06",
+        "gpt-5.2-2025-12-11",
+        "gpt-5.4-2026-03-05",
+    ]
 
     def __init__(
         self,
