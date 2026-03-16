@@ -25,11 +25,11 @@ verify_ssl = true
 python_version = "3.11"
 
 [packages]
-vllm = "==0.9.1"
+vllm = "==0.11.2"
 transformers = "*"
 regex = "*"
 lighteval = { path = "./", editable = true, extras = ["multilingual", "math", "extended_tasks"] }
-torch = {version = "~=2.7", index = "pytorch-cu128"}
+torch = {version = "~=2.9", index = "pytorch-cu128"}
 janome = "*"
 nagisa = "*"
 litellm = "<2.0.0"
