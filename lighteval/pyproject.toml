@@ -88,7 +88,7 @@ dependencies = [
     "langdetect>=1.0.0,<2.0.0", # M-IFEval-Ja
     "janome", # M-IFEval-Ja, WMT20
     "nagisa", # WMT20
-    "syllapy", "emoji", # IFBench
+    "emoji", # IFBench
 ]
 
 [project.optional-dependencies]
