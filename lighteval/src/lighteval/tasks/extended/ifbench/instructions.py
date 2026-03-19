@@ -25,8 +25,8 @@ from collections import Counter
 
 import emoji
 import nltk
-import syllapy
 
+from lighteval.tasks.extended.ifbench import _vendor_syllapy as syllapy
 from lighteval.tasks.extended.ifbench import instructions_utils as instructions_util
 
 

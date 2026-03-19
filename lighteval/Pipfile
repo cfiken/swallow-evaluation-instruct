@@ -2,20 +2,20 @@
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
-
 # pytorch with CUDA 12.1
+
 [[source]]
 name = "pytorch-cu121"
 url = "https://download.pytorch.org/whl/cu121"
 verify_ssl = true
-
 # pytorch with CUDA 12.4
+
 [[source]]
 name = "pytorch-cu124"
 url = "https://download.pytorch.org/whl/cu124"
 verify_ssl = true
-
 # pytorch with CUDA 12.8
+
 [[source]]
 name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu128"
@@ -42,7 +42,6 @@ beautifulsoup4 = "<5.0.0"
 openai = ">=1.4.0"
 more-itertools = "*"
 datasets = "<4.0.0"
-syllapy = "*"
 emoji = "*"
 
 [dev-packages]
@@ -57,3 +56,4 @@ test_pass_at_k = "python -m pytest -s tests/metrics/test_passk_utils.py -v"
 test_maj_at_k_solutions = "python -m pytest -s tests/metrics/test_maj_at_k_solutions.py -v"
 test_maj_at_k = "python -m pytest -s tests/metrics/test_majk_utils.py -v"
 test_span_extractor = "python -m pytest -s tests/metrics/test_translation_span_extractor.py"
+test_vendor_syllapy = "python -m pytest -s tests/tasks/test_vendor_syllapy.py -v"
