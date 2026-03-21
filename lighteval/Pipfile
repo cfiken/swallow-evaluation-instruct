@@ -25,7 +25,7 @@ verify_ssl = true
 python_version = "3.11"
 
 [packages]
-vllm = "==0.11.2"
+vllm = "==0.13.0"
 transformers = "*"
 regex = "*"
 lighteval = { path = "./", editable = true, extras = ["multilingual", "math", "extended_tasks"] }
@@ -41,7 +41,8 @@ markdown-it-py = "*"
 beautifulsoup4 = "<5.0.0"
 openai = ">=1.4.0"
 more-itertools = "*"
-datasets = "<4.0.0"
+datasets = "<4.0.0,>=3.0.0"
+pyarrow = "<21.0.0"
 emoji = "*"
 
 [dev-packages]
