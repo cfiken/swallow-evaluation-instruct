@@ -206,6 +206,23 @@ MMLU-Pro [Wang et al. (2024)](https://openreview.net/forum?id=y10DM6R2r3) の低
 * 事前準備：OpenAI API Key を 環境変数 `OPENAI_API_KEY` に設定してください．  
 * 注意事項：コンテキスト超過エラーを防ぐため，1ターン目の応答文（深い推論過程を含まない最終出力）は最長8,192文字で切り詰めます．  
 
+### PolyMath（日本語）
+既存の数学ベンチマークを再編成かつ多言語化した数学ベンチマークスイート PolyMath [Wang et al. (2025)](https://openreview.net/forum?id=B1vCImy6yI) のうち，日本語の設問を抽出したものです．  
+初等教育レベルの"Low", 高校から大学レベルの"Medium", 競技数学レベルの"High", 国際数学オリンピックまたは学術研究レベルの"Top"の4段階の難易度から，それぞれ125問ずつ出題されます．
+
+* タスク分類：数学
+* lightevalタスクID：`swallow|polymath_japanese`
+* データセット：[Qwen/PolyMath](https://huggingface.co/datasets/Qwen/PolyMath)
+* ライセンス：表記なし
+* 設問数：各難易度から125問，合計500問
+* CoTプロンプト：なし
+* 評価尺度：正解率．数式や数値による回答を正解と照合して正誤判定します．
+* 派生版
+    * `swallow|polymath_japanese:{low,medium,high,top}` を指定することで，評価するサブセットを指定できます．  
+    * `swallow|polymath_japanese_N{4,8,16,32,64,128}` を指定することで，N回試行時のPass@KおよびMaj@Kを評価できます．  
+      この場合の推奨設定は temperature=0.6, top-p=0.95 です．
+
+
 ## 英語のベンチマーク
 
 ### HellaSwag

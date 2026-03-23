@@ -112,6 +112,10 @@ EXTENDED_BENCHMARKS = {
         "analysis_function": extractive_match_pass_at_k_metric,
         "file_pattern": "details_swallow|aime_N4:*|0_*.parquet"
     },
+    "swallow|polymath_japanese|0": {
+        "analysis_function": extractive_match_metric,
+        "file_pattern": "details_swallow|polymath_japanese:*|0_*.parquet"
+    }
 }
 
 BENCHMARKS.update(EXTENDED_BENCHMARKS)

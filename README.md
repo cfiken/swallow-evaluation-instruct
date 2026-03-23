@@ -362,7 +362,8 @@ lightevalの実行時引数 `lighteval endpoint litellm {MODEL_ARGS} {TASK_ID} [
 
 ## ライセンス
 
-本フレームワークは MIT License で配布します．ベンチマークのライセンスは [Swallowチームが実装したベンチマーク一覧](./BENCHMARKS.md) を参照してください．
+本フレームワークは MIT License で配布します．第三者由来のコードについては `LICENSE` を参照してください．  
+ベンチマークのライセンスは [Swallowチームが実装したベンチマーク一覧](./BENCHMARKS.md) を参照してください．  
 
 ## 謝辞
 

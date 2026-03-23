@@ -34,3 +34,5 @@ en_ifbench,ifbench_singleturn,en/ifbench,lighteval,04:00:00,01:00:00,02:00:00,01
 ja_math_100_n4,math_100_japanese_N4,ja/math_100_n4,lighteval,03:00:00,03:00:00,03:00:00,03:00:00
 en_gpqa_diamond_n4,gpqa_N4:diamond,en/gpqa_diamond_n4,lighteval,08:00:00,08:00:00,08:00:00,08:00:00
 en_aime_2024_2025_n4,aime_N4,en/aime_2024_2025_n4,lighteval,04:30:00,04:30:00,04:30:00,04:30:00
+ja_polymath,polymath_japanese,ja/polymath_japanese,lighteval,10:00:00,10:00:00,10:00:00,10:00:00
+ja_polymath_n16,polymath_japanese_N16,ja/polymath_n16,lighteval,24:00:00,24:00:00,24:00:00,24:00:00

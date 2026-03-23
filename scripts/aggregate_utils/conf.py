@@ -1311,6 +1311,35 @@ AGGREGATE_CONF += [
             "task_key": "swallow|aime_N4|0"
         }
     },
+    # PolyMath-Ja
+    # 難易度 medium, high, top および high+top 平均の4指標を追加
+    {
+        "display_name": "polymath_ja_medium",
+        "func": pick,
+        "func_args": {'metric_key': 'extractive_match'}, 
+        'target': {'task_key': 'swallow|polymath_japanese:medium|0'}
+    },
+    {
+        "display_name": "polymath_ja_high",
+        "func": pick,
+        "func_args": {'metric_key': 'extractive_match'}, 
+        'target': {'task_key': 'swallow|polymath_japanese:high|0'}
+    },
+    {
+        "display_name": "polymath_ja_top",
+        "func": pick,
+        "func_args": {'metric_key': 'extractive_match'}, 
+        'target': {'task_key': 'swallow|polymath_japanese:top|0'}
+    },
+    {
+        "display_name": "polymath_ja_high_top",
+        "func": micro_average,
+        "func_args": {
+            'metric_key': 'extractive_match',
+            "white_list": ["high", "top"]}, 
+        'target': {'task_key': 'swallow|polymath_japanese|0'}
+    },
+    # 新しいベンチマークはここに追加していってください
 ]
 
 # 新しいベンチマークはここに追加していってください
