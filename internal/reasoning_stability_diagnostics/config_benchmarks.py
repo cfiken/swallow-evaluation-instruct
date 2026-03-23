@@ -99,6 +99,10 @@ EXTENDED_BENCHMARKS = {
     "swallow|ifbench_singleturn|0": {
         "analysis_function": ifeval_metric,
         "file_pattern": "details_swallow|ifbench_singleturn|0_*.parquet"
+    },
+    "swallow|polymath_japanese|0": {
+        "analysis_function": extractive_match_metric,
+        "file_pattern": "details_swallow|polymath_japanese:*|0_*.parquet"
     }
 }
 

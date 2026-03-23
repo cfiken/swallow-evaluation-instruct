@@ -29,6 +29,7 @@ from .humaneval_series import humaneval, humanevalplus
 from .jgpqa import lst_jgpqa_tasks, lst_jgpqa_passk_majk
 from .jamcqa import jamcqa_task, jamcqa_cot_task
 from .ifbench import ifbench
+from .polymath_japanese import lst_polymath_japanese_tasks, lst_polymath_japanese_passk_majk
 
 TASKS_TABLE = [
     math_100_japanese,
@@ -60,6 +61,7 @@ TASKS_TABLE.extend(mmlu_pro_english_tasks)
 TASKS_TABLE.extend(mmlu_english_tasks)
 TASKS_TABLE.extend(lcb_swallow_tasks)
 TASKS_TABLE.extend(lst_jgpqa_tasks)
+TASKS_TABLE.extend(lst_polymath_japanese_tasks)
 
 # Pass@K and Maj@K variants
 TASKS_TABLE.extend(lst_gpqa_diamond_instruct_swallow_passk_majk)
@@ -68,3 +70,4 @@ TASKS_TABLE.extend(lst_aime_swallow_passk_majk)
 TASKS_TABLE.extend(lst_gpqa_ja_instruct_passk_majk)
 TASKS_TABLE.extend(lst_math_100_japanese_passk_majk)
 TASKS_TABLE.extend(lst_jgpqa_passk_majk)
+TASKS_TABLE.extend(lst_polymath_japanese_passk_majk)
