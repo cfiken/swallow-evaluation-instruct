@@ -5,21 +5,21 @@ set -euo pipefail
 
 # Set Args
 ## Common Settings
-NODE_KIND="node_q"                # A node kind to use. tsubame: ["node_q", "node_f", "cpu_16"], local: ["cpu", "gpu_*" (*: GPU number)], abci: ["rt_HG", "rt_HF", "rt_HC"]
-MODEL_NAME="Qwen/Qwen3.5-27B"               # A model name (HuggingFace ID) to use. If you use OpenRouter, set the model name registered in OpenRouter. (e.g. google/gemini-3-pro-preview ref: https://openrouter.ai/google/gemini-3-pro-preview/api)
+NODE_KIND=""                # A node kind to use. tsubame: ["node_q", "node_h", "node_f", "cpu_16"], local: ["cpu", "gpu_*" (*: GPU number)], abci: ["rt_HG", "rt_HF", "rt_HC"]
+MODEL_NAME=""               # A model name (HuggingFace ID) to use. If you use OpenRouter, set the model name registered in OpenRouter. (e.g. google/gemini-3-pro-preview ref: https://openrouter.ai/google/gemini-3-pro-preview/api)
 
 ## Special Settings
 PROVIDER="vllm"             # Default: "vllm". A provider to host the model. ["vllm", "openai", "deepinfra","openrouter"]
-CUSTOM_SETTINGS="reasoning"          # Default: "". A custom setting name to use. (e.g. "reasoning", "coding", "flashattn_incompatible")
-PREDOWNLOAD_MODEL="false"    # Default: "true". A pre-download a model before qsub.
+CUSTOM_SETTINGS=""          # Default: "". A custom setting name to use. (e.g. "reasoning", "coding", "flashattn_incompatible")
+PREDOWNLOAD_MODEL="true"    # Default: "true". A pre-download a model before qsub.
 MAX_SAMPLES=""              # Default: "". A maximum number of samples in benchmark to evaluate. Set it for debugging.
 UPLOAD_DETAILS="false"      # Default: "false". Set "true" if you want to upload the outputs to huggingface.
 COPY_DETAILS="false"      # abci only. Default: "false". Set "true" if you want to copy the outputs to a shared directory "/groups/gag51395/share/se_eval_details".
 AR_ID=""                    # Default: "". AR ID for jobs to run on reserved nodes on TSUBAME.
 
 ## Environmental Settings
-SERVICE="tsubame"                  # A service to use. ["tsubame", "abci", "local"]
-PRIORITY="-3"               # Default: "-5". A priority of the job. Note that double priority is double cost. ["-5", "-4", "-3"] (Only for TSUBAME)
+SERVICE=""                  # A service to use. ["tsubame", "abci", "local"]
+PRIORITY="-5"               # Default: "-5". A priority of the job. Note that double priority is double cost. ["-5", "-4", "-3"] (Only for TSUBAME)
 CUDA_VISIBLE_DEVICES=""     # Default: "". A CUDA_VISIBLE_DEVICES to use. [e.g. "0,1"] (Only for and absolutely necessary for local)
 
 #######################################################
@@ -178,25 +178,25 @@ qsub_task() {
 echo "🚀 Submitting tasks..."
 
 ## Japanese
-#qsub_task ja gpqa
-#qsub_task ja jemhopqa_cot
+qsub_task ja gpqa
+qsub_task ja jemhopqa_cot
 qsub_task ja jamcqa
-#qsub_task ja math_100
-#qsub_task ja mmlu_prox
-#qsub_task ja mtbench
-#qsub_task ja wmt20_en_ja
-#qsub_task ja wmt20_ja_en
-#qsub_task ja humaneval
-#qsub_task ja mifeval
+qsub_task ja math_100
+qsub_task ja mmlu_prox
+qsub_task ja mtbench
+qsub_task ja wmt20_en_ja
+qsub_task ja wmt20_ja_en
+qsub_task ja humaneval
+qsub_task ja mifeval
 
 ## English
-#qsub_task en hellaswag
-#qsub_task en mtbench
-#qsub_task en gpqa_diamond
-#qsub_task en math_500
+qsub_task en hellaswag
+qsub_task en mtbench
+qsub_task en gpqa_diamond
+qsub_task en math_500
 qsub_task en aime_2024_2025
-#qsub_task en livecodebench_v5_v6
-#qsub_task en mmlu_pro
+qsub_task en livecodebench_v5_v6
+qsub_task en mmlu_pro
 
 ## Optional
 # qsub_task ja mmlu
