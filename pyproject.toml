@@ -3,7 +3,7 @@ name = "swallow-evaluation-instruct-private"
 version = "0.0.1"
 description = "beta"
 readme = "README.md"
-requires-python = "==3.10.14"
+requires-python = "==3.11.10"
 dependencies = []
 
 
@@ -24,11 +24,10 @@ lighteval = [
     "openai>=1.40.0", # Set the floor to avoid using deprecated names.
     "datasets>=3.6.0,<4.0.0", # Set the floor to prevent uv from downgrading to v2, and the ceiling to avoid breaking changes
     "litellm>=1.75.8", # Set the ceiling to support gpt-oss
-    "setuptools<81.0.0", # Pin to <81 to avoid ModuleNotFoundError for pkg_resources
 ]
 
 vllm = [
-  "vllm==0.17.1", # Set the ceiling to support gpt-oss
+  "vllm==0.18.0", # Set the ceiling to support gpt-oss
 ]
 
 
