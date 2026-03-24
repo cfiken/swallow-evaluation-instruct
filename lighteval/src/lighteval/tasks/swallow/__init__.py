@@ -23,7 +23,7 @@ from .mmlu_prox_japanese import mmlu_prox_japanese_tasks
 from .mmlu_prox_english import mmlu_prox_english_tasks
 from .mmlu_pro_english import mmlu_pro_english_tasks
 from .mmlu_english import mmlu_english_tasks
-from .english_mt_bench.main import mt_bench_english_swallow_gpt4o
+from .english_mt_bench.main import mt_bench_english_swallow, mt_bench_english_swallow_gpt4o_judge
 from .mifeval_ja.main import mifeval_ja
 from .gpqa import gpqa_diamond_instruct_swallow, lst_gpqa_diamond_instruct_swallow_passk_majk
 from .aime import aime_24_swallow, aime_25_swallow, lst_aime_swallow_passk_majk
@@ -46,7 +46,8 @@ TASKS_TABLE = [
     mt_bench_japanese_swallow,
     mt_bench_japanese_swallow_gpt4o_judge,
     mt_bench_japanese_swallow_truncate_6144,
-    mt_bench_english_swallow_gpt4o,
+    mt_bench_english_swallow,
+    mt_bench_english_swallow_gpt4o_judge,
     mifeval_ja,
     gpqa_diamond_instruct_swallow,
     math_500_swallow,

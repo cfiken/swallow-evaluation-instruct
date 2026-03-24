@@ -113,29 +113,42 @@ def mt_bench_corpus_level_fn(score_list: list[float]) -> float:
     return np.mean(score_list) / 10
 
 
-llm_judge_mt_bench_swallow_gpt4o_judge = SampleLevelMetricGrouping(
-    metric_name=[f"judge_score_{category}_turn_1" for category in ["overall"] + CATEGORIRES]
-    + [f"judge_score_{category}_turn_2" for category in ["overall"] + CATEGORIRES],
-    higher_is_better={f"judge_score_{category}_turn_1": True for category in ["overall"] + CATEGORIRES}
-    | {f"judge_score_{category}_turn_2": True for category in ["overall"] + CATEGORIRES},
-    category=MetricCategory.LLM_AS_JUDGE_MULTI_TURN,
-    use_case=MetricUseCase.SUMMARIZATION,
-    sample_level_fn=JudgeLLMMTBenchSwallow(
-        judge_model_name="gpt-5.2-2025-12-11",
-        template=gpt_judge_mt_bench_prompt,
-        process_judge_response=process_judge_response_gpt,
-        judge_backend="openai",
-        short_judge_name="gpt-5.2",
-        reasoning_effort="none",
-    ).compute,
-    corpus_level_fn={
-        f"judge_score_{category}_turn_1_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES
-    }
-    | {f"judge_score_{category}_turn_2_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES}
-    | {f"judge_score_{category}_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES},
+def make_llm_judge_mt_bench_metric(judge_model_name: str, short_judge_name: str, reasoning_effort=None):
+    return SampleLevelMetricGrouping(
+        metric_name=[f"judge_score_{category}_turn_1" for category in ["overall"] + CATEGORIRES]
+        + [f"judge_score_{category}_turn_2" for category in ["overall"] + CATEGORIRES],
+        higher_is_better={f"judge_score_{category}_turn_1": True for category in ["overall"] + CATEGORIRES}
+        | {f"judge_score_{category}_turn_2": True for category in ["overall"] + CATEGORIRES},
+        category=MetricCategory.LLM_AS_JUDGE_MULTI_TURN,
+        use_case=MetricUseCase.SUMMARIZATION,
+        sample_level_fn=JudgeLLMMTBenchSwallow(
+            judge_model_name=judge_model_name,
+            template=gpt_judge_mt_bench_prompt,
+            process_judge_response=process_judge_response_gpt,
+            judge_backend="openai",
+            short_judge_name=short_judge_name,
+            reasoning_effort=reasoning_effort,
+        ).compute,
+        corpus_level_fn={
+            f"judge_score_{category}_turn_1_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES
+        }
+        | {f"judge_score_{category}_turn_2_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES}
+        | {f"judge_score_{category}_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES},
+    )
+
+
+llm_judge_mt_bench_metric_gpt52_judge = make_llm_judge_mt_bench_metric(
+    judge_model_name="gpt-5.2-2025-12-11",
+    short_judge_name="gpt-5.2",
+    reasoning_effort="none",
 )
 
-mt_bench_english_swallow_gpt4o = LightevalTaskConfig(
+llm_judge_mt_bench_metric_gpt4o_judge = make_llm_judge_mt_bench_metric(
+    judge_model_name="gpt-4o-2024-08-06",
+    short_judge_name="gpt-4o",
+)
+
+mt_bench_english_swallow = LightevalTaskConfig(
     name="english_mt_bench",
     prompt_function=mt_bench_prompt,  # must be defined in the file or imported from src/lighteval/tasks/tasks_prompt_formatting.py
     suite=["swallow"],
@@ -145,9 +158,22 @@ mt_bench_english_swallow_gpt4o = LightevalTaskConfig(
     evaluation_splits=["train"],
     few_shots_split="",
     few_shots_select="random",
-    metric=[llm_judge_mt_bench_swallow_gpt4o_judge],
+    metric=[llm_judge_mt_bench_metric_gpt52_judge],
     stop_sequence=[],
 )
 
+mt_bench_english_swallow_gpt4o_judge = LightevalTaskConfig(
+    name="english_mt_bench_gpt4o_judge",
+    prompt_function=mt_bench_prompt,
+    suite=["swallow"],
+    hf_repo="tokyotech-llm/swallow_english_mt_bench",
+    hf_subset="default",
+    hf_avail_splits=["train"],
+    evaluation_splits=["train"],
+    few_shots_split="",
+    few_shots_select="random",
+    metric=[llm_judge_mt_bench_metric_gpt4o_judge],
+    stop_sequence=[],
+)
 
-TASKS_TABLE = [mt_bench_english_swallow_gpt4o]
+TASKS_TABLE = [mt_bench_english_swallow, mt_bench_english_swallow_gpt4o_judge]
