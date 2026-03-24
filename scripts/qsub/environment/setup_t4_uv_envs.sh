@@ -78,7 +78,7 @@ else
     echo "🛠️ uv is successfully installed: $(command -v uv) (version: $(uv --version))"
 fi
 
-if uv python list --only-installed | grep -q "3\.10\.14"; then
+if uv python list --only-installed | grep -q "3\.11\.10"; then
     echo "🛠️ Python 3.11.10 is already installed under uv."
 else
     echo "📦 Installing Python 3.11.10 via uv..."
