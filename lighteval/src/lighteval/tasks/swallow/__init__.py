@@ -8,7 +8,11 @@
 
 from .mclm_MATH_100_japanese import math_100_japanese, lst_math_100_japanese_passk_majk
 from .jmmlu import JMMLU_SUBSET_TASKS
-from .japanese_mt_bench.main import mt_bench_japanese_swallow_gpt4o, mt_bench_japanese_swallow_gpt4o_truncate_6144
+from .japanese_mt_bench.main import (
+    mt_bench_japanese_swallow,
+    mt_bench_japanese_swallow_gpt4o_judge,
+    mt_bench_japanese_swallow_truncate_6144,
+)
 from .jhumaneval import jhumaneval
 
 from .hellaswag import hellaswag_generative
@@ -39,8 +43,9 @@ TASKS_TABLE = [
     jemhopqa_cot,
     wmt20_enja_swallow,
     wmt20_jaen_swallow,
-    mt_bench_japanese_swallow_gpt4o,
-    mt_bench_japanese_swallow_gpt4o_truncate_6144,
+    mt_bench_japanese_swallow,
+    mt_bench_japanese_swallow_gpt4o_judge,
+    mt_bench_japanese_swallow_truncate_6144,
     mt_bench_english_swallow_gpt4o,
     mifeval_ja,
     gpqa_diamond_instruct_swallow,
