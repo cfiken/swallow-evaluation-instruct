@@ -39,6 +39,8 @@ while read -r job_id state; do
     gn_mig_value=$(echo $resource_list | grep -oP 'gn_mig=\K[0-9]+')
     if [[ $gn_mig_value -eq 2 ]]; then
         node_kind="node_q"
+    elif [[ $gn_mig_value -eq 4 ]]; then
+        node_kind="node_h"
     elif [[ $gn_mig_value -eq 8 ]]; then
         node_kind="node_f"
     else
