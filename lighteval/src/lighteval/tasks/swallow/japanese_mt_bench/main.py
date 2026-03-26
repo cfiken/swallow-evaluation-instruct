@@ -28,6 +28,7 @@
 import re
 import logging
 import ast
+from typing import Optional
 
 import numpy as np
 from markdown import markdown
@@ -219,28 +220,33 @@ japanese_character_ratio_metric = SampleLevelMetricGrouping(
     corpus_level_fn=compute_japanese_ratio_corpus,
 )
 
-llm_judge_mt_bench_swallow_gpt4o_judge = SampleLevelMetricGrouping(
-    metric_name=[f"judge_score_{category}_turn_1" for category in ["overall"] + CATEGORIRES]
-    + [f"judge_score_{category}_turn_2" for category in ["overall"] + CATEGORIRES],
-    higher_is_better={f"judge_score_{category}_turn_1": True for category in ["overall"] + CATEGORIRES}
-    | {f"judge_score_{category}_turn_2": True for category in ["overall"] + CATEGORIRES},
-    category=MetricCategory.LLM_AS_JUDGE_MULTI_TURN,
-    use_case=MetricUseCase.SUMMARIZATION,
-    sample_level_fn=JudgeLLMMTBenchSwallow(
-        judge_model_name="gpt-4o-2024-08-06",
-        template=gpt_judge_mt_bench_prompt,
-        process_judge_response=process_judge_response_gpt,
-        judge_backend="openai",
-        short_judge_name="gpt-4o",
-    ).compute,
-    corpus_level_fn={
-        f"judge_score_{category}_turn_1_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES
-    }
-    | {f"judge_score_{category}_turn_2_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES}
-    | {f"judge_score_{category}_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES},
-)
+def make_llm_judge_mt_bench_metric(judge_model_name: str, short_judge_name: str,reasoning_effort: Optional[str] = None) -> SampleLevelMetricGrouping:
+    return SampleLevelMetricGrouping(
+        metric_name=[f"judge_score_{category}_turn_1" for category in ["overall"] + CATEGORIRES]
+        + [f"judge_score_{category}_turn_2" for category in ["overall"] + CATEGORIRES],
+        higher_is_better={f"judge_score_{category}_turn_1": True for category in ["overall"] + CATEGORIRES}
+        | {f"judge_score_{category}_turn_2": True for category in ["overall"] + CATEGORIRES},
+        category=MetricCategory.LLM_AS_JUDGE_MULTI_TURN,
+        use_case=MetricUseCase.SUMMARIZATION,
+        sample_level_fn=JudgeLLMMTBenchSwallow(
+            judge_model_name=judge_model_name,
+            template=gpt_judge_mt_bench_prompt,
+            process_judge_response=process_judge_response_gpt,
+            judge_backend="openai",
+            short_judge_name=short_judge_name,
+            reasoning_effort=reasoning_effort,
+        ).compute,
+        corpus_level_fn={
+            f"judge_score_{category}_turn_1_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES
+        }
+        | {f"judge_score_{category}_turn_2_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES}
+        | {f"judge_score_{category}_avg": mt_bench_corpus_level_fn for category in ["overall"] + CATEGORIRES},
+    )
 
-mt_bench_japanese_swallow_gpt4o = LightevalTaskConfig(
+llm_judge_mt_bench_metric_gpt52_judge = make_llm_judge_mt_bench_metric(judge_model_name="gpt-5.2-2025-12-11", short_judge_name="gpt-5.2", reasoning_effort="none")
+llm_judge_mt_bench_metric_gpt4o_judge = make_llm_judge_mt_bench_metric(judge_model_name="gpt-4o-2024-08-06", short_judge_name="gpt-4o")
+
+mt_bench_japanese_swallow = LightevalTaskConfig(
     name="japanese_mt_bench",
     prompt_function=mt_bench_prompt,
     suite=["swallow"],
@@ -250,12 +256,26 @@ mt_bench_japanese_swallow_gpt4o = LightevalTaskConfig(
     evaluation_splits=["train"],
     few_shots_split="",
     few_shots_select="random",
-    metric=[llm_judge_mt_bench_swallow_gpt4o_judge, japanese_character_ratio_metric],
+    metric=[llm_judge_mt_bench_metric_gpt52_judge, japanese_character_ratio_metric],
+    stop_sequence=[],
+)
+
+mt_bench_japanese_swallow_gpt4o_judge = LightevalTaskConfig(
+    name="japanese_mt_bench_gpt4o_judge",
+    prompt_function=mt_bench_prompt,
+    suite=["swallow"],
+    hf_repo="tokyotech-llm/swallow_japanese_mt_bench",
+    hf_subset="default",
+    hf_avail_splits=["train"],
+    evaluation_splits=["train"],
+    few_shots_split="",
+    few_shots_select="random",
+    metric=[llm_judge_mt_bench_metric_gpt4o_judge, japanese_character_ratio_metric],
     stop_sequence=[],
 )
 
 # max_gen_text_lengthを6144に減らした，コンテキスト長が短いモデル(e.g., llm-jp-3.1)向けの派生版
-mt_bench_japanese_swallow_gpt4o_truncate_6144 = LightevalTaskConfig(
+mt_bench_japanese_swallow_truncate_6144 = LightevalTaskConfig(
     name="japanese_mt_bench_truncate_6144",
     prompt_function=mt_bench_prompt_truncate_6144,
     suite=["swallow"],
@@ -265,8 +285,12 @@ mt_bench_japanese_swallow_gpt4o_truncate_6144 = LightevalTaskConfig(
     evaluation_splits=["train"],
     few_shots_split="",
     few_shots_select="random",
-    metric=[llm_judge_mt_bench_swallow_gpt4o_judge, japanese_character_ratio_metric],
+    metric=[llm_judge_mt_bench_metric_gpt52_judge, japanese_character_ratio_metric],
     stop_sequence=[],
 )
 
-TASKS_TABLE = [mt_bench_japanese_swallow_gpt4o, mt_bench_japanese_swallow_gpt4o_truncate_6144]
+TASKS_TABLE = [
+    mt_bench_japanese_swallow,
+    mt_bench_japanese_swallow_gpt4o_judge,
+    mt_bench_japanese_swallow_truncate_6144,
+]
