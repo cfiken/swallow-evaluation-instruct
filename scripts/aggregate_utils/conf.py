@@ -1276,6 +1276,41 @@ AGGREGATE_CONF += [
             'task_key': 'swallow|ifbench_singleturn|0'
         }
     },
+    # ここから下に新しいベンチマークを追加しないでください
+]
+
+# Pass@1:4 の定義（MATH-100-Ja, GPQA:diamond, AIME24--25）
+AGGREGATE_CONF += [
+    {
+        "display_name": "mclm_math_100_japanese_pass@1:4",
+        "func": pick,
+        "func_args": {
+            "metric_key": "extractive_match_pass@1:4"
+        },
+        "target": {
+            "task_key": "swallow|math_100_japanese_N4|0"
+        }
+    },
+    {
+        "display_name": "gpqa_diamond_pass@1:4",
+        "func": pick,
+        "func_args": {
+            "metric_key": "extractive_match_pass@1:4"
+        },
+        "target": {
+            "task_key": "swallow|gpqa_N4:diamond|0"
+        }
+    },
+    {
+        "display_name": "aime_2024_2025_pass@1:4",
+        "func": micro_average,
+        "func_args": {
+            "metric_key": "extractive_match_pass@1:4"
+        },
+        "target": {
+            "task_key": "swallow|aime_N4|0"
+        }
+    },
     # PolyMath-Ja
     # 難易度 medium, high, top および high+top 平均の4指標を追加
     {
@@ -1306,3 +1341,6 @@ AGGREGATE_CONF += [
     },
     # 新しいベンチマークはここに追加していってください
 ]
+
+# 新しいベンチマークはここに追加していってください
+AGGREGATE_CONF += []

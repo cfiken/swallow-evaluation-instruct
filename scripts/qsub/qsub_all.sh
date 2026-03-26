@@ -179,9 +179,8 @@ echo "🚀 Submitting tasks..."
 
 ## Japanese
 qsub_task ja gpqa
-qsub_task ja jemhopqa_cot
 qsub_task ja jamcqa
-qsub_task ja math_100
+qsub_task ja polymath
 qsub_task ja mmlu_prox
 qsub_task ja mtbench
 qsub_task ja wmt20_en_ja
@@ -192,21 +191,29 @@ qsub_task ja mifeval
 ## English
 qsub_task en hellaswag
 qsub_task en mtbench
-qsub_task en gpqa_diamond
+qsub_task en gpqa_diamond_n4
 qsub_task en math_500
-qsub_task en aime_2024_2025
+qsub_task en aime_2024_2025_n4
 qsub_task en livecodebench_v5_v6
 qsub_task en mmlu_pro
+qsub_task en ifbench
+
+## N=1 variants for non-reasoning models
+# qsub_task ja math_100
+# qsub_task en gpqa_diamond
+# qsub_task en aime_2024_2025
 
 ## Optional
 # qsub_task ja mmlu
+# qsub_task ja jemhopqa_cot
 # qsub_task ja jemhopqa
 # qsub_task ja jamcqa_cot
+# qsub_task ja math_100_n4
 # qsub_task en mmlu
 # qsub_task en mmlu_prox
 # qsub_task en humaneval
 # qsub_task en humanevalplus
-# qsub_task ja jgpqa_diamond
+# qsub_task ja jgpqa_diamond_n4
 # qsub_task ja jgpqa_diamond_n16
 # qsub_task ja gpqa_n16
 # qsub_task ja math_100_n16
