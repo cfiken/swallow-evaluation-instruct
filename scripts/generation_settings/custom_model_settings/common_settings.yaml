@@ -1,50 +1,50 @@
 # Stochastic
 reasoning-stochastic_common_qwen3:
   reasoning_parser: "qwen3"
+  temperature: 0.6
+  top_p: 0.95
   version: "2"
 
 reasoning-stochastic_common_gptoss:
+  temperature: 0.6
+  top_p: 0.95
   version: "2"
 
 ignore_reasoning-stochastic_tag_common:
   reasoning_parser: "ignore"
+  temperature: 0.6
+  top_p: 0.95
   version: "1"
 
 deepseek_r1-stochastic_common:
   reasoning_parser: "deepseek_r1"
+  temperature: 0.6
+  top_p: 0.95
   version: "1"
 
 deepseek_r1_markup-stochastic_common:
   reasoning_parser: "deepseek_r1_markup"
+  temperature: 0.6
+  top_p: 0.95
   version: "1"
 
 
 # Greedy
 reasoning_common_qwen3:
   reasoning_parser: "qwen3"
-  temperature: 0.0
-  top_p: null
   version: "2"
 
 reasoning_common_gptoss:
-  temperature: 0.0
-  top_p: null
   version: "1"
 
 ignore_reasoning_tag_common:
   reasoning_parser: "ignore"
-  temperature: 0.0
-  top_p: null
   version: "2"
 
 deepseek_r1_common:
   reasoning_parser: "deepseek_r1"
-  temperature: 0.0
-  top_p: null
   version: "2"
 
 deepseek_r1_markup_common:
   reasoning_parser: "deepseek_r1_markup"
-  temperature: 0.0
-  top_p: null
   version: "2"
