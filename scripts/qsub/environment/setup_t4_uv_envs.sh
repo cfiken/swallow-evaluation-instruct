@@ -78,13 +78,13 @@ else
     echo "🛠️ uv is successfully installed: $(command -v uv) (version: $(uv --version))"
 fi
 
-if uv python list --only-installed | grep -q "3\.10\.14"; then
-    echo "🛠️ Python 3.10.14 is already installed under uv."
+if uv python list --only-installed | grep -q "3\.11\.10"; then
+    echo "🛠️ Python 3.11.10 is already installed under uv."
 else
-    echo "📦 Installing Python 3.10.14 via uv..."
-    uv python install 3.10.14
-    uv python pin 3.10.14
-    echo "🛠️ Python 3.10.14 is successfully installed under uv."
+    echo "📦 Installing Python 3.11.10 via uv..."
+    uv python install 3.11.10
+    uv python pin 3.11.10
+    echo "🛠️ Python 3.11.10 is successfully installed under uv."
 fi
 
 echo "🔧 Creating shared virtual environment..."

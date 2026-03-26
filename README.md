@@ -57,10 +57,10 @@ export PATH="$HOME/.local/bin:$PATH"
 ```
 
 ### 2. uv 内への python のインストール
-次に uv 内に python をインストールしてください．本フレームワークでは python [v3.10.14](https://www.python.org/downloads/release/python-31014/) を想定しています．
+次に uv 内に python をインストールしてください．本フレームワークでは python [v3.11.10](https://www.python.org/downloads/release/python-31110/) を想定しています．
 ```sh
-uv python install 3.10.14
-uv python pin 3.10.14
+uv python install 3.11.10
+uv python pin 3.11.10
 ```
 
 ### 3. 共通パッケージのインストール
