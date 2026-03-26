@@ -61,7 +61,7 @@ init_service "${SERVICE}" "${NODE_KIND}" "${CUDA_VISIBLE_DEVICES}" "${CUSTOM_JOB
 init_common "${REPO_PATH}"
 get_generation_params "${CUSTOM_SETTINGS}" "${TASK_NAME}" "${REPO_PATH}" "${MODEL_NAME}" "${MAX_SAMPLES}" "${UPLOAD_DETAILS_TO_HUGGINGFACE}"
 echo "⚙️ Generation Parameters: ${GEN_PARAMS}"
-RAW_OUTPUT_DIR="${REPO_PATH}/lighteval/outputs"
+RAW_OUTPUT_DIR="${STORE_PATH}/lighteval/outputs"
 
 
 # Serve a LLM by using litellm
