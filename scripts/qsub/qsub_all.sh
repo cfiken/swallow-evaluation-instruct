@@ -133,7 +133,7 @@ qsub_task() {
   # Safety check for local jobs
   if [[ "${SERVICE}" == "local" && -n "${last_submit_time}" ]]; then
     now=$(date +%s); elapsed=$(( now - last_submit_time ))
-    if (( $elapsed < 30 )); then
+    if [[ "${NODE_KIND}" != "cpu" ]] && (( elapsed < 30 )); then
       echo "💀 Error: Local jobs cannot be submitted continuously. Please reset CUDA_VISIBLE_DEVICES appropriately and submit one task at a time."
       exit 1
     fi
