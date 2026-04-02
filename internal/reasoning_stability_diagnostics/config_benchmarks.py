@@ -57,9 +57,9 @@ BENCHMARKS = {
         "analysis_function": extractive_match_metric,
         "file_pattern": "details_swallow|aime:*|0_*.parquet"
     },
-    "swallow|lcb:codegeneration_v5_v6|0": {
+    "swallow|lcb:codegeneration_v6|0": {
         "analysis_function": pass_at_k_metric,
-        "file_pattern": "details_swallow|lcb:codegeneration_v5_v6|0_*.parquet"
+        "file_pattern": "details_swallow|lcb:codegeneration_v6|0_*.parquet"
     },
     "swallow|english_mt_bench|0": {
         "analysis_function": mt_bench_metric,
