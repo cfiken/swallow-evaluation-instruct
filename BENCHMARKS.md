@@ -241,13 +241,13 @@ MMLU-Pro [Wang et al. (2024)](https://openreview.net/forum?id=y10DM6R2r3) の低
 
 ### LiveCodeBench
 競技プログラミングの設問を用いたコード生成能力を評価するベンチマークです．  
-リーク対策のためにデータセットが定期的に更新されており，Swallowリーダーボードではv5およびv6で追加された設問（リリースID： `v5_v6`）を使用しています．  
+リーク対策のためにデータセットが定期的に更新されており，Swallowリーダーボードではv6で追加された設問（リリースID： `v6`）を使用しています．  
 
 * タスク分類：コード生成
 * 出典：[Jain et al. (2025)](https://openreview.net/forum?id=chfJJYC3iL)
-* lightevalタスクID：`swallow|lcb:codegeneration_v5_v6`
+* lightevalタスクID：`swallow|lcb:codegeneration_v6`
 * データセット：[livecodebench/code_generation_lite](https://huggingface.co/datasets/livecodebench/code_generation_lite)
-* 設問数：342問（リリースv5・v6追加設問）
+* 設問数：175問（リリースv6追加設問）
 * CoTプロンプト：なし
 * 推奨設定：temperature=0.6, top-p=0.95
 * 評価尺度：Pass@1, Pass@10 (N=10) [Chen et al. (2021)](https://arxiv.org/abs/2107.03374)

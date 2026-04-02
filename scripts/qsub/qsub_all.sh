@@ -194,7 +194,7 @@ qsub_task en mtbench
 qsub_task en gpqa_diamond_n4
 qsub_task en math_500
 qsub_task en aime_2024_2025_n4
-qsub_task en livecodebench_v5_v6
+qsub_task en livecodebench_v6
 qsub_task en mmlu_pro
 qsub_task en ifbench
 
@@ -221,3 +221,4 @@ qsub_task en ifbench
 # qsub_task en math_500_n16
 # qsub_task en aime_2024_2025_n16
 # qsub_task en ifbench
+# qsub_task en livecodebench_v5_v6
