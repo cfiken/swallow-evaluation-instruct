@@ -1339,6 +1339,27 @@ AGGREGATE_CONF += [
             "white_list": ["high", "top"]}, 
         'target': {'task_key': 'swallow|polymath_japanese|0'}
     },
+    # LiveCodeBench v6 の設問
+    {
+        "display_name": "livecodebench_v6_pass@1",
+        "func": pick,
+        "func_args": {
+            'metric_key': 'codegen_pass@1:10'
+        }, 
+        'target': {
+            'task_key': 'swallow|lcb:codegeneration_v6|0'
+        }
+    },
+    {
+        "display_name": "livecodebench_v6_pass@10",
+        "func": pick,
+        "func_args": {
+            'metric_key': 'codegen_pass@10:10'
+        }, 
+        'target': {
+            'task_key': 'swallow|lcb:codegeneration_v6|0'
+        }
+    },
     # 新しいベンチマークはここに追加していってください
 ]
 

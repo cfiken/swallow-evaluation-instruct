@@ -44,7 +44,7 @@ fi
 #   "gpqa:diamond"
 #   "math_500"
 #   "aime"
-#   "lcb:codegeneration_v5_v6"
+#   "lcb:codegeneration_v6"
 #   "mmlu_english"
 #   "mmlu_prox_english"
 #   "jemhopqa_cot_f1_score_quasi"

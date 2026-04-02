@@ -31,7 +31,7 @@ task_runtime = {k: -1 for k in [
     "en/mmlu_pro",
     "en/mt_bench",
     "en/gpqa_diamond",
-    "en/livecodebench_v5_v6",
+    "en/livecodebench_v6",
     "en/mmlu",
     "en/mmlu_prox",
     "ja/gpqa",
