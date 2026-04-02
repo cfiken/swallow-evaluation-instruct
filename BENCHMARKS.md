@@ -247,7 +247,7 @@ MMLU-Pro [Wang et al. (2024)](https://openreview.net/forum?id=y10DM6R2r3) の低
 * 出典：[Jain et al. (2025)](https://openreview.net/forum?id=chfJJYC3iL)
 * lightevalタスクID：`swallow|lcb:codegeneration_v6`
 * データセット：[livecodebench/code_generation_lite](https://huggingface.co/datasets/livecodebench/code_generation_lite)
-* 設問数：342問（リリースv5・v6追加設問）
+* 設問数：175問（リリースv6追加設問）
 * CoTプロンプト：なし
 * 推奨設定：temperature=0.6, top-p=0.95
 * 評価尺度：Pass@1, Pass@10 (N=10) [Chen et al. (2021)](https://arxiv.org/abs/2107.03374)
