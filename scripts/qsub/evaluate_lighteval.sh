@@ -5,6 +5,11 @@
 # Replace % with $ if you want to receive emails when jobs start & finish, and errors occur.
 set -euo pipefail
 
+# Due to TSUBAME 4.0 updates (Apr 2026), the default CUDA version is 13.1.1.
+# Ref: https://www.t4.cii.isct.ac.jp/node/261
+# We explicitly load 12.8.0 to match PyTorch (cu128) and avoid FlashInfer JIT errors.
+module load cuda/12.8.0
+
 
 # Load Args
 ## Default Values
