@@ -398,6 +398,7 @@ serve_litellm(){
     MAX_MODEL_LENGTH=${10:-"-1"}
     REASONING_PARSER_FOR_VLLM=${11:-""}
     REASONING_PARSER_FOR_LIGHTEVAL=${12:-""}
+    TRUST_REMOTE_CODE=${13:-"false"}
 
     # Setup based on provider
     RAW_OUTPUT_DIR="${REPO_PATH}/lighteval/outputs"
@@ -457,6 +458,9 @@ serve_litellm(){
         if [[ -n "${REASONING_PARSER_FOR_VLLM:-}" ]]; then
             OPTIONAL_PARAMS_FOR_VLLM+=(--reasoning-parser "$REASONING_PARSER_FOR_VLLM")
         fi
+        if [[ "${TRUST_REMOTE_CODE}" == "true" ]]; then
+            OPTIONAL_PARAMS_FOR_VLLM+=(--trust-remote-code)
+        fi
 
         ## Start vllm server
         source "${REPO_PATH}/scripts/qsub/conf/load_config.sh"
@@ -470,7 +474,6 @@ serve_litellm(){
                 --max-model-len "$MAX_MODEL_LENGTH" \
                 --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION" \
                 --dtype bfloat16 \
-                --trust-remote-code \
                 --reasoning-parser-plugin "${REPO_PATH}/scripts/generation_settings/reasoning_parser/multi_parser_loader.py" \
                 ${OPTIONAL_PARAMS_FOR_VLLM[@]} \
                 2>&1 > "$vllm_log_file" &

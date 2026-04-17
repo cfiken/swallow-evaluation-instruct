@@ -14,6 +14,7 @@ module load cuda/12.8.0
 # Load Args
 ## Default Values
 TASK_NAME=""; NODE_KIND=""; MODEL_NAME=""; REPO_PATH=""; SERVICE=""; CUSTOM_SETTINGS=""; PROVIDER=""; CUSTOM_JOB_ID=""; MAX_SAMPLES=""; UPLOAD_DETAILS_TO_HUGGINGFACE=""; COPY_DETAILS_TO_SHARED_DIR="false";
+TRUST_REMOTE_CODE="false"
 STDOUT_STDERR_DIR=""; : "${CUDA_VISIBLE_DEVICES:=}"
 
 ## Parse Args
@@ -32,10 +33,16 @@ while [[ $# -gt 0 ]]; do
     --stdout-stderr-dir) STDOUT_STDERR_DIR="$2";;   # Optional
     --upload-details-to-huggingface) UPLOAD_DETAILS_TO_HUGGINGFACE="$2";; #optional
     --copy-details-to-shared-dir) COPY_DETAILS_TO_SHARED_DIR="$2";; # optional
+    --trust-remote-code) TRUST_REMOTE_CODE="$2";; # optional
     *) echo "💀 Error: Unknown option: $1" >&2;;
   esac
   shift 2
 done
+
+if [[ "$TRUST_REMOTE_CODE" != "true" && "$TRUST_REMOTE_CODE" != "false" ]]; then
+  echo "💀 Error: --trust-remote-code must be \"true\" or \"false\". Current value: $TRUST_REMOTE_CODE" >&2
+  exit 1
+fi
 
 
 ## Redirect stdout and stderr to files if specified
@@ -71,7 +78,7 @@ RAW_OUTPUT_DIR="${STORE_PATH}/lighteval/outputs"
 
 # Serve a LLM by using litellm
 serve_litellm "${MODEL_NAME}" "${PROVIDER}" "${REPO_PATH}" "${CUSTOM_SETTINGS_SUBDIR}" "${GEN_PARAMS}" "${TASK_NAME}" \
-  "${NODE_KIND}" "${NUM_GPUS}" "${GPU_MEMORY_UTILIZATION}" "${MAX_MODEL_LENGTH--1}" "${REASONING_PARSER_FOR_VLLM-}" "${REASONING_PARSER_FOR_LIGHTEVAL-}"
+  "${NODE_KIND}" "${NUM_GPUS}" "${GPU_MEMORY_UTILIZATION}" "${MAX_MODEL_LENGTH--1}" "${REASONING_PARSER_FOR_VLLM-}" "${REASONING_PARSER_FOR_LIGHTEVAL-}" "${TRUST_REMOTE_CODE}"
 
 
 # Task Definition

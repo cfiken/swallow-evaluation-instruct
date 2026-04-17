@@ -23,6 +23,7 @@ MODEL_NAMES=(
 PROVIDER="vllm"                 # ["vllm"] 
 SERVICE="abci"                  # ["abci","tsubame"]
 PREDOWNLOAD_MODEL="true"        # ["true","false"] falseだと大量のモデルを同時にダウンロードすることになり、HFのレートリミットに引っかかる可能性がある
+TRUST_REMOTE_CODE="false"       # ["true","false"] trueならvllm serveに --trust-remote-code を付与
 MAX_SAMPLES=""
 PRIORITY="-5"
 CUDA_VISIBLE_DEVICES=""
@@ -100,6 +101,7 @@ for key in "${ALLOW_KEYS[@]}"; do
     "ENV_CUSTOM_SETTINGS=$CUSTOM_SETTINGS"
     "ENV_PROVIDER=$PROVIDER"
     "ENV_PREDOWNLOAD_MODEL=$PREDOWNLOAD_MODEL"
+    "ENV_TRUST_REMOTE_CODE=$TRUST_REMOTE_CODE"
     "ENV_MAX_SAMPLES=$MAX_SAMPLES"
     "ENV_SERVICE=$SERVICE"
     "ENV_PRIORITY=$PRIORITY"
