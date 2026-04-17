@@ -11,11 +11,14 @@ MODEL_NAME=""               # A model name (HuggingFace ID) to use. If you use O
 ## Special Settings
 PROVIDER="vllm"             # Default: "vllm". A provider to host the model. ["vllm", "openai", "deepinfra","openrouter"]
 CUSTOM_SETTINGS=""          # Default: "". A custom setting name to use. (e.g. "reasoning", "coding", "flashattn_incompatible")
-PREDOWNLOAD_MODEL="true"    # Default: "true". A pre-download a model before qsub.
 MAX_SAMPLES=""              # Default: "". A maximum number of samples in benchmark to evaluate. Set it for debugging.
 UPLOAD_DETAILS="false"      # Default: "false". Set "true" if you want to upload the outputs to huggingface.
 COPY_DETAILS="false"      # abci only. Default: "false". Set "true" if you want to copy the outputs to a shared directory "/groups/gag51395/share/se_eval_details".
 AR_ID=""                    # Default: "". AR ID for jobs to run on reserved nodes on TSUBAME.
+
+## vLLM-only Settings
+PREDOWNLOAD_MODEL="true"    # Default: "true". A pre-download a model before qsub.
+TRUST_REMOTE_CODE="false"   # Default: "false". Whether to pass --trust-remote-code to vllm serve. ["true", "false"]
 
 ## Environmental Settings
 SERVICE=""                  # A service to use. ["tsubame", "abci", "local"]
@@ -31,10 +34,16 @@ if [[ "$ENABLE_ENV" == "enable_env" ]]; then
   PROVIDER="$ENV_PROVIDER"
   CUSTOM_SETTINGS="$ENV_CUSTOM_SETTINGS"
   PREDOWNLOAD_MODEL="$ENV_PREDOWNLOAD_MODEL"
+  TRUST_REMOTE_CODE="${ENV_TRUST_REMOTE_CODE:-$TRUST_REMOTE_CODE}"
   MAX_SAMPLES="$ENV_MAX_SAMPLES"
   SERVICE="$ENV_SERVICE"
   PRIORITY="$ENV_PRIORITY"
   CUDA_VISIBLE_DEVICES="$ENV_CUDA_VISIBLE_DEVICES"
+fi
+
+if [[ "$TRUST_REMOTE_CODE" != "true" && "$TRUST_REMOTE_CODE" != "false" ]]; then
+  echo "💀 Error: TRUST_REMOTE_CODE must be \"true\" or \"false\". Current value: $TRUST_REMOTE_CODE"
+  exit 1
 fi
 
 # check COPY_DETAILS is true only when SERVICE is abci
@@ -85,6 +94,7 @@ fi
 if [[ "${COPY_DETAILS}" == "true" ]]; then
   OPTIONAL_ARGS+=(--copy-details-to-shared-dir ${COPY_DETAILS})
 fi
+OPTIONAL_ARGS+=(--trust-remote-code ${TRUST_REMOTE_CODE})
 
 
 # Set common qsub args
