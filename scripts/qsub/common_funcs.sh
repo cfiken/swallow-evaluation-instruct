@@ -354,7 +354,7 @@ classify_reasoning_parser(){
     # Classify reasoning parser
     REASONING_PARSER_FOR_VLLM=""; REASONING_PARSER_FOR_LIGHTEVAL=""
     case "$REASONING_PARSER" in
-        "qwen3" | "deepseek_r1" | "granite" | "nemotron_v3" | "llmjp4" )
+        "qwen3" | "deepseek_r1" | "granite" | "nemotron_v3" | "llmjp4" | "nemotron_nano_v2" )
             ## vLLM official parsers (*) are passed to vllm serve
             ## (*) Available parsers at v0.18.0 - https://github.com/vllm-project/vllm/tree/v0.18.0/vllm/reasoning
             REASONING_PARSER_FOR_VLLM="$REASONING_PARSER"
