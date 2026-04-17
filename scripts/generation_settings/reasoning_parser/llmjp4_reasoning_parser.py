@@ -30,8 +30,23 @@ class Llmjp4ReasoningParser(ReasoningParser):
         self._start_id = vocab["<|start|>"]
         self._end_id = vocab["<|end|>"]
         self._message_id = vocab["<|message|>"]
-        self._reasoning_end_prefix = tokenizer.encode("<|channel|>final")
-        self._reasoning_prefill = tokenizer.encode("<|start|>assistant")
+
+        # vllm serveの引数でこのreasoning parserを指定すると、
+        # 初期化処理の間にtokenizerを複数プロセスがアクセスし、 RuntimeError: Already borrowedというエラーが発生する。
+        # そのため、tokenizer.encodeは使用せずに固定値でハードコードする。
+
+        # self._reasoning_end_prefix = tokenizer.encode("<|channel|>final")
+        # self._reasoning_prefill = tokenizer.encode("<|start|>assistant")
+        warnings.warn(
+            "When 'llmjp4' is specified as the reasoning-parser, reasoning tokens "
+            "are hardcoded to fixed values ([9, 2520], [10, 12811]) to avoid vLLM "
+            "initialization errors. This modification has been verified to work with "
+            "'llm-jp/llm-jp-4-8b-thinking' and 'llm-jp/llm-jp-4-32b-a3b-thinking'. "
+            "Please note that applying this parser to other models may cause "
+            "unexpected behavior due to token ID mismatches."
+        )
+        self._reasoning_end_prefix = [9, 2520]
+        self._reasoning_prefill = [10, 12811]
     
     def is_reasoning_end(self, input_ids: Sequence[int]) -> bool:
         # Find the final message pattern: <|channel|>final ... <|message|>
