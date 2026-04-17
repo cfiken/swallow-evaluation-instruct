@@ -1,0 +1,7 @@
+# Stochastic
+reasoning-stochastic:
+  reasoning_parser: "nemotron_v3"
+  temperature: 1
+  top_p: 0.95
+  max_new_tokens: 65536
+  version: "1"

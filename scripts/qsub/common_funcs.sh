@@ -20,6 +20,7 @@ init_common(){
     export UV_CACHE_DIR=$UV_CACHE
     export VLLM_CACHE_ROOT=$VLLM_CACHE
     export REPO_PATH=$REPO_PATH
+    export PYTHONPATH="${REPO_PATH}/scripts/generation_settings/reasoning_parser:${PYTHONPATH:-}"
 
     # GPU Settings
     ## Set GPU_MEMORY_UTILIZATION
@@ -353,9 +354,9 @@ classify_reasoning_parser(){
     # Classify reasoning parser
     REASONING_PARSER_FOR_VLLM=""; REASONING_PARSER_FOR_LIGHTEVAL=""
     case "$REASONING_PARSER" in
-        "qwen3" | "deepseek_r1" | "granite")
+        "qwen3" | "deepseek_r1" | "granite" | "nemotron_v3" | "llmjp4" )
             ## vLLM official parsers (*) are passed to vllm serve
-            ## (*) Available parsers at v0.9.2 - https://github.com/vllm-project/vllm/tree/v0.9.2/vllm/reasoning
+            ## (*) Available parsers at v0.18.0 - https://github.com/vllm-project/vllm/tree/v0.18.0/vllm/reasoning
             REASONING_PARSER_FOR_VLLM="$REASONING_PARSER"
             echo "✅ vLLM's official parser: '$REASONING_PARSER' was detected. Use it in vLLM."
             ;;
@@ -469,6 +470,8 @@ serve_litellm(){
                 --max-model-len "$MAX_MODEL_LENGTH" \
                 --gpu-memory-utilization "$GPU_MEMORY_UTILIZATION" \
                 --dtype bfloat16 \
+                --trust-remote-code \
+                --reasoning-parser-plugin "${REPO_PATH}/scripts/generation_settings/reasoning_parser/multi_parser_loader.py" \
                 ${OPTIONAL_PARAMS_FOR_VLLM[@]} \
                 2>&1 > "$vllm_log_file" &
         VLLM_SERVER_PID=$!
