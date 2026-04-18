@@ -354,7 +354,7 @@ vLLM には，カスタム reasoning parser を渡す機能がある．具体的
 
 自動評価スクリプトで vLLM にカスタム reasoning parser を渡すには，提供された .py ファイルを `/scripts/generation_settings/reasoning_parser/`に配置するだけでよい．  
 ただしファイル名は `{parser名}_reasoning_parser.py`とすること．例：`scripts/generation_settings/reasoning_parser/llmjp4_reasoning_parser.py`  
-あとはふだん通り，custom_model_settings の reasoning parser 引数に parser名を指定するだけでよい．  
+あとはふだん通り，custom_model_settings の reasoning parser 引数に parser名を指定できるようになる．  
 
 #### 3.7.2 自分でカスタム reasoning parser を実装する
 
