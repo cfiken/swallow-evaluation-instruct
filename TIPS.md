@@ -20,10 +20,11 @@ Qwen3のような推論型モデルの評価詳細では "predictions"列が `<t
 
 ### vLLMが対応していない推論型モデルを評価する
 
-まれにvLLMのreasoning parserが対応していない推論型モデルが存在します．たとえば [nvidia/Llama-3.1-Nemotron-Nano-8B-v1](https://huggingface.co/nvidia/Llama-3.1-Nemotron-Nano-8B-v1) は DeepSeek-R1 と同じく `<think>, </think>` タグで推論過程をマークアップするモデルですが `vllm serve --reasoning-parser deepseek_r1` を実行するとエラーが生じます（vLLM v0.10.0で検証）．  
+まれにvLLMのreasoning parserが対応していない推論型モデルが存在します．
+開発元がカスタム reasoning parser のPythonファイルを公開している場合（例：[nvidia/NVIDIA-Nemotron-Nano-9B-v2-Japanese](https://huggingface.co/nvidia/NVIDIA-Nemotron-Nano-9B-v2-Japanese/blob/main/nemotron_nano_v2_reasoning_parser.py)）は `vllm serve --reasoning-parser-plugin` 引数に `.py` ファイルを渡すことで，推論過程と最終出力を分離して正常に評価できるようになります．  
 
-このようなモデルの場合は `vllm serve` 実行時引数から `--reasoning-parser` を削除して，かわりに lighteval 実行時引数の MODEL_ARGS で `reasoning_parser` を指定することにより，vLLMではなくlighteval内で推論過程と最終出力を分離することで評価を実行できます．  
-DeepSeek-R1形式でマークアップするモデルの場合は `deepseek_r1_markup` を指定してください．
+カスタム reasoning parser が非公開かつ，`<think>, </think>` タグで推論過程をマークアップするモデル（例：[nvidia/Llama-3.1-Nemotron-Nano-8B-v1](https://huggingface.co/nvidia/Llama-3.1-Nemotron-Nano-8B-v1)）については，swallow-evaluation-instruct で独自に対応しています．  
+具体的には `vllm serve` 実行時引数から `--reasoning-parser` を削除して，かわりに lighteval 実行時引数の MODEL_ARGS で `reasoning_parser:deepseek_r1_markup` を指定してください．
 
 ### プロバイダが提供する推論APIでエラーが起きる
 
