@@ -356,6 +356,13 @@ vLLM には，カスタム reasoning parser を渡す機能がある．具体的
 ただしファイル名は `{parser名}_reasoning_parser.py`とすること．例：`scripts/generation_settings/reasoning_parser/llmjp4_reasoning_parser.py`  
 あとはふだん通り，custom_model_settings の reasoning parser 引数に parser名を指定できるようになる．  
 
+配置済みのカスタム reasoning parserは以下の通り（2026年4月現在）．  
+
+|reasoning_parser|適用可能なモデルの例|配布元|
+|--|--|--|
+|llmjp4|`llm-jp/llm-jp-4-*-thinking`|[llmjp4_reasoning_parser.py](https://github.com/llm-jp/llm-jp-4-cookbook)|
+|nemotron_nano_v2|`nvidia/NVIDIA-Nemotron-Nano-9B-v2-Japanese`|[nemotron_nano_v2_reasoning_parser.py](https://huggingface.co/nvidia/NVIDIA-Nemotron-Nano-9B-v2-Japanese)|
+
 #### 3.7.2 自分でカスタム reasoning parser を実装する
 
 モデル提供側が助けてくれないときは自力でなんとかするしかないが，parserの実装は楽ではない．  
