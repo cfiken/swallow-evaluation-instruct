@@ -82,6 +82,7 @@ class JudgeLM:
         url: str | None = None,
         api_key: str | None = None,
         response_format: BaseModel = None,
+        reasoning_effort: str | None = None,
     ):
         self.model = model
         self.template = templates
@@ -96,6 +97,7 @@ class JudgeLM:
         self.url = url
         self.api_key = api_key
         self.backend = judge_backend
+        self.reasoning_effort = reasoning_effort
 
         self.response_format = response_format if not None else DEFAULT_FORMAT
 
@@ -295,35 +297,37 @@ class JudgeLM:
         return results
 
     def __call_api(self, prompt):
+        temperature = 0.0
+        max_completion_tokens = 4096
+        if self.reasoning_effort is not None and self.reasoning_effort != "none":
+            temperature = 1.0
+            max_completion_tokens = 32768
+
+        request_kwargs = {
+            "model": self.model,
+            "messages": as_list(prompt),
+            "response_format": self.response_format,
+            "max_completion_tokens": max_completion_tokens,
+            "temperature": temperature,
+            "n": 1,
+        }
+        if self.reasoning_effort is not None:
+            request_kwargs["reasoning_effort"] = self.reasoning_effort
+
         for _ in range(self.API_MAX_RETRY):
             try:
-                # Base model
-                response = self.client.beta.chat.completions.parse(
-                    model=self.model,
-                    messages=as_list(prompt),
-                    response_format=self.response_format,
-                    max_tokens=4096,
-                    temperature=0.0,
-                    n=1,
-                )
-                answer = response.choices[0].message.parsed
-                return answer
-            except TypeError:
+                # Prefer create() first
                 try:
-                    # Finetune
-                    response = self.client.chat.completions.create(
-                        model=self.model,
-                        messages=as_list(prompt),
-                        response_format=self.response_format,
-                        max_tokens=4096,
-                        temperature=0.0,
-                        n=1,
-                    )
+                    response = self.client.chat.completions.create(**request_kwargs)
                     text = response.choices[0].message.content
+                    if text is None and hasattr(response.choices[0].message, "parsed"):
+                        text = response.choices[0].message.parsed
                     return text
-                except Exception as e:
-                    logger.warning(f"{type(e), e}")
-                    time.sleep(self.API_RETRY_SLEEP)
+                except TypeError:
+                    # Fallback to parse() for SDK/API compatibility
+                    response = self.client.beta.chat.completions.parse(**request_kwargs)
+                    answer = response.choices[0].message.parsed
+                    return answer
             except Exception as e:
                 logger.warning(f"{type(e), e}")
                 time.sleep(self.API_RETRY_SLEEP)

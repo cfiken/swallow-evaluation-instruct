@@ -10,4 +10,5 @@ swallow-evaluation-instruct は，Swallowプロジェクトのメンバーによ
 * 水木 栄（Sakae Mizuki）：プロジェクト管理，概念設計，プログラミング，文書作成
 * Sangwhan Moon：概念設計に関する助言
 * 宮本 空（Sora Miyamoto）：検証・テスト，モデルの評価
+* 平塚 貴也 (Takaya Hiratsuka)：検証・テスト，モデルの評価
 * 一瀬 達矢（Tatsuya Ichinose）：検証・テスト，モデルの評価

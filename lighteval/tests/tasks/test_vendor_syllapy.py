@@ -1,17 +1,17 @@
 # MIT License
-
+#
 # Copyright (c) 2024 The HuggingFace Team
-
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,20 +20,46 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from lighteval.utils.imports import can_load_extended_tasks
+"""Tests adapted from syllapy 0.7.2 upstream tests."""
+
+from string import punctuation
+
+import pytest
+
+from lighteval.tasks.extended.ifbench import _vendor_syllapy as syllapy
 
 
-if can_load_extended_tasks():
-    import lighteval.tasks.extended.hle.main as hle
-    import lighteval.tasks.extended.ifeval.main as ifeval
-    import lighteval.tasks.extended.lcb.main as lcb
-    import lighteval.tasks.extended.mix_eval.main as mix_eval
-    import lighteval.tasks.extended.mt_bench.main as mt_bench
-    import lighteval.tasks.extended.olympiade_bench.main as olympiad_bench
-    import lighteval.tasks.extended.tiny_benchmarks.main as tiny_benchmarks
-    import lighteval.tasks.extended.ifbench.main as ifbench
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("dog!!!!!", 1),
+        (None, 0),
+        (True, 0),
+        (2, 0),
+        ("", 0),
+        (" ", 0),
+        ("ostentatious", 4),
+        ("because", 2),
+        ("woman", 2),
+        ("international", 5),
+        ("Norway", 2),
+        ("norway", 2),
+        ("Ohio", 3),
+        ("ohio", 3),
+        ("part-time", 2),
+        ("one-on-one", 3),
+        ("four-at-a-time", 4),
+        ("4-at-a-time", 0),
+        ("zero-for-2", 0),
+        ("d0g", 0),
+        ("4dog", 0),
+        ("dog123", 0),
+    ],
+)
+def test_vendor_syllapy_count_examples(value, expected):
+    assert syllapy.count(value) == expected
 
-    AVAILABLE_EXTENDED_TASKS_MODULES = [ifeval, tiny_benchmarks, mt_bench, mix_eval, olympiad_bench, hle, lcb, ifbench]
 
-else:
-    AVAILABLE_EXTENDED_TASKS_MODULES = []
+@pytest.mark.parametrize("punct", list(punctuation))
+def test_vendor_syllapy_punctuation_only(punct):
+    assert syllapy.count(punct) == 0

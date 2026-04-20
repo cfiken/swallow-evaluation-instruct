@@ -29,7 +29,7 @@ gpqa_diamond_instruct_swallow = LightevalTaskConfig(
 
 # Pass@K and Maj@K variant
 lst_gpqa_diamond_instruct_swallow_passk_majk = []
-for num_samples in [16, 32, 64, 128, 256]:
+for num_samples in [4, 8, 16, 32, 64, 128, 256]:
     lst_k = powers_of_two_up_to_n(num_samples)
     # Metricsクラスに属するSampleLevelMetricを指定する場合は .value をつける
     _lst_pass_at_k_metrics = create_passk_metrics(base_metric=Metrics.gpqa_instruct_metric.value, k_values=lst_k, num_samples=num_samples)

@@ -47,6 +47,10 @@ class GenerationParameters:
     # OpenAI o3 など reasoning_effort をサポートするモデル用．
     # litellm backend の場合は litellm.completion(), vLLM backend の場合は tokenizer.apply_chat_template() に引き渡す．
     reasoning_effort: Optional[str] = None  # openai o3 など
+    
+    # chat template keyword arguments パラメータ
+    # litellm backend の場合は litellm.completion(extra_body={"chat_template_kwargs": {...}}) に引き渡す．
+    chat_template_kwargs: Optional[dict] = None
 
     # response format to be followed by the model,
     # more info here https://platform.openai.com/docs/api-reference/chat/create#chat-create-response_format
@@ -69,7 +73,7 @@ class GenerationParameters:
         return GenerationParameters(**config_dict.get("generation", {}))
 
     @classmethod
-    def from_model_args(cls, model_args: str):
+    def from_model_args(cls, model_args: str, return_non_generation_args: bool = False):
         """Creates a GenerationParameters object from a model_args string.
 
         It's used when the model_args are passed as a string in the command line.
@@ -79,6 +83,12 @@ class GenerationParameters:
         Args:
             model_args (str): A string like the following:
                 "pretrained=deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B,dtype=float16,max_model_length=32768,generation={temperature:0.7,top_p:5}"
+            return_non_generation_args (bool): If True, return a tuple of (GenerationParameters, non_generation_args_string).
+                Defaults to False.
+        
+        Returns:
+            GenerationParameters if return_non_generation_args is False
+            tuple[GenerationParameters, str] if return_non_generation_args is True
         """
 
         def parse_model_args(model_args):
@@ -91,14 +101,23 @@ class GenerationParameters:
                 key = key.strip()
                 if key == "generation_parameters":
                     gen_params = re.sub(r"(\w+):", r'"\1":', value)
-                    return json.loads(gen_params)
+                    non_gen_args = model_args.replace(f"generation_parameters={value}", "")
+                    # 連続カンマのクリーンアップ
+                    non_gen_args = re.sub(r',+', ',', non_gen_args).strip(',')
+                    return json.loads(gen_params), non_gen_args
+            return None, model_args
 
-        params: dict = parse_model_args(model_args) or {}        
+        result, non_gen_model_args = parse_model_args(model_args)
+        params = result if result is not None else {}
+        
         stop_tokens = params.get("stop_tokens", None)
         if isinstance(stop_tokens, str):
             params["stop_tokens"] = stop_tokens.split(",")
         
-        return GenerationParameters(**params)
+        generation_parameters = GenerationParameters(**params)
+        if return_non_generation_args:
+            return generation_parameters, non_gen_model_args
+        return generation_parameters
 
     def to_litellm_dict(self) -> dict:
         """Selects relevant generation and sampling parameters for litellm models.

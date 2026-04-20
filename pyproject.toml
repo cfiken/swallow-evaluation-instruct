@@ -3,13 +3,13 @@ name = "swallow-evaluation-instruct-private"
 version = "0.0.1"
 description = "beta"
 readme = "README.md"
-requires-python = "==3.10.14"
+requires-python = "==3.11.10"
 dependencies = []
 
 
 [project.optional-dependencies]
 auto_detector = [
-  "transformers",
+  "transformers>=5.3.0",
   "sentencepiece",
   "protobuf",
 ]
@@ -22,13 +22,12 @@ lighteval = [
     "lighteval[math,extended_tasks,litellm,vllm]",
     "transformers>=4.51.0", # Set the floor to allow evaluation of the latest models
     "openai>=1.40.0", # Set the floor to avoid using deprecated names.
-    "datasets<4.0.0", # Set the ceiling to avoid errors due to breaking changes
+    "datasets>=3.6.0,<4.0.0", # Set the floor to prevent uv from downgrading to v2, and the ceiling to avoid breaking changes
     "litellm>=1.75.8", # Set the ceiling to support gpt-oss
 ]
 
 vllm = [
-  "vllm>=0.10.1", # Set the ceiling to support gpt-oss
-  "transformers>=4.55.0", # Set the ceiling to support gpt-oss
+  "vllm==0.18.0", # Set the ceiling to support gpt-oss
 ]
 
 

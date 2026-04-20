@@ -2,20 +2,20 @@
 name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
-
 # pytorch with CUDA 12.1
+
 [[source]]
 name = "pytorch-cu121"
 url = "https://download.pytorch.org/whl/cu121"
 verify_ssl = true
-
 # pytorch with CUDA 12.4
+
 [[source]]
 name = "pytorch-cu124"
 url = "https://download.pytorch.org/whl/cu124"
 verify_ssl = true
-
 # pytorch with CUDA 12.8
+
 [[source]]
 name = "pytorch-cu128"
 url = "https://download.pytorch.org/whl/cu128"
@@ -25,11 +25,11 @@ verify_ssl = true
 python_version = "3.11"
 
 [packages]
-vllm = "==0.9.1"
+vllm = "==0.13.0"
 transformers = "*"
 regex = "*"
 lighteval = { path = "./", editable = true, extras = ["multilingual", "math", "extended_tasks"] }
-torch = {version = "~=2.7", index = "pytorch-cu128"}
+torch = {version = "~=2.9", index = "pytorch-cu128"}
 janome = "*"
 nagisa = "*"
 litellm = "<2.0.0"
@@ -41,7 +41,9 @@ markdown-it-py = "*"
 beautifulsoup4 = "<5.0.0"
 openai = ">=1.4.0"
 more-itertools = "*"
-datasets = "<4.0.0"
+datasets = "<4.0.0,>=3.0.0"
+pyarrow = "<21.0.0"
+emoji = "*"
 
 [dev-packages]
 lighteval = { path = "./", editable = true, extras = ["tests", "multilingual", "math", "extended_tasks"] }
@@ -55,3 +57,4 @@ test_pass_at_k = "python -m pytest -s tests/metrics/test_passk_utils.py -v"
 test_maj_at_k_solutions = "python -m pytest -s tests/metrics/test_maj_at_k_solutions.py -v"
 test_maj_at_k = "python -m pytest -s tests/metrics/test_majk_utils.py -v"
 test_span_extractor = "python -m pytest -s tests/metrics/test_translation_span_extractor.py"
+test_vendor_syllapy = "python -m pytest -s tests/tasks/test_vendor_syllapy.py -v"
