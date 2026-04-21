@@ -9,8 +9,8 @@ export PATH="$HOME/.local/bin:$PATH"
 
 
 # 2. uv 内への python のインストール
-uv python install 3.10.14
-uv python pin 3.10.14
+uv python install 3.11.10
+uv python pin 3.11.10
 
 
 # 3. 共通パッケージのインストール
@@ -18,7 +18,7 @@ uv venv ".common_envs"
 source ".common_envs/bin/activate"
 
 uv pip install --upgrade pip setuptools wheel
-uv pip install huggingface_hub[cli]
+uv pip install huggingface_hub
 
 # HuggingFace のログインを行う場合は，自身の huggingface token を書き，コメントアウトを外してから実行すること．
 # hf auth login --token (ここに huggingface token を書く)
