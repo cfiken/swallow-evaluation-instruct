@@ -342,7 +342,7 @@ lightevalの実行時引数 `lighteval endpoint litellm {MODEL_ARGS} {TASK_ID} [
 * `temperature`：サンプリングの温度．
 * `top_p`：核サンプリング（[Holtzman et al. (2020)](https://openreview.net/forum?id=rygGQyrFvH)）のパラメータ．
 * `max_new_tokens`：出力トークン数の最大値．
-* `reasoning_effort`（独自）：推論の深さ（例："middle"）．LiteLLMが対応しているOpenAI o系列などの推論型モデルで利用できます（参考：[Reasoning models](https://platform.openai.com/docs/guides/reasoning)）
+* `reasoning_effort`（独自）：推論の深さ（例："medium"）．LiteLLMが対応しているOpenAI o系列などの推論型モデルで利用できます（参考：[Reasoning models](https://platform.openai.com/docs/guides/reasoning)）
 * `max_n`（独自）：推論APIの1回の呼び出しにおいて生成させる応答数の最大値（いわゆる"n"の上限値）．OpenAIのように応答数を制限しているプロバイダは1を指定してください（参考：[Tips](./TIPS.md)）．
 * `chat_template_kwargs`（独自）：チャットテンプレートのパラメータ．Qwen3系列モデルの `enable_thinking` のようなパラメータを指定する場合に使います．例： `chat_template_kwargs:{enable_thinking:false}`
 
