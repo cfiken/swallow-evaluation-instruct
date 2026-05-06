@@ -9,7 +9,8 @@ dependencies = []
 
 [project.optional-dependencies]
 auto_detector = [
-  "transformers>=5.3.0",
+  # "transformers>=5.3.0",
+  "transformers>=5.5.0",
   "sentencepiece",
   "protobuf",
 ]
@@ -20,14 +21,16 @@ aggregate_results = [
 
 lighteval = [
     "lighteval[math,extended_tasks,litellm,vllm]",
-    "transformers>=4.51.0", # Set the floor to allow evaluation of the latest models
+    # "transformers>=4.51.0", # Set the floor to allow evaluation of the latest models
+    "transformers>=5.5.0",
     "openai>=1.40.0", # Set the floor to avoid using deprecated names.
     "datasets>=3.6.0,<4.0.0", # Set the floor to prevent uv from downgrading to v2, and the ceiling to avoid breaking changes
     "litellm>=1.75.8", # Set the ceiling to support gpt-oss
 ]
 
 vllm = [
-  "vllm==0.18.0", # Set the ceiling to support gpt-oss
+  # "vllm==0.18.0", # Set the ceiling to support gpt-oss
+  "vllm==0.19.1",
 ]
 
 
