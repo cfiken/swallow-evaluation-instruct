@@ -25,6 +25,7 @@
 
 # ruff: noqa: F405, F403, F401, I001
 
+import os
 import re
 import logging
 import ast
@@ -229,10 +230,10 @@ def make_llm_judge_mt_bench_metric(judge_model_name: str, short_judge_name: str,
         category=MetricCategory.LLM_AS_JUDGE_MULTI_TURN,
         use_case=MetricUseCase.SUMMARIZATION,
         sample_level_fn=JudgeLLMMTBenchSwallow(
-            judge_model_name=judge_model_name,
+            judge_model_name=os.environ.get("MT_BENCH_JUDGE_MODEL", judge_model_name),
             template=gpt_judge_mt_bench_prompt,
             process_judge_response=process_judge_response_gpt,
-            judge_backend="openai",
+            judge_backend=os.environ.get("MT_BENCH_JUDGE_BACKEND", "openai"),
             short_judge_name=short_judge_name,
             reasoning_effort=reasoning_effort,
         ).compute,
